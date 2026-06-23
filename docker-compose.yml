@@ -1,0 +1,21 @@
+services:
+  mysql:
+    image: mysql:8.4
+    container_name: volleyball-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpw
+      MYSQL_DATABASE: volleyball
+      MYSQL_USER: volleyball
+      MYSQL_PASSWORD: volleyball
+    ports:
+      - "3306:3306"
+    volumes:
+      - volleyball_mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-prootpw"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+volumes:
+  volleyball_mysql_data:
