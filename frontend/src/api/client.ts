@@ -20,7 +20,11 @@ export const tokenStore = {
   },
 };
 
-export const api = axios.create({ baseURL: '/api' });
+const apiBaseURL = import.meta.env.VITE_API_URL
+  ? `${import.meta.env.VITE_API_URL}/api`
+  : '/api';
+
+export const api = axios.create({ baseURL: apiBaseURL });
 
 /** Fetches a file (with the auth header via the interceptor) and triggers a browser download. */
 export async function downloadFile(path: string, filename: string) {
@@ -58,7 +62,7 @@ api.interceptors.response.use(
       try {
         if (!refreshing) {
           refreshing = axios
-            .post('/api/auth/refresh', { refreshToken: tokenStore.refresh })
+            .post(`${apiBaseURL}/auth/refresh`, { refreshToken: tokenStore.refresh })
             .then((r) => {
               tokenStore.set(r.data.accessToken, r.data.refreshToken);
               return r.data.accessToken as string;
