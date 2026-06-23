@@ -64,7 +64,7 @@ export function TeamsPage() {
   }, [teams]);
 
   const availablePlayers = useMemo(
-    () => players?.filter((p) => !assignedIds.has(p.id)) ?? [],
+    () => players?.filter((p) => !assignedIds.has(p.id) && !p.preferredPositions.includes('REFEREE')) ?? [],
     [players, assignedIds],
   );
 
