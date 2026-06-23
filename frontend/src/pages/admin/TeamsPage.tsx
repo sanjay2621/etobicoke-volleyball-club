@@ -1,0 +1,285 @@
+import { useEffect, useMemo, useState } from 'react';
+import {
+  Autocomplete,
+  Avatar,
+  Box,
+  Button,
+  Card,
+  CardContent,
+  Chip,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  Grid,
+  IconButton,
+  ListItem,
+  ListItemAvatar,
+  ListItemText,
+  MenuItem,
+  Stack,
+  TextField,
+  Tooltip,
+  Typography,
+} from '@mui/material';
+import AddIcon from '@mui/icons-material/Add';
+import DeleteIcon from '@mui/icons-material/Delete';
+import DownloadIcon from '@mui/icons-material/Download';
+import StarIcon from '@mui/icons-material/Star';
+import StarBorderIcon from '@mui/icons-material/StarBorder';
+import SportsIcon from '@mui/icons-material/Sports';
+import { useActiveTournaments } from '../../api/tournaments';
+import { downloadFile } from '../../api/client';
+import { usePlayers } from '../../api/players';
+import {
+  useAddMember,
+  useCreateTeam,
+  useDeleteTeam,
+  useRemoveMember,
+  useSetCaptain,
+  useSetReferee,
+  useTeams,
+} from '../../api/teams';
+import type { Player, Team } from '../../types';
+
+export function TeamsPage() {
+  const { data: tournaments } = useActiveTournaments();
+  const [tournamentId, setTournamentId] = useState<number | null>(null);
+  const { data: teams } = useTeams(tournamentId);
+  const { data: players } = usePlayers(tournamentId);
+  const createTeam = useCreateTeam();
+  const [newOpen, setNewOpen] = useState(false);
+  const [newName, setNewName] = useState('');
+
+  useEffect(() => {
+    if (tournamentId == null && tournaments && tournaments.length > 0) {
+      setTournamentId(tournaments[0].id);
+    }
+  }, [tournaments, tournamentId]);
+
+  const assignedIds = useMemo(() => {
+    const set = new Set<number>();
+    teams?.forEach((t) => t.members.forEach((m) => set.add(m.playerId)));
+    return set;
+  }, [teams]);
+
+  const availablePlayers = useMemo(
+    () => players?.filter((p) => !assignedIds.has(p.id)) ?? [],
+    [players, assignedIds],
+  );
+
+  async function onCreate() {
+    if (!tournamentId || !newName.trim()) return;
+    await createTeam.mutateAsync({ tournamentId, name: newName.trim() });
+    setNewName('');
+    setNewOpen(false);
+  }
+
+  return (
+    <>
+      <Stack direction="row" justifyContent="space-between" alignItems="center" mb={2}>
+        <Typography variant="h4">Teams</Typography>
+        <Stack direction="row" spacing={2}>
+          <TextField
+            select
+            size="small"
+            label="Tournament"
+            value={tournamentId ?? ''}
+            onChange={(e) => setTournamentId(Number(e.target.value))}
+            sx={{ minWidth: 220 }}
+          >
+            {tournaments?.map((t) => (
+              <MenuItem key={t.id} value={t.id}>
+                {t.name}
+              </MenuItem>
+            ))}
+          </TextField>
+          <Button
+            variant="outlined"
+            startIcon={<DownloadIcon />}
+            disabled={!tournamentId}
+            onClick={() =>
+              tournamentId &&
+              downloadFile(`/teams/export?tournamentId=${tournamentId}`, `teams-${tournamentId}.csv`)
+            }
+          >
+            CSV
+          </Button>
+          <Button variant="contained" startIcon={<AddIcon />} onClick={() => setNewOpen(true)}>
+            New team
+          </Button>
+        </Stack>
+      </Stack>
+
+      <Grid container spacing={2}>
+        {teams?.length === 0 && (
+          <Grid item xs={12}>
+            <Typography color="text.secondary">No teams yet. Create one to start building rosters.</Typography>
+          </Grid>
+        )}
+        {teams?.map((team) => (
+          <Grid item xs={12} md={6} lg={4} key={team.id}>
+            <TeamCard team={team} available={availablePlayers} allPlayers={players ?? []} />
+          </Grid>
+        ))}
+      </Grid>
+
+      <Dialog open={newOpen} onClose={() => setNewOpen(false)}>
+        <DialogTitle>New team</DialogTitle>
+        <DialogContent>
+          <TextField
+            autoFocus
+            label="Team name"
+            value={newName}
+            onChange={(e) => setNewName(e.target.value)}
+            sx={{ mt: 1, minWidth: 320 }}
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setNewOpen(false)}>Cancel</Button>
+          <Button variant="contained" onClick={onCreate}>
+            Create
+          </Button>
+        </DialogActions>
+      </Dialog>
+    </>
+  );
+}
+
+function TeamCard({
+  team,
+  available,
+  allPlayers,
+}: {
+  team: Team;
+  available: Player[];
+  allPlayers: Player[];
+}) {
+  const addMember = useAddMember();
+  const removeMember = useRemoveMember();
+  const setCaptain = useSetCaptain();
+  const setReferee = useSetReferee();
+  const deleteTeam = useDeleteTeam();
+  const [toAdd, setToAdd] = useState<Player | null>(null);
+
+  const refereeName = team.refereePlayerId
+    ? allPlayers.find((p) => p.id === team.refereePlayerId)?.fullName ?? `#${team.refereePlayerId}`
+    : null;
+
+  // Only players who registered as a referee (picked the REFEREE position) can be assigned.
+  const refereeOptions = useMemo(
+    () => allPlayers.filter((p) => p.preferredPositions.includes('REFEREE')),
+    [allPlayers],
+  );
+
+  return (
+    <Card sx={{ height: '100%' }}>
+      <CardContent>
+        <Stack direction="row" justifyContent="space-between" alignItems="center">
+          <Typography variant="h6">{team.name}</Typography>
+          <Box>
+            {team.groupLabel && <Chip size="small" label={`Group ${team.groupLabel}`} sx={{ mr: 1 }} />}
+            <Chip size="small" label={`${team.memberCount} players`} />
+            <IconButton
+              size="small"
+              color="error"
+              aria-label="delete team"
+              onClick={() => {
+                if (confirm(`Delete team "${team.name}"?`)) deleteTeam.mutate(team.id);
+              }}
+            >
+              <DeleteIcon fontSize="small" />
+            </IconButton>
+          </Box>
+        </Stack>
+
+        <Box mt={1}>
+          {team.members.length === 0 && (
+            <Typography variant="body2" color="text.secondary">
+              No players yet.
+            </Typography>
+          )}
+          {team.members.map((m) => (
+            <ListItem
+              key={m.playerId}
+              disableGutters
+              secondaryAction={
+                <Box>
+                  <Tooltip title={m.captain ? 'Captain' : 'Make captain'}>
+                    <IconButton
+                      size="small"
+                      onClick={() => setCaptain.mutate({ teamId: team.id, playerId: m.playerId })}
+                    >
+                      {m.captain ? <StarIcon fontSize="small" color="warning" /> : <StarBorderIcon fontSize="small" />}
+                    </IconButton>
+                  </Tooltip>
+                  <IconButton
+                    size="small"
+                    aria-label="remove"
+                    onClick={() => removeMember.mutate({ teamId: team.id, playerId: m.playerId })}
+                  >
+                    <DeleteIcon fontSize="small" />
+                  </IconButton>
+                </Box>
+              }
+            >
+              <ListItemAvatar>
+                <Avatar src={m.photoUrl ?? undefined} sx={{ width: 32, height: 32 }} />
+              </ListItemAvatar>
+              <ListItemText
+                primary={m.fullName}
+                secondary={m.preferredPositions.join(', ')}
+              />
+            </ListItem>
+          ))}
+        </Box>
+
+        <Stack direction="row" spacing={1} mt={2}>
+          <Autocomplete
+            size="small"
+            sx={{ flexGrow: 1 }}
+            options={available}
+            value={toAdd}
+            onChange={(_, v) => setToAdd(v)}
+            getOptionLabel={(p) => p.fullName}
+            renderOption={({ key, ...props }, p) => (
+              <Box key={key} component="li" {...props} sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <Avatar src={p.photoUrl ?? undefined} sx={{ width: 28, height: 28, flexShrink: 0 }} />
+                {p.fullName}
+              </Box>
+            )}
+            renderInput={(params) => <TextField {...params} label="Add player" />}
+          />
+          <Button
+            variant="outlined"
+            disabled={!toAdd}
+            onClick={async () => {
+              if (toAdd) {
+                await addMember.mutateAsync({ teamId: team.id, playerId: toAdd.id });
+                setToAdd(null);
+              }
+            }}
+          >
+            Add
+          </Button>
+        </Stack>
+
+        <Stack direction="row" spacing={1} mt={2} alignItems="center">
+          <SportsIcon fontSize="small" color="action" />
+          <Autocomplete
+            size="small"
+            sx={{ flexGrow: 1 }}
+            options={refereeOptions}
+            value={allPlayers.find((p) => p.id === team.refereePlayerId) ?? null}
+            onChange={(_, v) => setReferee.mutate({ teamId: team.id, playerId: v ? v.id : 0 })}
+            getOptionLabel={(p) => p.fullName}
+            noOptionsText="No registered referees"
+            renderInput={(params) => (
+              <TextField {...params} label={refereeName ? 'Referee' : 'Assign referee'} />
+            )}
+          />
+        </Stack>
+      </CardContent>
+    </Card>
+  );
+}
