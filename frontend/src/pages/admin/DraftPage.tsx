@@ -62,7 +62,7 @@ export function DraftPage() {
 
   return (
     <>
-      <Stack direction="row" justifyContent="space-between" alignItems="center" mb={2}>
+      <Stack direction="row" justifyContent="space-between" alignItems="center" mb={2} flexWrap="wrap" gap={1}>
         <Typography variant="h4">Draft</Typography>
         <Stack direction="row" spacing={2} alignItems="center">
           <TextField

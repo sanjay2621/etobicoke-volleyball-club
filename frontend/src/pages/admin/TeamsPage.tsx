@@ -85,9 +85,9 @@ export function TeamsPage() {
 
   return (
     <>
-      <Stack direction="row" justifyContent="space-between" alignItems="center" mb={2}>
+      <Stack direction="row" justifyContent="space-between" alignItems="center" mb={2} flexWrap="wrap" gap={1}>
         <Typography variant="h4">Teams</Typography>
-        <Stack direction="row" spacing={2}>
+        <Stack direction="row" spacing={1} flexWrap="wrap">
           <TextField
             select
             size="small"

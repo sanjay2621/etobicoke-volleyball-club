@@ -199,10 +199,10 @@ export function RegisterPage() {
           <Button component={RouterLink} to="/" className={styles.homeLink}>
             ← Home
           </Button>
-          <Stack direction="row" alignItems="center" spacing={2}>
+          <Stack direction={{ xs: 'column', sm: 'row' }} alignItems={{ xs: 'flex-start', sm: 'center' }} spacing={2}>
             <SportsVolleyballIcon className={styles.bannerMainIcon} />
             <Box>
-              <Typography variant="h3" fontWeight={800} letterSpacing={-0.5}>
+              <Typography variant="h4" fontWeight={800} letterSpacing={-0.5}>
                 Register to Play
               </Typography>
               <Typography variant="body1" className={styles.bannerSubtext}>

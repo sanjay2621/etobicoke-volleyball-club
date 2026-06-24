@@ -87,7 +87,7 @@ export function PlayerDashboardPage() {
           <>
             <Card className={styles.profileCard}>
               <CardContent>
-                <Stack direction="row" spacing={3} alignItems="center">
+                <Stack direction={{ xs: 'column', sm: 'row' }} spacing={3} alignItems={{ xs: 'center', sm: 'center' }}>
                   <Box>
                     <Tooltip title={player.photoUrl ? 'Change photo' : 'Upload photo'}>
                       <Box

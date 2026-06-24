@@ -1,3 +1,10 @@
 .tournamentSelect {
   min-width: 240px;
 }
+
+@media (max-width: 599px) {
+  .tournamentSelect {
+    min-width: 0;
+    width: 100%;
+  }
+}

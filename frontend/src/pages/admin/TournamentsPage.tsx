@@ -43,7 +43,7 @@ export function TournamentsPage() {
 
   return (
     <>
-      <Stack direction="row" justifyContent="space-between" alignItems="center" mb={2}>
+      <Stack direction="row" justifyContent="space-between" alignItems="center" mb={2} flexWrap="wrap" gap={1}>
         <Typography variant="h4">Tournaments</Typography>
         <Button variant="contained" startIcon={<AddIcon />} onClick={openCreate}>
           New tournament
