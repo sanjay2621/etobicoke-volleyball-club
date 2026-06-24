@@ -48,36 +48,29 @@ const schema = z.object({
   lastName: z.string().min(1, 'Required'),
   phone: phoneRule,
   email: z.string().email('Enter a valid email address'),
-  line1: z
-    .string()
-    .optional()
-    .refine((v) => !v || v.trim().length >= 3, 'Enter a valid street address'),
-  city: z
-    .string()
-    .optional()
-    .refine((v) => !v || v.trim().length >= 2, 'Enter a valid city'),
-  province: z
-    .string()
-    .optional()
-    .refine((v) => !v || v.trim().length >= 2, 'Enter a valid province'),
-  postalCode: z
-    .string()
-    .optional()
-    .refine((v) => !v || /^[A-Za-z]\d[A-Za-z]\s?\d[A-Za-z]\d$/.test(v.trim()), 'Enter a valid postal code, e.g. M4B 1B3'),
+  line1: z.string().min(3, 'Enter a valid street address'),
+  city: z.string().min(2, 'Enter a valid city'),
+  province: z.string().min(2, 'Enter a valid province'),
+  postalCode: z.string().refine(
+    (v) => /^[A-Za-z]\d[A-Za-z]\s?\d[A-Za-z]\d$/.test(v.trim()),
+    'Enter a valid postal code, e.g. M4B 1B3',
+  ),
   country: z.string().min(1),
   preferredPositions: z.array(z.string()).refine(
     (val) => (val.includes('REFEREE') ? val.length === 1 : val.length === 2),
     { message: 'Select Referee only, or pick exactly two positions' },
   ),
   tshirtSize: z.enum(['S', 'M', 'L', 'XL', 'XXL', 'XXXL']),
-  emergencyContactName: z.string().optional(),
-  emergencyContactPhone: z
-    .string()
-    .optional()
-    .refine((v) => !v || v.replace(/\D/g, '').length === 10, 'Enter a 10-digit phone number, e.g. (416)-555-1234'),
+  emergencyContactName: z.string().min(1, 'Required'),
+  emergencyContactPhone: phoneRule,
   skillLevel: z.string().optional(),
   waiverAccepted: z.literal(true, { errorMap: () => ({ message: 'You must accept the waiver' }) }),
   photoConsent: z.boolean().optional(),
+}).superRefine((data, ctx) => {
+  const isReferee = data.preferredPositions.includes('REFEREE');
+  if (!isReferee && !data.skillLevel) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'Required', path: ['skillLevel'] });
+  }
 });
 
 type FormValues = z.infer<typeof schema>;
@@ -400,7 +393,15 @@ export function RegisterPage() {
               </Grid>
               {!isReferee && (
                 <Grid item xs={6} sm={3}>
-                  <TextField select label="Skill level" fullWidth defaultValue="" {...field('skillLevel')}>
+                  <TextField
+                    select
+                    label="Skill level *"
+                    fullWidth
+                    defaultValue=""
+                    {...field('skillLevel')}
+                    error={!!errors.skillLevel}
+                    helperText={errors.skillLevel?.message}
+                  >
                     <MenuItem value="">—</MenuItem>
                     {SKILL_LEVELS.map((s) => (
                       <MenuItem key={s} value={s}>{s}</MenuItem>
@@ -419,14 +420,20 @@ export function RegisterPage() {
               </Grid>
 
               <Grid item xs={12} sm={6}>
-                <TextField label="Emergency contact name" fullWidth {...field('emergencyContactName')} />
+                <TextField
+                  label="Emergency contact name *"
+                  fullWidth
+                  {...field('emergencyContactName')}
+                  error={!!errors.emergencyContactName}
+                  helperText={errors.emergencyContactName?.message}
+                />
               </Grid>
               <Grid item xs={12} sm={6}>
                 {(() => {
                   const reg = field('emergencyContactPhone');
                   return (
                     <TextField
-                      label="Emergency contact phone"
+                      label="Emergency contact phone *"
                       fullWidth
                       placeholder="(416)-555-1234"
                       {...reg}
