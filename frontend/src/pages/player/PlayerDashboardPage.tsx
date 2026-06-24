@@ -175,29 +175,21 @@ export function PlayerDashboardPage() {
                                   <Stack direction="row" spacing={0.5} alignItems="center" flexWrap="wrap">
                                     <span>{m.fullName}</span>
                                     {m.captain && <StarIcon fontSize="small" color="warning" />}
-                                    <Chip
-                                      size="small"
-                                      label={m.paymentStatus === 'PAID' ? 'Paid' : 'Unpaid'}
-                                      color={m.paymentStatus === 'PAID' ? 'success' : 'default'}
-                                      className={styles.paymentChip}
-                                    />
-                                    {!m.captain && (
-                                      <Button
+                                    <Tooltip title={m.paymentStatus === 'PAID' ? 'Click to mark unpaid' : 'Click to mark paid'}>
+                                      <Chip
                                         size="small"
-                                        variant="outlined"
-                                        color={m.paymentStatus === 'PAID' ? 'error' : 'success'}
-                                        className={styles.paymentBtn}
-                                        disabled={markPayment.isPending}
+                                        label={m.paymentStatus === 'PAID' ? 'Paid' : 'Unpaid'}
+                                        color={m.paymentStatus === 'PAID' ? 'success' : 'default'}
+                                        className={styles.paymentChip}
                                         onClick={() =>
                                           markPayment.mutate({
                                             id: m.playerId,
                                             paymentStatus: m.paymentStatus === 'PAID' ? 'UNPAID' : 'PAID',
                                           })
                                         }
-                                      >
-                                        {m.paymentStatus === 'PAID' ? 'Mark Unpaid' : 'Mark Paid'}
-                                      </Button>
-                                    )}
+                                        disabled={markPayment.isPending}
+                                      />
+                                    </Tooltip>
                                   </Stack>
                                 }
                                 secondary={
