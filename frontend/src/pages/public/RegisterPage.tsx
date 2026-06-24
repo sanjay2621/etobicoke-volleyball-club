@@ -189,7 +189,7 @@ export function RegisterPage() {
   }
 
   return (
-    <Box sx={{ minHeight: '100vh', bgcolor: 'background.default' }}>
+    <Box sx={{ minHeight: '100vh' }}>
       {/* Banner */}
       <Box
         sx={{
@@ -224,7 +224,23 @@ export function RegisterPage() {
         </Container>
       </Box>
 
-      <Container maxWidth="md" sx={{ py: 4 }}>
+      {/* Form area with light volleyball background */}
+      <Box
+        sx={{
+          background: 'linear-gradient(160deg, #EEF4FF 0%, #E8F0FE 50%, #F0EEFF 100%)',
+          position: 'relative',
+          overflow: 'hidden',
+          pb: 6,
+        }}
+      >
+        <SportsVolleyballIcon sx={{ position: 'absolute', top: 24,   right: 32,   fontSize: 100, color: '#1A2B4A', opacity: 0.06, pointerEvents: 'none' }} />
+        <SportsVolleyballIcon sx={{ position: 'absolute', top: 200,  left: 16,    fontSize: 70,  color: '#2C4A7A', opacity: 0.05, pointerEvents: 'none' }} />
+        <SportsVolleyballIcon sx={{ position: 'absolute', top: '40%', right: 10,  fontSize: 55,  color: '#2C4A7A', opacity: 0.04, pointerEvents: 'none' }} />
+        <SportsVolleyballIcon sx={{ position: 'absolute', bottom: 80, left: 60,   fontSize: 90,  color: '#1A2B4A', opacity: 0.05, pointerEvents: 'none' }} />
+        <SportsVolleyballIcon sx={{ position: 'absolute', bottom: 20, right: 80,  fontSize: 65,  color: '#2C4A7A', opacity: 0.04, pointerEvents: 'none' }} />
+        <SportsVolleyballIcon sx={{ position: 'absolute', top: '65%', left: '45%', fontSize: 48, color: '#1A2B4A', opacity: 0.03, pointerEvents: 'none' }} />
+
+      <Container maxWidth="md" sx={{ py: 4, position: 'relative', zIndex: 1 }}>
       {error && (
         <Alert severity="error" sx={{ mb: 2 }}>
           {error}
@@ -488,6 +504,7 @@ export function RegisterPage() {
         </CardContent>
       </Card>
       </Container>
+      </Box>
     </Box>
   );
 }
