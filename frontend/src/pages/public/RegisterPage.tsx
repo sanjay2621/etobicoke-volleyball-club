@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Link as RouterLink, useNavigate } from 'react-router-dom';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -27,17 +27,41 @@ import type { Position } from '../../types';
 import { useActivePublicTournaments } from '../../api/tournaments';
 import { useRegisterPlayer } from '../../api/players';
 
+function formatPhone(v: string): string {
+  const d = v.replace(/\D/g, '').slice(0, 10);
+  if (d.length === 0) return '';
+  if (d.length <= 3) return `(${d}`;
+  if (d.length <= 6) return `(${d.slice(0, 3)})-${d.slice(3)}`;
+  return `(${d.slice(0, 3)})-${d.slice(3, 6)}-${d.slice(6)}`;
+}
+
+const phoneRule = z
+  .string()
+  .refine((v) => v.replace(/\D/g, '').length === 10, 'Enter a 10-digit phone number, e.g. (416)-555-1234');
+
 const schema = z.object({
   tournamentId: z.coerce.number().int().positive('Choose a tournament'),
   firstName: z.string().min(1, 'Required'),
   middleName: z.string().optional(),
   lastName: z.string().min(1, 'Required'),
-  phone: z.string().min(7, 'Enter a valid phone number'),
-  email: z.string().email('Enter a valid email'),
-  line1: z.string().optional(),
-  city: z.string().optional(),
-  province: z.string().optional(),
-  postalCode: z.string().optional(),
+  phone: phoneRule,
+  email: z.string().email('Enter a valid email address'),
+  line1: z
+    .string()
+    .optional()
+    .refine((v) => !v || v.trim().length >= 3, 'Enter a valid street address'),
+  city: z
+    .string()
+    .optional()
+    .refine((v) => !v || v.trim().length >= 2, 'Enter a valid city'),
+  province: z
+    .string()
+    .optional()
+    .refine((v) => !v || v.trim().length >= 2, 'Enter a valid province'),
+  postalCode: z
+    .string()
+    .optional()
+    .refine((v) => !v || /^[A-Za-z]\d[A-Za-z]\s?\d[A-Za-z]\d$/.test(v.trim()), 'Enter a valid postal code, e.g. M4B 1B3'),
   country: z.string().min(1),
   preferredPositions: z.array(z.string()).refine(
     (val) => (val.includes('REFEREE') ? val.length === 1 : val.length === 2),
@@ -45,7 +69,10 @@ const schema = z.object({
   ),
   tshirtSize: z.enum(['S', 'M', 'L', 'XL', 'XXL', 'XXXL']),
   emergencyContactName: z.string().optional(),
-  emergencyContactPhone: z.string().optional(),
+  emergencyContactPhone: z
+    .string()
+    .optional()
+    .refine((v) => !v || v.replace(/\D/g, '').length === 10, 'Enter a 10-digit phone number, e.g. (416)-555-1234'),
   skillLevel: z.string().optional(),
   waiverAccepted: z.literal(true, { errorMap: () => ({ message: 'You must accept the waiver' }) }),
   photoConsent: z.boolean().optional(),
@@ -69,6 +96,7 @@ export function RegisterPage() {
     register: field,
     handleSubmit,
     control,
+    watch,
     formState: { errors, isSubmitting },
   } = useForm<FormValues>({
     resolver: zodResolver(schema),
@@ -79,6 +107,12 @@ export function RegisterPage() {
       photoConsent: false,
     } as Partial<FormValues> as FormValues,
   });
+
+  const selectedTournamentId = watch('tournamentId');
+  const selectedTournament = useMemo(
+    () => tournaments?.find((t) => t.id === Number(selectedTournamentId)),
+    [tournaments, selectedTournamentId],
+  );
 
   function onPhotoChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0] ?? null;
@@ -191,6 +225,18 @@ export function RegisterPage() {
                     </TextField>
                   )}
                 />
+                {selectedTournament?.registrationDeadline && (
+                  <Alert severity="info" sx={{ mt: 1 }}>
+                    Registration deadline:{' '}
+                    <strong>
+                      {new Date(selectedTournament.registrationDeadline).toLocaleDateString('en-CA', {
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric',
+                      })}
+                    </strong>
+                  </Alert>
+                )}
               </Grid>
 
               <Grid item xs={12} sm={4}>
@@ -206,8 +252,24 @@ export function RegisterPage() {
               </Grid>
 
               <Grid item xs={12} sm={6}>
-                <TextField label="Phone" fullWidth {...field('phone')}
-                  error={!!errors.phone} helperText={errors.phone?.message} />
+                {(() => {
+                  const reg = field('phone');
+                  return (
+                    <TextField
+                      label="Phone"
+                      fullWidth
+                      placeholder="(416)-555-1234"
+                      {...reg}
+                      onChange={(e) => {
+                        e.target.value = formatPhone(e.target.value);
+                        reg.onChange(e);
+                      }}
+                      inputProps={{ maxLength: 14 }}
+                      error={!!errors.phone}
+                      helperText={errors.phone?.message}
+                    />
+                  );
+                })()}
               </Grid>
               <Grid item xs={12} sm={6}>
                 <TextField label="Email" type="email" fullWidth {...field('email')}
@@ -218,16 +280,41 @@ export function RegisterPage() {
                 <Typography variant="subtitle2" color="text.secondary">Address</Typography>
               </Grid>
               <Grid item xs={12} sm={6}>
-                <TextField label="Street address" fullWidth {...field('line1')} />
+                <TextField
+                  label="Street address"
+                  fullWidth
+                  {...field('line1')}
+                  error={!!errors.line1}
+                  helperText={errors.line1?.message}
+                />
               </Grid>
               <Grid item xs={6} sm={3}>
-                <TextField label="City" fullWidth {...field('city')} />
+                <TextField
+                  label="City"
+                  fullWidth
+                  {...field('city')}
+                  error={!!errors.city}
+                  helperText={errors.city?.message}
+                />
               </Grid>
               <Grid item xs={6} sm={3}>
-                <TextField label="Province" fullWidth {...field('province')} />
+                <TextField
+                  label="Province"
+                  fullWidth
+                  {...field('province')}
+                  error={!!errors.province}
+                  helperText={errors.province?.message}
+                />
               </Grid>
               <Grid item xs={6} sm={3}>
-                <TextField label="Postal code" fullWidth {...field('postalCode')} />
+                <TextField
+                  label="Postal code"
+                  fullWidth
+                  placeholder="M4B 1B3"
+                  {...field('postalCode')}
+                  error={!!errors.postalCode}
+                  helperText={errors.postalCode?.message}
+                />
               </Grid>
               <Grid item xs={6} sm={3}>
                 <TextField label="Country" fullWidth {...field('country')} />
@@ -304,7 +391,24 @@ export function RegisterPage() {
                 <TextField label="Emergency contact name" fullWidth {...field('emergencyContactName')} />
               </Grid>
               <Grid item xs={12} sm={6}>
-                <TextField label="Emergency contact phone" fullWidth {...field('emergencyContactPhone')} />
+                {(() => {
+                  const reg = field('emergencyContactPhone');
+                  return (
+                    <TextField
+                      label="Emergency contact phone"
+                      fullWidth
+                      placeholder="(416)-555-1234"
+                      {...reg}
+                      onChange={(e) => {
+                        e.target.value = formatPhone(e.target.value);
+                        reg.onChange(e);
+                      }}
+                      inputProps={{ maxLength: 14 }}
+                      error={!!errors.emergencyContactPhone}
+                      helperText={errors.emergencyContactPhone?.message}
+                    />
+                  );
+                })()}
               </Grid>
 
               <Grid item xs={12}>

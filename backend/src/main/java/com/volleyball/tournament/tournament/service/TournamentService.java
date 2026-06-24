@@ -89,6 +89,7 @@ public class TournamentService {
         t.setTargetRosterSize(orDefault(req.targetRosterSize(), t.getTargetRosterSize()));
         t.setCaptainCountsInRoster(orDefault(req.captainCountsInRoster(), t.isCaptainCountsInRoster()));
         t.setRegistrationOpen(orDefault(req.registrationOpen(), t.isRegistrationOpen()));
+        t.setRegistrationDeadline(req.registrationDeadline());
         t.setStatus(Optional.ofNullable(req.status()).orElse(t.getStatus() == null
                 ? TournamentStatus.SETUP : t.getStatus()));
     }

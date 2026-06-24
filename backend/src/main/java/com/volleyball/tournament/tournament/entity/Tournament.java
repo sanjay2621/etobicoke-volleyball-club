@@ -61,6 +61,9 @@ public class Tournament extends BaseEntity {
     @Column(name = "registration_open", nullable = false)
     private boolean registrationOpen = true;
 
+    @Column(name = "registration_deadline")
+    private LocalDate registrationDeadline;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
     private TournamentStatus status = TournamentStatus.SETUP;

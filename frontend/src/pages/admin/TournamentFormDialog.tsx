@@ -31,6 +31,7 @@ const schema = z.object({
   name: z.string().min(1, 'Required'),
   date: z.string().min(1, 'Required'),
   startTime: z.string().min(1, 'Required'),
+  registrationDeadline: z.string().optional(),
   venue: z.string().optional(),
   numberOfCourts: z.coerce.number().int().min(1).max(50),
   breakMinutes: z.coerce.number().int().min(0).max(60),
@@ -46,6 +47,7 @@ const DEFAULTS: FormValues = {
   name: '',
   date: '',
   startTime: '08:00',
+  registrationDeadline: '',
   venue: '',
   numberOfCourts: 4,
   breakMinutes: 10,
@@ -81,6 +83,7 @@ export function TournamentFormDialog({
               name: tournament.name,
               date: tournament.date,
               startTime: tournament.startTime?.slice(0, 5),
+              registrationDeadline: tournament.registrationDeadline ?? '',
               venue: tournament.venue ?? '',
               numberOfCourts: tournament.numberOfCourts,
               breakMinutes: tournament.breakMinutes,
@@ -95,7 +98,11 @@ export function TournamentFormDialog({
   }, [open, tournament, reset]);
 
   async function onSubmit(values: FormValues) {
-    const body = { ...values, startTime: `${values.startTime}:00` };
+    const body = {
+      ...values,
+      startTime: `${values.startTime}:00`,
+      registrationDeadline: values.registrationDeadline || null,
+    };
     if (tournament) {
       await update.mutateAsync({ id: tournament.id, body });
     } else {
@@ -141,6 +148,16 @@ export function TournamentFormDialog({
                 helperText={errors.startTime?.message}
               />
             </Grid>
+            <Grid item xs={6}>
+              <TextField
+                label="Registration deadline"
+                type="date"
+                fullWidth
+                InputLabelProps={{ shrink: true }}
+                {...register('registrationDeadline')}
+              />
+            </Grid>
+            <Grid item xs={6} />
             <Grid item xs={12}>
               <TextField label="Venue" fullWidth {...register('venue')} />
             </Grid>

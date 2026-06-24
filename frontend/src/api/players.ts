@@ -57,3 +57,16 @@ export function useDeletePlayer() {
     onSuccess: () => qc.invalidateQueries({ queryKey: ['players'] }),
   });
 }
+
+export function useUploadPlayerPhoto() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, photo }: { id: number; photo: File }) => {
+      const form = new FormData();
+      form.append('photo', photo);
+      const res = await api.post<Player>(`/players/${id}/photo`, form);
+      return fixPlayer(res.data);
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['players'] }),
+  });
+}

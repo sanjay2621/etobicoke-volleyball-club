@@ -21,5 +21,6 @@ public record TournamentResponse(
         boolean captainCountsInRoster,
         int draftRounds,
         boolean registrationOpen,
+        LocalDate registrationDeadline,
         TournamentStatus status) {
 }

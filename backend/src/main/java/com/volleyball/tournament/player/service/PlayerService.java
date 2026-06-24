@@ -182,6 +182,13 @@ public class PlayerService {
         playerRepository.save(player);
     }
 
+    @Transactional
+    public PlayerResponse uploadPhoto(Long id, MultipartFile photo) {
+        Player player = getEntity(id);
+        player.setPhotoPath(fileStorageService.storePhoto(photo, player.getTournamentId()));
+        return toResponse(playerRepository.save(player));
+    }
+
     @Transactional(readOnly = true)
     public PhotoData getPhoto(Long id) {
         Player player = getEntity(id);

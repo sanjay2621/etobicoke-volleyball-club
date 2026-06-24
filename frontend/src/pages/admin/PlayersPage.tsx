@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   Avatar,
   Box,
@@ -17,15 +17,17 @@ import {
   TableHead,
   TableRow,
   TextField,
+  Tooltip,
   Typography,
 } from '@mui/material';
 import { green } from '@mui/material/colors';
+import AddPhotoAlternateIcon from '@mui/icons-material/AddPhotoAlternate';
 import DeleteIcon from '@mui/icons-material/Delete';
 import DownloadIcon from '@mui/icons-material/Download';
 import EditIcon from '@mui/icons-material/Edit';
 import SearchIcon from '@mui/icons-material/Search';
 import { useActiveTournaments } from '../../api/tournaments';
-import { useDeletePlayer, usePlayers } from '../../api/players';
+import { useDeletePlayer, usePlayers, useUploadPlayerPhoto } from '../../api/players';
 import { useTeams } from '../../api/teams';
 import { downloadFile } from '../../api/client';
 import type { Player } from '../../types';
@@ -37,6 +39,9 @@ export function PlayersPage() {
   const { data: players, isLoading } = usePlayers(tournamentId);
   const { data: teams } = useTeams(tournamentId);
   const del = useDeletePlayer();
+  const uploadPhoto = useUploadPlayerPhoto();
+  const photoInputRef = useRef<HTMLInputElement>(null);
+  const [uploadingId, setUploadingId] = useState<number | null>(null);
   const [editing, setEditing] = useState<Player | null>(null);
   const [search, setSearch] = useState('');
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
@@ -154,11 +159,35 @@ export function PlayersPage() {
                 sx={{ bgcolor: assignedIds.has(p.id) ? green[50] : undefined }}
               >
                 <TableCell>
-                  <Avatar
-                    src={p.photoUrl ?? undefined}
-                    sx={{ width: 32, height: 32, cursor: p.photoUrl ? 'pointer' : 'default' }}
-                    onClick={() => p.photoUrl && setPreviewUrl(p.photoUrl)}
-                  />
+                  <Box sx={{ position: 'relative', display: 'inline-flex' }}>
+                    <Avatar
+                      src={p.photoUrl ?? undefined}
+                      sx={{ width: 32, height: 32, cursor: p.photoUrl ? 'pointer' : 'default' }}
+                      onClick={() => p.photoUrl && setPreviewUrl(p.photoUrl)}
+                    />
+                    <Tooltip title="Upload photo">
+                      <IconButton
+                        size="small"
+                        sx={{
+                          position: 'absolute',
+                          bottom: -3,
+                          right: -3,
+                          p: 0,
+                          width: 16,
+                          height: 16,
+                          bgcolor: 'primary.main',
+                          color: 'white',
+                          '&:hover': { bgcolor: 'primary.dark' },
+                        }}
+                        onClick={() => {
+                          setUploadingId(p.id);
+                          photoInputRef.current?.click();
+                        }}
+                      >
+                        <AddPhotoAlternateIcon sx={{ fontSize: 11 }} />
+                      </IconButton>
+                    </Tooltip>
+                  </Box>
                 </TableCell>
                 <TableCell>{p.fullName}</TableCell>
                 <TableCell>
@@ -200,6 +229,21 @@ export function PlayersPage() {
           </TableBody>
         </Table>
       </TableContainer>
+
+      <input
+        type="file"
+        accept="image/*"
+        hidden
+        ref={photoInputRef}
+        onChange={async (e) => {
+          const file = e.target.files?.[0];
+          if (file && uploadingId != null) {
+            await uploadPhoto.mutateAsync({ id: uploadingId, photo: file });
+          }
+          e.target.value = '';
+          setUploadingId(null);
+        }}
+      />
 
       <PlayerEditDialog player={editing} onClose={() => setEditing(null)} />
 

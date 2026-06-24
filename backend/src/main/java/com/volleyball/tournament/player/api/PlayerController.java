@@ -95,6 +95,15 @@ public class PlayerController {
         return ResponseEntity.noContent().build();
     }
 
+    /** Admin uploads or replaces a player's photo (for players who registered without one). */
+    @PostMapping(value = "/{id}/photo", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PreAuthorize("hasRole('ADMIN')")
+    public PlayerResponse uploadPhoto(
+            @PathVariable Long id,
+            @RequestPart("photo") MultipartFile photo) {
+        return playerService.uploadPhoto(id, photo);
+    }
+
     /** Public photo endpoint (referenced by PlayerResponse.photoUrl). */
     @GetMapping("/{id}/photo")
     public ResponseEntity<byte[]> photo(@PathVariable Long id) {

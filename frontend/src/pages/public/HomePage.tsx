@@ -72,11 +72,23 @@ export function HomePage() {
           <Typography variant="h2" gutterBottom>
             Game on. Register your spot.
           </Typography>
-          <Typography variant="h6" sx={{ opacity: 0.85, mb: 4, fontWeight: 400 }}>
+          <Typography variant="h6" sx={{ opacity: 0.85, mb: featured?.registrationDeadline ? 1 : 4, fontWeight: 400 }}>
             {featured
               ? `${featured.name} — ${new Date(featured.date).toLocaleDateString()} at ${featured.startTime?.slice(0, 5)}`
               : 'Sign up, get drafted, and hit the court.'}
           </Typography>
+          {featured?.registrationDeadline && (
+            <Typography variant="body1" sx={{ opacity: 0.75, mb: 4, fontWeight: 400 }}>
+              Registration deadline:{' '}
+              <strong>
+                {new Date(featured.registrationDeadline).toLocaleDateString('en-CA', {
+                  year: 'numeric',
+                  month: 'long',
+                  day: 'numeric',
+                })}
+              </strong>
+            </Typography>
+          )}
           <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
             <Button size="large" variant="contained" color="secondary" component={RouterLink} to="/register">
               Register to play

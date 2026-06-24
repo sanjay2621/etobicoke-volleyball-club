@@ -1,0 +1,1 @@
+ALTER TABLE tournament ADD COLUMN registration_deadline DATE NULL;
