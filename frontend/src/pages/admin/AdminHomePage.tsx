@@ -5,6 +5,7 @@ import { usePlayers } from '../../api/players';
 import { useTeams } from '../../api/teams';
 import { useSchedule } from '../../api/schedule';
 import { useDraftState } from '../../api/draft';
+import styles from './AdminHomePage.module.css';
 
 function StatCard({ label, value, hint }: { label: string; value: string | number; hint?: string }) {
   return (
@@ -55,7 +56,7 @@ export function AdminHomePage() {
           label="Tournament"
           value={tournamentId ?? ''}
           onChange={(e) => setTournamentId(Number(e.target.value))}
-          sx={{ minWidth: 240 }}
+          className={styles.tournamentSelect}
         >
           {tournaments?.map((t) => (
             <MenuItem key={t.id} value={t.id}>

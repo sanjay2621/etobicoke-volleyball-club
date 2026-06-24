@@ -13,6 +13,7 @@ import {
   Typography,
 } from '@mui/material';
 import { useAuth } from '../../auth/AuthContext';
+import styles from './ForgotPasswordPage.module.css';
 
 export function ForgotPasswordPage() {
   const [params] = useSearchParams();
@@ -38,18 +39,18 @@ export function ForgotPasswordPage() {
   }
 
   return (
-    <Box sx={{ minHeight: '100vh', display: 'grid', placeItems: 'center', bgcolor: 'background.default' }}>
+    <Box className={styles.root}>
       <Container maxWidth="xs">
         <Card>
           <CardContent>
             <Typography variant="h4" gutterBottom>
               Reset password
             </Typography>
-            <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+            <Typography variant="body2" color="text.secondary" className={styles.subtitle}>
               Enter the email you registered with and choose a new password.
             </Typography>
             {error && (
-              <Alert severity="error" sx={{ mb: 2 }}>
+              <Alert severity="error" className={styles.alert}>
                 {error}
               </Alert>
             )}
@@ -79,13 +80,13 @@ export function ForgotPasswordPage() {
                 color="secondary"
                 fullWidth
                 size="large"
-                sx={{ mt: 2 }}
+                className={styles.submitBtn}
                 disabled={submitting}
               >
                 {submitting ? 'Resetting…' : 'Reset password'}
               </Button>
             </Box>
-            <Stack direction="row" justifyContent="center" sx={{ mt: 2 }}>
+            <Stack direction="row" justifyContent="center" className={styles.linksRow}>
               <Link component={RouterLink} to="/login" variant="body2">
                 Back to log in
               </Link>

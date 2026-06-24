@@ -21,6 +21,7 @@ import {
 import StarIcon from '@mui/icons-material/Star';
 import { useActiveTournaments } from '../../api/tournaments';
 import { useDraftState, usePick, useStartDraft } from '../../api/draft';
+import styles from './DraftPage.module.css';
 
 export function DraftPage() {
   const { data: tournaments } = useActiveTournaments();
@@ -70,7 +71,7 @@ export function DraftPage() {
             label="Tournament"
             value={tournamentId ?? ''}
             onChange={(e) => setTournamentId(Number(e.target.value))}
-            sx={{ minWidth: 220 }}
+            className={styles.tournamentSelect}
           >
             {tournaments?.map((t) => (
               <MenuItem key={t.id} value={t.id}>
@@ -87,13 +88,13 @@ export function DraftPage() {
       </Stack>
 
       {error && (
-        <Alert severity="error" sx={{ mb: 2 }}>
+        <Alert severity="error" className={styles.errorAlert}>
           {error}
         </Alert>
       )}
 
       {draft && (
-        <Paper sx={{ p: 2, mb: 2 }} variant="outlined">
+        <Paper className={styles.statusPaper} variant="outlined">
           {inProgress && (
             <Typography variant="h6">
               Round {draft.currentRound} / {draft.totalRounds} — on the clock:{' '}
@@ -120,7 +121,7 @@ export function DraftPage() {
                 <Grid item xs={12} sm={6} key={team.id}>
                   <Card
                     variant="outlined"
-                    sx={{ borderColor: onClock ? 'secondary.main' : undefined, borderWidth: onClock ? 2 : 1 }}
+                    className={onClock ? styles.teamCardOnClock : ''}
                   >
                     <CardContent>
                       <Stack direction="row" justifyContent="space-between" alignItems="center">
@@ -160,7 +161,7 @@ export function DraftPage() {
                 <Typography variant="h6" gutterBottom>
                   Available players ({draftable.length})
                 </Typography>
-                <Paper variant="outlined" sx={{ maxHeight: '70vh', overflow: 'auto' }}>
+                <Paper variant="outlined" className={styles.availableList}>
                   <List dense>
                     {draftable.map((p) => (
                       <ListItem
@@ -177,7 +178,7 @@ export function DraftPage() {
                         }
                       >
                         <ListItemAvatar>
-                          <Avatar src={p.photoUrl ?? undefined} sx={{ width: 32, height: 32 }} />
+                          <Avatar src={p.photoUrl ?? undefined} className={styles.avatar} />
                         </ListItemAvatar>
                         <ListItemText
                           primary={p.fullName}

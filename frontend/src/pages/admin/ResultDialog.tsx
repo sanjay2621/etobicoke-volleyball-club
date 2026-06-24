@@ -15,6 +15,7 @@ import AddIcon from '@mui/icons-material/Add';
 import DeleteIcon from '@mui/icons-material/Delete';
 import type { MatchResponse, MatchSetDto } from '../../types';
 import { useRecordResult } from '../../api/schedule';
+import styles from './ResultDialog.module.css';
 
 export function ResultDialog({
   match,
@@ -56,14 +57,14 @@ export function ResultDialog({
     <Dialog open={!!match} onClose={onClose} maxWidth="xs" fullWidth>
       <DialogTitle>Enter result</DialogTitle>
       <DialogContent>
-        <Stack direction="row" justifyContent="space-between" mb={1}>
+        <Stack direction="row" justifyContent="space-between" className={styles.teamsHeader}>
           <Typography fontWeight={700}>{match.homeTeamName ?? 'Home'}</Typography>
           <Typography color="text.secondary">vs</Typography>
           <Typography fontWeight={700}>{match.awayTeamName ?? 'Away'}</Typography>
         </Stack>
         {sets.map((s, i) => (
-          <Stack key={i} direction="row" spacing={1} alignItems="center" sx={{ mb: 1 }}>
-            <Typography sx={{ width: 48 }}>Set {s.setNumber}</Typography>
+          <Stack key={i} direction="row" spacing={1} alignItems="center" className={styles.setRow}>
+            <Typography className={styles.setLabel}>Set {s.setNumber}</Typography>
             <TextField
               size="small"
               type="number"

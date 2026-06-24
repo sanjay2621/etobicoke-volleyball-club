@@ -1,0 +1,31 @@
+.tournamentSelect {
+  min-width: 200px;
+}
+
+.errorAlert {
+  margin-bottom: 16px;
+}
+
+.playoffsHeading {
+  margin-top: 24px;
+}
+
+.matchCellBold {
+  font-weight: 700;
+}
+
+.matchCellNormal {
+  font-weight: 400;
+}
+
+.bracketChip {
+  margin-top: 4px;
+}
+
+.standingsGroup {
+  margin-bottom: 24px;
+}
+
+.topTwoRow {
+  background-color: rgba(0, 0, 0, 0.04);
+}

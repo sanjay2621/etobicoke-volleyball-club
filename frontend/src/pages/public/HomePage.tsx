@@ -33,6 +33,7 @@ import { useActivePublicTournaments } from '../../api/tournaments';
 import { usePublicTeams } from '../../api/teams';
 import { usePublicSchedule, usePublicStandings } from '../../api/schedule';
 import type { MatchResponse, PublicTeam, StandingGroup, Tournament } from '../../types';
+import styles from './HomePage.module.css';
 
 export function HomePage() {
   const { data: tournaments } = useActivePublicTournaments();
@@ -48,11 +49,11 @@ export function HomePage() {
   const featured: Tournament | undefined = sorted.find((t) => t.id === tournamentId) ?? sorted[0];
 
   return (
-    <Box sx={{ minHeight: '100vh', bgcolor: 'background.default' }}>
+    <Box className={styles.root}>
       <AppBar position="static" color="primary" elevation={0}>
         <Toolbar>
-          <SportsVolleyballIcon sx={{ mr: 1 }} />
-          <Typography variant="h6" sx={{ flexGrow: 1, fontFamily: 'Poppins' }}>
+          <SportsVolleyballIcon className={styles.appBarIcon} />
+          <Typography variant="h6" className={styles.appBarTitle}>
             Etobicoke Volleyball Club
           </Typography>
           <Button color="inherit" component={RouterLink} to="/login">
@@ -61,60 +62,35 @@ export function HomePage() {
         </Toolbar>
       </AppBar>
 
-      <Box
-        sx={{
-          background: 'linear-gradient(135deg, #0F1D35 0%, #1A2B4A 40%, #1E3A6E 75%, #2C4A7A 100%)',
-          color: 'common.white',
-          py: { xs: 8, md: 12 },
-          position: 'relative',
-          overflow: 'hidden',
-        }}
-      >
+      <Box className={styles.hero}>
         {/* Decorative volleyball shapes */}
-        <SportsVolleyballIcon
-          sx={{ position: 'absolute', right: { xs: -60, md: 40 }, top: '50%', transform: 'translateY(-50%)', fontSize: { xs: 280, md: 420 }, opacity: 0.07, color: 'white', pointerEvents: 'none' }}
-        />
-        <SportsVolleyballIcon
-          sx={{ position: 'absolute', left: { xs: -80, md: -40 }, bottom: -60, fontSize: { xs: 200, md: 300 }, opacity: 0.05, color: 'white', pointerEvents: 'none' }}
-        />
-        <SportsVolleyballIcon
-          sx={{ position: 'absolute', left: '45%', top: -40, fontSize: 140, opacity: 0.04, color: 'white', pointerEvents: 'none' }}
-        />
+        <SportsVolleyballIcon className={styles.heroDecor1} />
+        <SportsVolleyballIcon className={styles.heroDecor2} />
+        <SportsVolleyballIcon className={styles.heroDecor3} />
 
-        <Container maxWidth="md" sx={{ position: 'relative', zIndex: 1 }}>
-          <Box
-            sx={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: 1,
-              bgcolor: 'rgba(255,255,255,0.12)',
-              borderRadius: 5,
-              px: 2,
-              py: 0.5,
-              mb: 3,
-            }}
-          >
-            <SportsVolleyballIcon sx={{ fontSize: 18 }} />
-            <Typography variant="caption" fontWeight={600} letterSpacing={1} sx={{ textTransform: 'uppercase' }}>
+        <Container maxWidth="md" className={styles.heroContainer}>
+          <Box className={styles.heroPill}>
+            <SportsVolleyballIcon className={styles.heroPillIcon} />
+            <Typography variant="caption" fontWeight={600} letterSpacing={1} className={styles.heroPillText}>
               Etobicoke Volleyball Club
             </Typography>
           </Box>
 
-          <Typography variant="h2" fontWeight={900} letterSpacing={-1} gutterBottom sx={{ lineHeight: 1.1 }}>
+          <Typography variant="h2" fontWeight={900} letterSpacing={-1} gutterBottom className={styles.heroHeading}>
             Game on.{' '}
-            <Box component="span" sx={{ color: '#F97316' }}>
+            <Box component="span" className={styles.heroAccent}>
               Register
             </Box>{' '}
             your spot.
           </Typography>
 
-          <Typography variant="h6" sx={{ opacity: 0.85, mb: featured?.registrationDeadline ? 1 : 4, fontWeight: 400, maxWidth: 540 }}>
+          <Typography variant="h6" className={featured?.registrationDeadline ? styles.heroSubtextWithDeadline : styles.heroSubtext}>
             {featured
               ? `${featured.name} — ${new Date(featured.date).toLocaleDateString()} at ${featured.startTime?.slice(0, 5)}`
               : 'Sign up, get drafted, and hit the court.'}
           </Typography>
           {featured?.registrationDeadline && (
-            <Typography variant="body1" sx={{ opacity: 0.75, mb: 4, fontWeight: 400 }}>
+            <Typography variant="body1" className={styles.heroDeadlineText}>
               Registration deadline:{' '}
               <strong>
                 {new Date(featured.registrationDeadline).toLocaleDateString('en-CA', {
@@ -131,12 +107,12 @@ export function HomePage() {
               variant="contained"
               component={RouterLink}
               to="/register"
-              sx={{ bgcolor: '#F97316', '&:hover': { bgcolor: '#EA6C0A' }, fontWeight: 700, px: 4 }}
+              className={styles.heroRegisterBtn}
             >
               Register to play
             </Button>
             <Button size="large" variant="outlined" color="inherit" component={RouterLink} to="/login"
-              sx={{ borderColor: 'rgba(255,255,255,0.5)', '&:hover': { borderColor: 'white', bgcolor: 'rgba(255,255,255,0.08)' } }}
+              className={styles.heroLoginBtn}
             >
               View my team
             </Button>
@@ -144,7 +120,7 @@ export function HomePage() {
         </Container>
       </Box>
 
-      <Container maxWidth="lg" sx={{ py: 5 }}>
+      <Container maxWidth="lg" className={styles.contentContainer}>
         {sorted.length === 0 ? (
           <Typography color="text.secondary">No tournaments published yet — check back soon.</Typography>
         ) : (
@@ -166,7 +142,7 @@ export function HomePage() {
                   setSelectedId(Number(e.target.value));
                   setTab(0);
                 }}
-                sx={{ minWidth: 240 }}
+                className={styles.tournamentSelect}
               >
                 {sorted.map((t) => (
                   <MenuItem key={t.id} value={t.id}>
@@ -176,7 +152,7 @@ export function HomePage() {
               </TextField>
             </Stack>
 
-            <Tabs value={tab} onChange={(_, v) => setTab(v)} sx={{ mb: 3 }}>
+            <Tabs value={tab} onChange={(_, v) => setTab(v)} className={styles.tabs}>
               <Tab label="Teams" />
               <Tab label="Schedule & Results" />
               <Tab label="Standings" />
@@ -211,7 +187,7 @@ function TeamsSection({ tournamentId }: { tournamentId: number | null }) {
 
 function TeamCard({ team }: { team: PublicTeam }) {
   return (
-    <Card sx={{ height: '100%' }}>
+    <Card className={styles.teamCard}>
       <CardContent>
         <Stack direction="row" justifyContent="space-between" alignItems="center" mb={1}>
           <Typography variant="h6">{team.name}</Typography>
@@ -225,7 +201,7 @@ function TeamCard({ team }: { team: PublicTeam }) {
           )}
           {team.members.map((m) => (
             <Stack key={m.playerId} direction="row" spacing={1.5} alignItems="center">
-              <Avatar src={m.photoUrl ?? undefined} sx={{ width: 32, height: 32 }} />
+              <Avatar src={m.photoUrl ?? undefined} className={styles.memberAvatar} />
               <Typography>{m.fullName}</Typography>
               {m.captain && (
                 <Tooltip title="Captain">
@@ -236,7 +212,7 @@ function TeamCard({ team }: { team: PublicTeam }) {
           ))}
         </Stack>
         {team.refereeName && (
-          <Stack direction="row" spacing={1} alignItems="center" mt={1.5} pt={1.5} sx={{ borderTop: 1, borderColor: 'divider' }}>
+          <Stack direction="row" spacing={1} alignItems="center" mt={1.5} pt={1.5} className={styles.refereeSection}>
             <SportsIcon fontSize="small" color="action" />
             <Typography variant="body2" color="text.secondary">
               Referee: <strong>{team.refereeName}</strong>
@@ -272,7 +248,7 @@ function ScheduleSection({ tournamentId }: { tournamentId: number | null }) {
       <MatchTable matches={pool} showGroup />
       {bracket.length > 0 && (
         <>
-          <Typography variant="h6" gutterBottom sx={{ mt: 3 }}>
+          <Typography variant="h6" gutterBottom className={styles.playoffsHeading}>
             Playoffs
           </Typography>
           <MatchTable matches={bracket} />
@@ -307,13 +283,13 @@ function MatchTable({ matches, showGroup }: { matches: MatchResponse[]; showGrou
                 <TableCell>{m.court ?? '—'}</TableCell>
                 {showGroup && <TableCell>{m.groupLabel}</TableCell>}
                 <TableCell>
-                  <Box sx={{ fontWeight: m.winnerTeamId === m.homeTeamId ? 700 : 400 }}>
+                  <Box className={m.winnerTeamId === m.homeTeamId ? styles.matchCellBold : styles.matchCellNormal}>
                     {m.homeTeamName ?? 'TBD'}
                   </Box>
-                  <Box sx={{ fontWeight: m.winnerTeamId === m.awayTeamId ? 700 : 400 }}>
+                  <Box className={m.winnerTeamId === m.awayTeamId ? styles.matchCellBold : styles.matchCellNormal}>
                     {m.awayTeamName ?? 'TBD'}
                   </Box>
-                  {m.bracketSlot && <Chip size="small" label={m.bracketSlot} sx={{ mt: 0.5 }} />}
+                  {m.bracketSlot && <Chip size="small" label={m.bracketSlot} className={styles.bracketChip} />}
                 </TableCell>
                 <TableCell>{scoreLabel(m)}</TableCell>
               </TableRow>
@@ -362,7 +338,7 @@ function StandingsTable({ group }: { group: StandingGroup }) {
           </TableHead>
           <TableBody>
             {group.rows.map((r) => (
-              <TableRow key={r.teamId} sx={{ bgcolor: r.rank <= 2 ? 'action.hover' : undefined }}>
+              <TableRow key={r.teamId} className={r.rank <= 2 ? styles.topTwoRow : ''}>
                 <TableCell>{r.rank}</TableCell>
                 <TableCell>{r.teamName}</TableCell>
                 <TableCell align="right">{r.wins}</TableCell>

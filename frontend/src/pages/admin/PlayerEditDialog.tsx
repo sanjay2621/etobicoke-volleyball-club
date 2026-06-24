@@ -16,6 +16,7 @@ import {
 import { POSITIONS, SKILL_LEVELS, TSHIRT_SIZES } from '../../types';
 import type { Player, Position } from '../../types';
 import { useUpdatePlayer } from '../../api/players';
+import styles from './PlayerEditDialog.module.css';
 
 export function PlayerEditDialog({
   player,
@@ -75,7 +76,7 @@ export function PlayerEditDialog({
     <Dialog open={!!player} onClose={onClose} maxWidth="sm" fullWidth>
       <DialogTitle>Edit player</DialogTitle>
       <DialogContent>
-        <Grid container spacing={2} sx={{ mt: 0 }}>
+        <Grid container spacing={2} className={styles.gridContainer}>
           <Grid item xs={4}>
             <TextField label="First name" fullWidth value={form.firstName}
               onChange={(e) => set({ firstName: e.target.value })} />
@@ -117,7 +118,7 @@ export function PlayerEditDialog({
                       setPosError(false);
                     }}
                     size="small"
-                    sx={{ flexWrap: 'wrap', gap: 0.5 }}
+                    className={styles.positionsGroup}
                   >
                     {POSITIONS.map((p) => (
                       <ToggleButton key={p} value={p} disabled={isReferee && p !== 'REFEREE'}>

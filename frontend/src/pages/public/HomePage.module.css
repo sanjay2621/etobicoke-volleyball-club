@@ -1,0 +1,197 @@
+/* Root */
+.root {
+  min-height: 100vh;
+  background-color: #F7F9FC;
+}
+
+/* AppBar */
+.appBarIcon {
+  margin-right: 8px;
+}
+
+.appBarTitle {
+  flex-grow: 1;
+  font-family: 'Poppins', sans-serif;
+}
+
+/* Hero */
+.hero {
+  background: linear-gradient(135deg, #0F1D35 0%, #1A2B4A 40%, #1E3A6E 75%, #2C4A7A 100%);
+  color: white;
+  padding: 64px 0;
+  position: relative;
+  overflow: hidden;
+}
+
+@media (min-width: 900px) {
+  .hero {
+    padding: 96px 0;
+  }
+}
+
+.heroDecor1 {
+  position: absolute;
+  right: -60px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 280px !important;
+  opacity: 0.07;
+  color: white;
+  pointer-events: none;
+}
+
+@media (min-width: 900px) {
+  .heroDecor1 {
+    right: 40px;
+    font-size: 420px !important;
+  }
+}
+
+.heroDecor2 {
+  position: absolute;
+  left: -80px;
+  bottom: -60px;
+  font-size: 200px !important;
+  opacity: 0.05;
+  color: white;
+  pointer-events: none;
+}
+
+@media (min-width: 900px) {
+  .heroDecor2 {
+    left: -40px;
+    font-size: 300px !important;
+  }
+}
+
+.heroDecor3 {
+  position: absolute;
+  left: 45%;
+  top: -40px;
+  font-size: 140px !important;
+  opacity: 0.04;
+  color: white;
+  pointer-events: none;
+}
+
+.heroContainer {
+  position: relative;
+  z-index: 1;
+}
+
+.heroPill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background-color: rgba(255, 255, 255, 0.12);
+  border-radius: 40px;
+  padding: 4px 16px;
+  margin-bottom: 24px;
+}
+
+.heroPillIcon {
+  font-size: 18px !important;
+}
+
+.heroPillText {
+  text-transform: uppercase;
+}
+
+.heroHeading {
+  line-height: 1.1;
+}
+
+.heroAccent {
+  color: #F97316;
+}
+
+.heroSubtext {
+  opacity: 0.85;
+  font-weight: 400;
+  max-width: 540px;
+  margin-bottom: 32px;
+}
+
+.heroSubtextWithDeadline {
+  opacity: 0.85;
+  font-weight: 400;
+  max-width: 540px;
+  margin-bottom: 8px;
+}
+
+.heroDeadlineText {
+  opacity: 0.75;
+  font-weight: 400;
+  margin-bottom: 32px;
+}
+
+.heroRegisterBtn {
+  background-color: #F97316 !important;
+  font-weight: 700;
+  padding: 0 32px;
+}
+
+.heroRegisterBtn:hover {
+  background-color: #EA6C0A !important;
+}
+
+.heroLoginBtn {
+  border-color: rgba(255, 255, 255, 0.5) !important;
+}
+
+.heroLoginBtn:hover {
+  border-color: white !important;
+  background-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+/* Content */
+.contentContainer {
+  padding-top: 40px;
+  padding-bottom: 40px;
+}
+
+.tournamentSelect {
+  min-width: 240px;
+}
+
+.tabs {
+  margin-bottom: 24px;
+}
+
+/* TeamCard */
+.teamCard {
+  height: 100%;
+}
+
+.memberAvatar {
+  width: 32px;
+  height: 32px;
+}
+
+.refereeSection {
+  border-top: 1px solid rgba(0, 0, 0, 0.12);
+  padding-top: 12px;
+  margin-top: 12px;
+}
+
+/* MatchTable */
+.matchCellBold {
+  font-weight: 700;
+}
+
+.matchCellNormal {
+  font-weight: 400;
+}
+
+.bracketChip {
+  margin-top: 4px;
+}
+
+.playoffsHeading {
+  margin-top: 24px;
+}
+
+/* StandingsTable */
+.topTwoRow {
+  background-color: rgba(0, 0, 0, 0.04);
+}

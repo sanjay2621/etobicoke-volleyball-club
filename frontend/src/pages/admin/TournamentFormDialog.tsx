@@ -18,6 +18,7 @@ import {
   useUpdateTournament,
 } from '../../api/tournaments';
 import type { Tournament, TournamentStatus } from '../../types';
+import styles from './TournamentFormDialog.module.css';
 
 const STATUSES: TournamentStatus[] = [
   'SETUP',
@@ -125,11 +126,11 @@ export function TournamentFormDialog({
         <DialogTitle>{tournament ? 'Edit tournament' : 'New tournament'}</DialogTitle>
         <DialogContent>
           {submitError && (
-            <Alert severity="error" sx={{ mb: 2 }}>
+            <Alert severity="error" className={styles.errorAlert}>
               {submitError}
             </Alert>
           )}
-          <Grid container spacing={2} sx={{ mt: 0 }}>
+          <Grid container spacing={2} className={styles.gridContainer}>
             <Grid item xs={12}>
               <TextField
                 label="Tournament name"

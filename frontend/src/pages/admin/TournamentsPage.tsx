@@ -14,6 +14,7 @@ import {
   TableRow,
   Typography,
 } from '@mui/material';
+import styles from './TournamentsPage.module.css';
 import AddIcon from '@mui/icons-material/Add';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
@@ -70,7 +71,7 @@ export function TournamentsPage() {
             {tournaments?.length === 0 && (
               <TableRow>
                 <TableCell colSpan={6}>
-                  <Box py={2} color="text.secondary">
+                  <Box className={styles.emptyCell}>
                     No tournaments yet. Create your first one.
                   </Box>
                 </TableCell>

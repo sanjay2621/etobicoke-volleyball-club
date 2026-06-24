@@ -27,6 +27,7 @@ import { POSITIONS, SKILL_LEVELS, TSHIRT_SIZES } from '../../types';
 import type { Position } from '../../types';
 import { useActivePublicTournaments } from '../../api/tournaments';
 import { useRegisterPlayer } from '../../api/players';
+import styles from './RegisterPage.module.css';
 
 function formatPhone(v: string): string {
   const d = v.replace(/\D/g, '').slice(0, 10);
@@ -166,7 +167,7 @@ export function RegisterPage() {
 
   if (doneEmail) {
     return (
-      <Container maxWidth="sm" sx={{ py: 8 }}>
+      <Container maxWidth="sm" className={styles.successContainer}>
         <Card>
           <CardContent>
             <Typography variant="h4" gutterBottom>
@@ -189,34 +190,22 @@ export function RegisterPage() {
   }
 
   return (
-    <Box sx={{ minHeight: '100vh' }}>
+    <Box className={styles.root}>
       {/* Banner */}
-      <Box
-        sx={{
-          background: 'linear-gradient(135deg, #0F1D35 0%, #1A2B4A 45%, #2C4A7A 100%)',
-          color: 'common.white',
-          py: { xs: 5, md: 7 },
-          position: 'relative',
-          overflow: 'hidden',
-        }}
-      >
-        <SportsVolleyballIcon
-          sx={{ position: 'absolute', right: { xs: -40, md: 80 }, top: '50%', transform: 'translateY(-50%)', fontSize: { xs: 200, md: 320 }, opacity: 0.07, color: 'white' }}
-        />
-        <SportsVolleyballIcon
-          sx={{ position: 'absolute', left: -50, bottom: -40, fontSize: 220, opacity: 0.05, color: 'white' }}
-        />
-        <Container maxWidth="md" sx={{ position: 'relative', zIndex: 1 }}>
-          <Button component={RouterLink} to="/" sx={{ color: 'rgba(255,255,255,0.75)', mb: 2, '&:hover': { color: 'white' } }}>
+      <Box className={styles.banner}>
+        <SportsVolleyballIcon className={styles.bannerDecorRight} />
+        <SportsVolleyballIcon className={styles.bannerDecorLeft} />
+        <Container maxWidth="md" className={styles.bannerContainer}>
+          <Button component={RouterLink} to="/" className={styles.homeLink}>
             ← Home
           </Button>
           <Stack direction="row" alignItems="center" spacing={2}>
-            <SportsVolleyballIcon sx={{ fontSize: 48, opacity: 0.9 }} />
+            <SportsVolleyballIcon className={styles.bannerMainIcon} />
             <Box>
               <Typography variant="h3" fontWeight={800} letterSpacing={-0.5}>
                 Register to Play
               </Typography>
-              <Typography variant="body1" sx={{ opacity: 0.8, mt: 0.5 }}>
+              <Typography variant="body1" className={styles.bannerSubtext}>
                 Etobicoke Volleyball Club — fill in your details below to secure your spot.
               </Typography>
             </Box>
@@ -225,24 +214,17 @@ export function RegisterPage() {
       </Box>
 
       {/* Form area with light volleyball background */}
-      <Box
-        sx={{
-          background: 'linear-gradient(160deg, #EEF4FF 0%, #E8F0FE 50%, #F0EEFF 100%)',
-          position: 'relative',
-          overflow: 'hidden',
-          pb: 6,
-        }}
-      >
-        <SportsVolleyballIcon sx={{ position: 'absolute', top: 24,   right: 32,   fontSize: 100, color: '#1A2B4A', opacity: 0.06, pointerEvents: 'none' }} />
-        <SportsVolleyballIcon sx={{ position: 'absolute', top: 200,  left: 16,    fontSize: 70,  color: '#2C4A7A', opacity: 0.05, pointerEvents: 'none' }} />
-        <SportsVolleyballIcon sx={{ position: 'absolute', top: '40%', right: 10,  fontSize: 55,  color: '#2C4A7A', opacity: 0.04, pointerEvents: 'none' }} />
-        <SportsVolleyballIcon sx={{ position: 'absolute', bottom: 80, left: 60,   fontSize: 90,  color: '#1A2B4A', opacity: 0.05, pointerEvents: 'none' }} />
-        <SportsVolleyballIcon sx={{ position: 'absolute', bottom: 20, right: 80,  fontSize: 65,  color: '#2C4A7A', opacity: 0.04, pointerEvents: 'none' }} />
-        <SportsVolleyballIcon sx={{ position: 'absolute', top: '65%', left: '45%', fontSize: 48, color: '#1A2B4A', opacity: 0.03, pointerEvents: 'none' }} />
+      <Box className={styles.formArea}>
+        <SportsVolleyballIcon className={styles.formDecor1} />
+        <SportsVolleyballIcon className={styles.formDecor2} />
+        <SportsVolleyballIcon className={styles.formDecor3} />
+        <SportsVolleyballIcon className={styles.formDecor4} />
+        <SportsVolleyballIcon className={styles.formDecor5} />
+        <SportsVolleyballIcon className={styles.formDecor6} />
 
-      <Container maxWidth="md" sx={{ py: 4, position: 'relative', zIndex: 1 }}>
+      <Container maxWidth="md" className={styles.formContainer}>
       {error && (
-        <Alert severity="error" sx={{ mb: 2 }}>
+        <Alert severity="error" className={styles.errorAlert}>
           {error}
         </Alert>
       )}
@@ -273,7 +255,7 @@ export function RegisterPage() {
                   )}
                 />
                 {selectedTournament?.registrationDeadline && (
-                  <Alert severity="info" sx={{ mt: 1 }}>
+                  <Alert severity="info" className={styles.deadlineAlert}>
                     Registration deadline:{' '}
                     <strong>
                       {new Date(selectedTournament.registrationDeadline).toLocaleDateString('en-CA', {
@@ -387,14 +369,14 @@ export function RegisterPage() {
                               f.onChange(val);
                             }
                           }}
-                          sx={{ flexWrap: 'wrap', gap: 1 }}
+                          className={styles.positionsGroup}
                         >
                           {POSITIONS.map((p) => (
                             <ToggleButton
                               key={p}
                               value={p}
                               disabled={isReferee && p !== 'REFEREE'}
-                              sx={{ borderRadius: 2 }}
+                              className={styles.positionBtn}
                             >
                               {p}
                             </ToggleButton>
@@ -428,7 +410,7 @@ export function RegisterPage() {
               )}
               <Grid item xs={12} sm={6}>
                 <Stack direction="row" spacing={2} alignItems="center">
-                  <Avatar src={photoPreview ?? undefined} sx={{ width: 56, height: 56 }} />
+                  <Avatar src={photoPreview ?? undefined} className={styles.photoAvatar} />
                   <Button variant="outlined" component="label">
                     Upload photo
                     <input hidden type="file" accept="image/*" onChange={onPhotoChange} />

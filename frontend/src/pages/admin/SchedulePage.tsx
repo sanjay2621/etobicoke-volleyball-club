@@ -23,6 +23,7 @@ import { downloadFile } from '../../api/client';
 import { useGeneratePlayoffs, useGeneratePools, useSchedule, useStandings } from '../../api/schedule';
 import type { MatchResponse, StandingGroup } from '../../types';
 import { ResultDialog } from './ResultDialog';
+import styles from './SchedulePage.module.css';
 
 export function SchedulePage() {
   const { data: tournaments } = useActiveTournaments();
@@ -64,7 +65,7 @@ export function SchedulePage() {
             label="Tournament"
             value={tournamentId ?? ''}
             onChange={(e) => setTournamentId(Number(e.target.value))}
-            sx={{ minWidth: 200 }}
+            className={styles.tournamentSelect}
           >
             {tournaments?.map((t) => (
               <MenuItem key={t.id} value={t.id}>
@@ -99,7 +100,7 @@ export function SchedulePage() {
         </Stack>
       </Stack>
 
-      {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
+      {error && <Alert severity="error" className={styles.errorAlert}>{error}</Alert>}
 
       <Grid container spacing={3}>
         <Grid item xs={12} lg={7}>
@@ -108,7 +109,7 @@ export function SchedulePage() {
 
           {bracket.length > 0 && (
             <>
-              <Typography variant="h6" gutterBottom sx={{ mt: 3 }}>Playoffs</Typography>
+              <Typography variant="h6" gutterBottom className={styles.playoffsHeading}>Playoffs</Typography>
               <MatchTable matches={bracket} onEnter={setEditingMatch} />
             </>
           )}
@@ -173,13 +174,13 @@ function MatchTable({
                 <TableCell>{m.court ?? '—'}</TableCell>
                 {showGroup && <TableCell>{m.groupLabel}</TableCell>}
                 <TableCell>
-                  <Box sx={{ fontWeight: m.winnerTeamId === m.homeTeamId ? 700 : 400 }}>
+                  <Box className={m.winnerTeamId === m.homeTeamId ? styles.matchCellBold : styles.matchCellNormal}>
                     {m.homeTeamName ?? 'TBD'}
                   </Box>
-                  <Box sx={{ fontWeight: m.winnerTeamId === m.awayTeamId ? 700 : 400 }}>
+                  <Box className={m.winnerTeamId === m.awayTeamId ? styles.matchCellBold : styles.matchCellNormal}>
                     {m.awayTeamName ?? 'TBD'}
                   </Box>
-                  {m.bracketSlot && <Chip size="small" label={m.bracketSlot} sx={{ mt: 0.5 }} />}
+                  {m.bracketSlot && <Chip size="small" label={m.bracketSlot} className={styles.bracketChip} />}
                 </TableCell>
                 <TableCell>{scoreLabel(m)}</TableCell>
                 <TableCell align="right">
@@ -198,7 +199,7 @@ function MatchTable({
 
 function StandingsTable({ group }: { group: StandingGroup }) {
   return (
-    <Box mb={3}>
+    <Box className={styles.standingsGroup}>
       <Typography variant="subtitle1" fontWeight={700}>
         Group {group.groupLabel}
       </Typography>
@@ -216,7 +217,7 @@ function StandingsTable({ group }: { group: StandingGroup }) {
           </TableHead>
           <TableBody>
             {group.rows.map((r) => (
-              <TableRow key={r.teamId} sx={{ bgcolor: r.rank <= 2 ? 'action.hover' : undefined }}>
+              <TableRow key={r.teamId} className={r.rank <= 2 ? styles.topTwoRow : ''}>
                 <TableCell>{r.rank}</TableCell>
                 <TableCell>{r.teamName}</TableCell>
                 <TableCell align="right">{r.wins}</TableCell>

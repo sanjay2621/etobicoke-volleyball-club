@@ -20,7 +20,6 @@ import {
   Tooltip,
   Typography,
 } from '@mui/material';
-import { green } from '@mui/material/colors';
 import AddPhotoAlternateIcon from '@mui/icons-material/AddPhotoAlternate';
 import DeleteIcon from '@mui/icons-material/Delete';
 import DownloadIcon from '@mui/icons-material/Download';
@@ -32,6 +31,7 @@ import { useTeams } from '../../api/teams';
 import { downloadFile } from '../../api/client';
 import type { Player } from '../../types';
 import { PlayerEditDialog } from './PlayerEditDialog';
+import styles from './PlayersPage.module.css';
 
 export function PlayersPage() {
   const { data: tournaments } = useActiveTournaments();
@@ -91,7 +91,7 @@ export function PlayersPage() {
                 </InputAdornment>
               ),
             }}
-            sx={{ minWidth: 260 }}
+            className={styles.searchField}
           />
           <TextField
             select
@@ -99,7 +99,7 @@ export function PlayersPage() {
             label="Tournament"
             value={tournamentId ?? ''}
             onChange={(e) => setTournamentId(Number(e.target.value))}
-            sx={{ minWidth: 200 }}
+            className={styles.tournamentSelect}
           >
             {tournaments?.map((t) => (
               <MenuItem key={t.id} value={t.id}>
@@ -146,7 +146,7 @@ export function PlayersPage() {
             {!isLoading && filtered.length === 0 && (
               <TableRow>
                 <TableCell colSpan={10}>
-                  <Box py={2} color="text.secondary">
+                  <Box className={styles.emptyCell}>
                     {search ? 'No players match your search.' : 'No registrations yet for this tournament.'}
                   </Box>
                 </TableCell>
@@ -156,42 +156,32 @@ export function PlayersPage() {
               <TableRow
                 key={p.id}
                 hover
-                sx={{ bgcolor: assignedIds.has(p.id) ? green[50] : undefined }}
+                className={assignedIds.has(p.id) ? styles.assignedRow : ''}
               >
                 <TableCell>
-                  <Box sx={{ position: 'relative', display: 'inline-flex' }}>
+                  <Box className={styles.avatarWrapper}>
                     <Avatar
                       src={p.photoUrl ?? undefined}
-                      sx={{ width: 32, height: 32, cursor: p.photoUrl ? 'pointer' : 'default' }}
+                      className={p.photoUrl ? styles.avatarClickable : styles.avatar}
                       onClick={() => p.photoUrl && setPreviewUrl(p.photoUrl)}
                     />
                     <Tooltip title="Upload photo">
                       <IconButton
                         size="small"
-                        sx={{
-                          position: 'absolute',
-                          bottom: -3,
-                          right: -3,
-                          p: 0,
-                          width: 16,
-                          height: 16,
-                          bgcolor: 'primary.main',
-                          color: 'white',
-                          '&:hover': { bgcolor: 'primary.dark' },
-                        }}
+                        className={styles.photoUploadBtn}
                         onClick={() => {
                           setUploadingId(p.id);
                           photoInputRef.current?.click();
                         }}
                       >
-                        <AddPhotoAlternateIcon sx={{ fontSize: 11 }} />
+                        <AddPhotoAlternateIcon className={styles.photoUploadIcon} />
                       </IconButton>
                     </Tooltip>
                   </Box>
                 </TableCell>
                 <TableCell>{p.fullName}</TableCell>
                 <TableCell>
-                  <Stack direction="row" spacing={0.5} flexWrap="wrap">
+                  <Stack direction="row" spacing={0.5} className={styles.positionsCell}>
                     {p.preferredPositions.map((pos) => (
                       <Chip key={pos} label={pos} size="small" />
                     ))}
@@ -248,7 +238,7 @@ export function PlayersPage() {
       <PlayerEditDialog player={editing} onClose={() => setEditing(null)} />
 
       <Dialog open={!!previewUrl} onClose={() => setPreviewUrl(null)} maxWidth="sm" fullWidth>
-        <Box sx={{ p: 1, display: 'flex', justifyContent: 'center', bgcolor: 'black' }}>
+        <Box className={styles.photoPreviewBox}>
           <img
             src={previewUrl ?? ''}
             alt="Player photo"

@@ -26,6 +26,7 @@ import StarIcon from '@mui/icons-material/Star';
 import { useMyPlayer, useUploadMyPhoto } from '../../api/players';
 import { useMyTeam, useMyRoster } from '../../api/teams';
 import { useAuth } from '../../auth/AuthContext';
+import styles from './PlayerDashboardPage.module.css';
 
 function Detail({ label, value }: { label: string; value?: string | number | null }) {
   return (
@@ -51,11 +52,11 @@ export function PlayerDashboardPage() {
   const photoInputRef = useRef<HTMLInputElement>(null);
 
   return (
-    <Box sx={{ minHeight: '100vh', bgcolor: 'background.default' }}>
+    <Box className={styles.root}>
       <AppBar position="static" color="primary" elevation={0}>
         <Toolbar>
-          <SportsVolleyballIcon sx={{ mr: 1 }} />
-          <Typography variant="h6" sx={{ flexGrow: 1 }}>
+          <SportsVolleyballIcon className={styles.appBarIcon} />
+          <Typography variant="h6" className={styles.appBarTitle}>
             My Tournament
           </Typography>
           <Button
@@ -70,7 +71,7 @@ export function PlayerDashboardPage() {
         </Toolbar>
       </AppBar>
 
-      <Container maxWidth="md" sx={{ py: 4 }}>
+      <Container maxWidth="md" className={styles.container}>
         {isLoading && <Typography>Loading…</Typography>}
         {isError && (
           <Card>
@@ -84,35 +85,22 @@ export function PlayerDashboardPage() {
         )}
         {player && (
           <>
-            <Card sx={{ mb: 3 }}>
+            <Card className={styles.profileCard}>
               <CardContent>
                 <Stack direction="row" spacing={3} alignItems="center">
                   <Box>
                     <Tooltip title={player.photoUrl ? 'Change photo' : 'Upload photo'}>
                       <Box
-                        sx={{ position: 'relative', display: 'inline-flex', cursor: 'pointer' }}
+                        className={styles.avatarWrapper}
                         onClick={() => photoInputRef.current?.click()}
                       >
-                        <Avatar src={player.photoUrl ?? undefined} sx={{ width: 80, height: 80 }} />
-                        <Box
-                          sx={{
-                            position: 'absolute',
-                            inset: 0,
-                            borderRadius: '50%',
-                            bgcolor: 'rgba(0,0,0,0.4)',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            opacity: 0,
-                            transition: 'opacity 0.15s',
-                            '&:hover': { opacity: 1 },
-                          }}
-                        >
-                          <AddPhotoAlternateIcon sx={{ color: 'white', fontSize: 28 }} />
+                        <Avatar src={player.photoUrl ?? undefined} className={styles.avatar} />
+                        <Box className={styles.avatarOverlay}>
+                          <AddPhotoAlternateIcon className={styles.overlayIcon} />
                         </Box>
                       </Box>
                     </Tooltip>
-                    <Typography variant="caption" color="text.secondary" display="block" textAlign="center" mt={0.5}>
+                    <Typography variant="caption" color="text.secondary" className={styles.photoCaption}>
                       {uploadMyPhoto.isPending ? 'Uploading…' : 'Click to change'}
                     </Typography>
                     <input
@@ -152,7 +140,7 @@ export function PlayerDashboardPage() {
                   <Detail label="Payment" value={player.paymentStatus} />
                   <Detail label="Jersey #" value={player.jerseyNumberPreference} />
                 </Grid>
-                <Divider sx={{ my: 2 }} />
+                <Divider className={styles.divider} />
                 <Typography variant="h6" gutterBottom>
                   My team
                 </Typography>
@@ -179,7 +167,7 @@ export function PlayerDashboardPage() {
                           {roster.members.map((m) => (
                             <ListItem key={m.playerId} disableGutters alignItems="flex-start">
                               <ListItemAvatar>
-                                <Avatar src={m.photoUrl ?? undefined} sx={{ width: 40, height: 40 }} />
+                                <Avatar src={m.photoUrl ?? undefined} className={styles.memberAvatarLg} />
                               </ListItemAvatar>
                               <ListItemText
                                 primary={
@@ -190,12 +178,12 @@ export function PlayerDashboardPage() {
                                 }
                                 secondary={
                                   <>
-                                    <Box component="span" sx={{ display: 'block' }}>
+                                    <Box component="span" className={styles.inlineBlock}>
                                       {[m.preferredPositions.join(', '), m.skillLevel]
                                         .filter(Boolean)
                                         .join(' · ')}
                                     </Box>
-                                    <Box component="span" sx={{ display: 'block' }}>
+                                    <Box component="span" className={styles.inlineBlock}>
                                       {[m.phone, m.email].filter(Boolean).join(' · ') || '—'}
                                     </Box>
                                   </>
@@ -210,7 +198,7 @@ export function PlayerDashboardPage() {
                         {team.members.map((m) => (
                           <ListItem key={m.playerId} disableGutters>
                             <ListItemAvatar>
-                              <Avatar src={m.photoUrl ?? undefined} sx={{ width: 32, height: 32 }} />
+                              <Avatar src={m.photoUrl ?? undefined} className={styles.memberAvatarSm} />
                             </ListItemAvatar>
                             <ListItemText
                               primary={

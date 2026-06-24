@@ -19,7 +19,6 @@ import {
   TextField,
   Typography,
 } from '@mui/material';
-import { green } from '@mui/material/colors';
 import DeleteIcon from '@mui/icons-material/Delete';
 import DownloadIcon from '@mui/icons-material/Download';
 import EditIcon from '@mui/icons-material/Edit';
@@ -30,6 +29,7 @@ import { useTeams } from '../../api/teams';
 import { downloadFile } from '../../api/client';
 import type { Player } from '../../types';
 import { PlayerEditDialog } from './PlayerEditDialog';
+import styles from './RefereesPage.module.css';
 
 export function RefereesPage() {
   const { data: tournaments } = useActiveTournaments();
@@ -89,7 +89,7 @@ export function RefereesPage() {
                 </InputAdornment>
               ),
             }}
-            sx={{ minWidth: 240 }}
+            className={styles.searchField}
           />
           <TextField
             select
@@ -97,7 +97,7 @@ export function RefereesPage() {
             label="Tournament"
             value={tournamentId ?? ''}
             onChange={(e) => setTournamentId(Number(e.target.value))}
-            sx={{ minWidth: 200 }}
+            className={styles.tournamentSelect}
           >
             {tournaments?.map((t) => (
               <MenuItem key={t.id} value={t.id}>
@@ -143,7 +143,7 @@ export function RefereesPage() {
             {!isLoading && filtered.length === 0 && (
               <TableRow>
                 <TableCell colSpan={9}>
-                  <Box py={2} color="text.secondary">
+                  <Box className={styles.emptyCell}>
                     {search
                       ? 'No referees match your search.'
                       : 'No players have registered as referee for this tournament.'}
@@ -157,12 +157,12 @@ export function RefereesPage() {
                 <TableRow
                   key={p.id}
                   hover
-                  sx={{ bgcolor: assignedTeam ? green[50] : undefined }}
+                  className={assignedTeam ? styles.assignedRow : ''}
                 >
                   <TableCell>
                     <Avatar
                       src={p.photoUrl ?? undefined}
-                      sx={{ width: 32, height: 32, cursor: p.photoUrl ? 'pointer' : 'default' }}
+                      className={p.photoUrl ? styles.avatarClickable : styles.avatar}
                       onClick={() => p.photoUrl && setPreviewUrl(p.photoUrl)}
                     />
                   </TableCell>
@@ -210,7 +210,7 @@ export function RefereesPage() {
       <PlayerEditDialog player={editing} onClose={() => setEditing(null)} />
 
       <Dialog open={!!previewUrl} onClose={() => setPreviewUrl(null)} maxWidth="sm" fullWidth>
-        <Box sx={{ p: 1, display: 'flex', justifyContent: 'center', bgcolor: 'black' }}>
+        <Box className={styles.photoPreviewBox}>
           <img
             src={previewUrl ?? ''}
             alt="Referee photo"

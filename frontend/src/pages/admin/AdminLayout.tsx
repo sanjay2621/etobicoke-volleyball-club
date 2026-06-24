@@ -19,8 +19,7 @@ import SportsIcon from '@mui/icons-material/Sports';
 import HowToRegIcon from '@mui/icons-material/HowToReg';
 import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
 import { useAuth } from '../../auth/AuthContext';
-
-const DRAWER_WIDTH = 230;
+import styles from './AdminLayout.module.css';
 
 const NAV = [
   { to: '/admin', label: 'Dashboard', icon: <DashboardIcon />, exact: true },
@@ -38,13 +37,13 @@ export function AdminLayout() {
   const location = useLocation();
 
   return (
-    <Box sx={{ display: 'flex', minHeight: '100vh', bgcolor: 'background.default' }}>
-      <AppBar position="fixed" sx={{ zIndex: (t) => t.zIndex.drawer + 1 }} elevation={0}>
+    <Box className={styles.root}>
+      <AppBar position="fixed" className={styles.appBar} elevation={0}>
         <Toolbar>
-          <Typography variant="h6" sx={{ flexGrow: 1 }}>
+          <Typography variant="h6" className={styles.appBarTitle}>
             Volleyball Admin
           </Typography>
-          <Typography variant="body2" sx={{ mr: 2, opacity: 0.85 }}>
+          <Typography variant="body2" className={styles.appBarEmail}>
             {user?.email}
           </Typography>
           <Button
@@ -61,11 +60,7 @@ export function AdminLayout() {
 
       <Drawer
         variant="permanent"
-        sx={{
-          width: DRAWER_WIDTH,
-          flexShrink: 0,
-          [`& .MuiDrawer-paper`]: { width: DRAWER_WIDTH, boxSizing: 'border-box' },
-        }}
+        className={styles.drawer}
       >
         <Toolbar />
         <List>
@@ -88,7 +83,7 @@ export function AdminLayout() {
         </List>
       </Drawer>
 
-      <Box component="main" sx={{ flexGrow: 1, p: 3 }}>
+      <Box component="main" className={styles.main}>
         <Toolbar />
         <Outlet />
       </Box>

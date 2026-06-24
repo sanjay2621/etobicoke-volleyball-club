@@ -42,6 +42,7 @@ import {
   useTeams,
 } from '../../api/teams';
 import type { Player, Team } from '../../types';
+import styles from './TeamsPage.module.css';
 
 export function TeamsPage() {
   const { data: tournaments } = useActiveTournaments();
@@ -93,7 +94,7 @@ export function TeamsPage() {
             label="Tournament"
             value={tournamentId ?? ''}
             onChange={(e) => setTournamentId(Number(e.target.value))}
-            sx={{ minWidth: 220 }}
+            className={styles.tournamentSelect}
           >
             {tournaments?.map((t) => (
               <MenuItem key={t.id} value={t.id}>
@@ -135,7 +136,7 @@ export function TeamsPage() {
         <DialogTitle>New team</DialogTitle>
         <DialogContent>
           {newError && (
-            <Alert severity="error" sx={{ mb: 1 }}>
+            <Alert severity="error" className={styles.newTeamAlert}>
               {newError}
             </Alert>
           )}
@@ -145,7 +146,7 @@ export function TeamsPage() {
             value={newName}
             onChange={(e) => { setNewName(e.target.value); setNewError(null); }}
             onKeyDown={(e) => e.key === 'Enter' && onCreate()}
-            sx={{ mt: 1, minWidth: 320 }}
+            className={styles.newTeamField}
           />
         </DialogContent>
         <DialogActions>
@@ -186,12 +187,12 @@ function TeamCard({
   );
 
   return (
-    <Card sx={{ height: '100%' }}>
+    <Card className={styles.teamCard}>
       <CardContent>
         <Stack direction="row" justifyContent="space-between" alignItems="center">
           <Typography variant="h6">{team.name}</Typography>
           <Box>
-            {team.groupLabel && <Chip size="small" label={`Group ${team.groupLabel}`} sx={{ mr: 1 }} />}
+            {team.groupLabel && <Chip size="small" label={`Group ${team.groupLabel}`} className={styles.groupChip} />}
             <Chip size="small" label={`${team.memberCount} players`} />
             <IconButton
               size="small"
@@ -206,7 +207,7 @@ function TeamCard({
           </Box>
         </Stack>
 
-        <Box mt={1}>
+        <Box className={styles.membersBox}>
           {team.members.length === 0 && (
             <Typography variant="body2" color="text.secondary">
               No players yet.
@@ -237,7 +238,7 @@ function TeamCard({
               }
             >
               <ListItemAvatar>
-                <Avatar src={m.photoUrl ?? undefined} sx={{ width: 32, height: 32 }} />
+                <Avatar src={m.photoUrl ?? undefined} className={styles.memberAvatar} />
               </ListItemAvatar>
               <ListItemText
                 primary={m.fullName}
@@ -247,17 +248,17 @@ function TeamCard({
           ))}
         </Box>
 
-        <Stack direction="row" spacing={1} mt={2}>
+        <Stack direction="row" spacing={1} className={styles.addPlayerRow}>
           <Autocomplete
             size="small"
-            sx={{ flexGrow: 1 }}
+            className={styles.autocompleteGrow}
             options={available}
             value={toAdd}
             onChange={(_, v) => setToAdd(v)}
             getOptionLabel={(p) => p.fullName}
             renderOption={({ key, ...props }, p) => (
-              <Box key={key} component="li" {...props} sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                <Avatar src={p.photoUrl ?? undefined} sx={{ width: 28, height: 28, flexShrink: 0 }} />
+              <Box key={key} component="li" {...props} className={styles.playerOption}>
+                <Avatar src={p.photoUrl ?? undefined} className={styles.playerOptionAvatar} />
                 {p.fullName}
               </Box>
             )}
@@ -277,11 +278,11 @@ function TeamCard({
           </Button>
         </Stack>
 
-        <Stack direction="row" spacing={1} mt={2} alignItems="center">
+        <Stack direction="row" spacing={1} alignItems="center" className={styles.refereeSection}>
           <SportsIcon fontSize="small" color="action" />
           <Autocomplete
             size="small"
-            sx={{ flexGrow: 1 }}
+            className={styles.autocompleteGrow}
             options={refereeOptions}
             value={allPlayers.find((p) => p.id === team.refereePlayerId) ?? null}
             onChange={(_, v) => setReferee.mutate({ teamId: team.id, playerId: v ? v.id : 0 })}
