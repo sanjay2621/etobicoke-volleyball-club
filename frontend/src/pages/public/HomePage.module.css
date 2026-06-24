@@ -99,7 +99,7 @@
 
 .heroHeading {
   line-height: 1.1;
-  margin-bottom: 16px;
+  margin-bottom: 16px !important;
 }
 
 .heroAccent {
@@ -110,20 +110,20 @@
   opacity: 0.85;
   font-weight: 400;
   max-width: 540px;
-  margin-bottom: 32px;
+  margin-bottom: 32px !important;
 }
 
 .heroSubtextWithDeadline {
   opacity: 0.85;
   font-weight: 400;
   max-width: 540px;
-  margin-bottom: 16px;
+  margin-bottom: 16px !important;
 }
 
 .heroDeadlineText {
   opacity: 0.75;
   font-weight: 400;
-  margin-bottom: 12px;
+  margin-bottom: 12px !important;
 }
 
 .heroRegisterBtn {
