@@ -76,7 +76,7 @@ export function HomePage() {
             </Typography>
           </Box>
 
-          <Typography variant="h2" fontWeight={900} letterSpacing={-1} gutterBottom className={styles.heroHeading}>
+          <Typography variant="h2" fontWeight={900} letterSpacing={-1} className={styles.heroHeading}>
             Game on.{' '}
             <Box component="span" className={styles.heroAccent}>
               Register
