@@ -116,13 +116,13 @@
   opacity: 0.85;
   font-weight: 400;
   max-width: 540px;
-  margin-bottom: 8px;
+  margin-bottom: 4px;
 }
 
 .heroDeadlineText {
   opacity: 0.75;
   font-weight: 400;
-  margin-bottom: 32px;
+  margin-bottom: 16px;
 }
 
 .heroRegisterBtn {
