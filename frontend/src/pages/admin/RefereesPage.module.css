@@ -18,6 +18,11 @@
   background-color: #e8f5e9;
 }
 
+.avatarWrapper {
+  position: relative;
+  display: inline-flex;
+}
+
 .avatar {
   width: 32px;
   height: 32px;
@@ -28,6 +33,27 @@
   width: 32px;
   height: 32px;
   cursor: pointer;
+}
+
+.photoUploadBtn {
+  position: absolute;
+  bottom: -3px;
+  right: -3px;
+  padding: 0 !important;
+  width: 16px !important;
+  height: 16px !important;
+  min-width: unset !important;
+  background-color: #0F4C5C !important;
+  color: white !important;
+  border-radius: 50% !important;
+}
+
+.photoUploadBtn:hover {
+  background-color: #0a3340 !important;
+}
+
+.photoUploadIcon {
+  font-size: 11px !important;
 }
 
 .emptyCell {

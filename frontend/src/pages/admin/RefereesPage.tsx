@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   Avatar,
   Box,
@@ -17,14 +17,16 @@ import {
   TableHead,
   TableRow,
   TextField,
+  Tooltip,
   Typography,
 } from '@mui/material';
+import AddPhotoAlternateIcon from '@mui/icons-material/AddPhotoAlternate';
 import DeleteIcon from '@mui/icons-material/Delete';
 import DownloadIcon from '@mui/icons-material/Download';
 import EditIcon from '@mui/icons-material/Edit';
 import SearchIcon from '@mui/icons-material/Search';
 import { useActiveTournaments } from '../../api/tournaments';
-import { useDeletePlayer, usePlayers } from '../../api/players';
+import { useDeletePlayer, usePlayers, useUploadPlayerPhoto } from '../../api/players';
 import { useTeams } from '../../api/teams';
 import { downloadFile } from '../../api/client';
 import type { Player } from '../../types';
@@ -37,6 +39,9 @@ export function RefereesPage() {
   const { data: players, isLoading } = usePlayers(tournamentId);
   const { data: teams } = useTeams(tournamentId);
   const del = useDeletePlayer();
+  const uploadPhoto = useUploadPlayerPhoto();
+  const photoInputRef = useRef<HTMLInputElement>(null);
+  const [uploadingId, setUploadingId] = useState<number | null>(null);
   const [editing, setEditing] = useState<Player | null>(null);
   const [search, setSearch] = useState('');
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
@@ -160,11 +165,22 @@ export function RefereesPage() {
                   className={assignedTeam ? styles.assignedRow : ''}
                 >
                   <TableCell>
-                    <Avatar
-                      src={p.photoUrl ?? undefined}
-                      className={p.photoUrl ? styles.avatarClickable : styles.avatar}
-                      onClick={() => p.photoUrl && setPreviewUrl(p.photoUrl)}
-                    />
+                    <Box className={styles.avatarWrapper}>
+                      <Avatar
+                        src={p.photoUrl ?? undefined}
+                        className={p.photoUrl ? styles.avatarClickable : styles.avatar}
+                        onClick={() => p.photoUrl && setPreviewUrl(p.photoUrl)}
+                      />
+                      <Tooltip title="Upload photo">
+                        <IconButton
+                          size="small"
+                          className={styles.photoUploadBtn}
+                          onClick={() => { setUploadingId(p.id); photoInputRef.current?.click(); }}
+                        >
+                          <AddPhotoAlternateIcon className={styles.photoUploadIcon} />
+                        </IconButton>
+                      </Tooltip>
+                    </Box>
                   </TableCell>
                   <TableCell>{p.fullName}</TableCell>
                   <TableCell>{p.skillLevel ?? '—'}</TableCell>
@@ -206,6 +222,19 @@ export function RefereesPage() {
           </TableBody>
         </Table>
       </TableContainer>
+
+      <input
+        type="file"
+        accept="image/*"
+        hidden
+        ref={photoInputRef}
+        onChange={async (e) => {
+          const file = e.target.files?.[0];
+          if (file && uploadingId != null) await uploadPhoto.mutateAsync({ id: uploadingId, photo: file });
+          e.target.value = '';
+          setUploadingId(null);
+        }}
+      />
 
       <PlayerEditDialog player={editing} onClose={() => setEditing(null)} />
 
