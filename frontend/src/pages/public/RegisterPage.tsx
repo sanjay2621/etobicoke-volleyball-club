@@ -113,6 +113,7 @@ export function RegisterPage() {
     () => tournaments?.find((t) => t.id === Number(selectedTournamentId)),
     [tournaments, selectedTournamentId],
   );
+  const isReferee = (watch('preferredPositions') as string[]).includes('REFEREE');
 
   function onPhotoChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0] ?? null;
@@ -369,14 +370,16 @@ export function RegisterPage() {
                   ))}
                 </TextField>
               </Grid>
-              <Grid item xs={6} sm={3}>
-                <TextField select label="Skill level" fullWidth defaultValue="" {...field('skillLevel')}>
-                  <MenuItem value="">—</MenuItem>
-                  {SKILL_LEVELS.map((s) => (
-                    <MenuItem key={s} value={s}>{s}</MenuItem>
-                  ))}
-                </TextField>
-              </Grid>
+              {!isReferee && (
+                <Grid item xs={6} sm={3}>
+                  <TextField select label="Skill level" fullWidth defaultValue="" {...field('skillLevel')}>
+                    <MenuItem value="">—</MenuItem>
+                    {SKILL_LEVELS.map((s) => (
+                      <MenuItem key={s} value={s}>{s}</MenuItem>
+                    ))}
+                  </TextField>
+                </Grid>
+              )}
               <Grid item xs={12} sm={6}>
                 <Stack direction="row" spacing={2} alignItems="center">
                   <Avatar src={photoPreview ?? undefined} sx={{ width: 56, height: 56 }} />
