@@ -71,6 +71,15 @@ export function useDeletePlayer() {
   });
 }
 
+export function useMarkPayment() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, paymentStatus }: { id: number; paymentStatus: 'PAID' | 'UNPAID' }) =>
+      api.patch<Player>(`/players/${id}/payment`, { paymentStatus }).then((r) => fixPlayer(r.data)),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['teams', 'my', 'roster'] }),
+  });
+}
+
 export function useUploadPlayerPhoto() {
   const qc = useQueryClient();
   return useMutation({

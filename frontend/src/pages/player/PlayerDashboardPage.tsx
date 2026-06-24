@@ -23,7 +23,7 @@ import {
 import AddPhotoAlternateIcon from '@mui/icons-material/AddPhotoAlternate';
 import SportsVolleyballIcon from '@mui/icons-material/SportsVolleyball';
 import StarIcon from '@mui/icons-material/Star';
-import { useMyPlayer, useUploadMyPhoto } from '../../api/players';
+import { useMarkPayment, useMyPlayer, useUploadMyPhoto } from '../../api/players';
 import { useMyTeam, useMyRoster } from '../../api/teams';
 import { useAuth } from '../../auth/AuthContext';
 import styles from './PlayerDashboardPage.module.css';
@@ -49,6 +49,7 @@ export function PlayerDashboardPage() {
   const { logout } = useAuth();
   const navigate = useNavigate();
   const uploadMyPhoto = useUploadMyPhoto();
+  const markPayment = useMarkPayment();
   const photoInputRef = useRef<HTMLInputElement>(null);
 
   return (
@@ -171,9 +172,32 @@ export function PlayerDashboardPage() {
                               </ListItemAvatar>
                               <ListItemText
                                 primary={
-                                  <Stack direction="row" spacing={0.5} alignItems="center">
+                                  <Stack direction="row" spacing={0.5} alignItems="center" flexWrap="wrap">
                                     <span>{m.fullName}</span>
                                     {m.captain && <StarIcon fontSize="small" color="warning" />}
+                                    <Chip
+                                      size="small"
+                                      label={m.paymentStatus === 'PAID' ? 'Paid' : 'Unpaid'}
+                                      color={m.paymentStatus === 'PAID' ? 'success' : 'default'}
+                                      className={styles.paymentChip}
+                                    />
+                                    {!m.captain && (
+                                      <Button
+                                        size="small"
+                                        variant="outlined"
+                                        color={m.paymentStatus === 'PAID' ? 'error' : 'success'}
+                                        className={styles.paymentBtn}
+                                        disabled={markPayment.isPending}
+                                        onClick={() =>
+                                          markPayment.mutate({
+                                            id: m.playerId,
+                                            paymentStatus: m.paymentStatus === 'PAID' ? 'UNPAID' : 'PAID',
+                                          })
+                                        }
+                                      >
+                                        {m.paymentStatus === 'PAID' ? 'Mark Unpaid' : 'Mark Paid'}
+                                      </Button>
+                                    )}
                                   </Stack>
                                 }
                                 secondary={

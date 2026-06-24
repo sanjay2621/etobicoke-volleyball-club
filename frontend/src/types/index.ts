@@ -156,6 +156,7 @@ export type CaptainRosterMember = {
   skillLevel?: SkillLevel | null;
   preferredPositions: Position[];
   captain: boolean;
+  paymentStatus: PaymentStatus;
 };
 
 export type CaptainRoster = {

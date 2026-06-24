@@ -219,7 +219,8 @@ public class TeamService {
                             p.getEmail(),
                             p.getSkillLevel(),
                             p.getPreferredPositions(),
-                            m.getPlayerId().equals(team.getCaptainPlayerId()));
+                            m.getPlayerId().equals(team.getCaptainPlayerId()),
+                            p.getPaymentStatus());
                 })
                 .sorted(Comparator.comparing(CaptainRosterResponse.CaptainRosterMember::captain).reversed()
                         .thenComparing(CaptainRosterResponse.CaptainRosterMember::fullName))

@@ -1,5 +1,6 @@
 package com.volleyball.tournament.team.model;
 
+import com.volleyball.tournament.player.entity.PaymentStatus;
 import com.volleyball.tournament.player.entity.Position;
 import com.volleyball.tournament.player.entity.SkillLevel;
 import java.util.List;
@@ -23,6 +24,7 @@ public record CaptainRosterResponse(
             String email,
             SkillLevel skillLevel,
             Set<Position> preferredPositions,
-            boolean captain) {
+            boolean captain,
+            PaymentStatus paymentStatus) {
     }
 }

@@ -76,3 +76,14 @@
 .inlineBlock {
   display: block;
 }
+
+.paymentChip {
+  font-size: 11px !important;
+}
+
+.paymentBtn {
+  font-size: 11px !important;
+  padding: 1px 8px !important;
+  min-height: unset !important;
+  line-height: 1.4 !important;
+}
