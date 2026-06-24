@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import {
+  Alert,
   Autocomplete,
   Avatar,
   Box,
@@ -50,6 +51,7 @@ export function TeamsPage() {
   const createTeam = useCreateTeam();
   const [newOpen, setNewOpen] = useState(false);
   const [newName, setNewName] = useState('');
+  const [newError, setNewError] = useState<string | null>(null);
 
   useEffect(() => {
     if (tournamentId == null && tournaments && tournaments.length > 0) {
@@ -70,9 +72,14 @@ export function TeamsPage() {
 
   async function onCreate() {
     if (!tournamentId || !newName.trim()) return;
-    await createTeam.mutateAsync({ tournamentId, name: newName.trim() });
-    setNewName('');
-    setNewOpen(false);
+    setNewError(null);
+    try {
+      await createTeam.mutateAsync({ tournamentId, name: newName.trim() });
+      setNewName('');
+      setNewOpen(false);
+    } catch (err: any) {
+      setNewError(err?.response?.data?.message ?? 'Failed to create team');
+    }
   }
 
   return (
@@ -124,20 +131,26 @@ export function TeamsPage() {
         ))}
       </Grid>
 
-      <Dialog open={newOpen} onClose={() => setNewOpen(false)}>
+      <Dialog open={newOpen} onClose={() => { setNewOpen(false); setNewError(null); setNewName(''); }}>
         <DialogTitle>New team</DialogTitle>
         <DialogContent>
+          {newError && (
+            <Alert severity="error" sx={{ mb: 1 }}>
+              {newError}
+            </Alert>
+          )}
           <TextField
             autoFocus
             label="Team name"
             value={newName}
-            onChange={(e) => setNewName(e.target.value)}
+            onChange={(e) => { setNewName(e.target.value); setNewError(null); }}
+            onKeyDown={(e) => e.key === 'Enter' && onCreate()}
             sx={{ mt: 1, minWidth: 320 }}
           />
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setNewOpen(false)}>Cancel</Button>
-          <Button variant="contained" onClick={onCreate}>
+          <Button onClick={() => { setNewOpen(false); setNewError(null); setNewName(''); }}>Cancel</Button>
+          <Button variant="contained" onClick={onCreate} disabled={!newName.trim()}>
             Create
           </Button>
         </DialogActions>

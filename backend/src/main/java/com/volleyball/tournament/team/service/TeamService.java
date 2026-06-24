@@ -69,6 +69,9 @@ public class TeamService {
     @Transactional
     public TeamResponse create(TeamRequest req) {
         tournamentService.getEntity(req.tournamentId());
+        if (teamRepository.existsByTournamentIdAndNameIgnoreCase(req.tournamentId(), req.name().trim())) {
+            throw new ApiException(HttpStatus.CONFLICT, "A team with this name already exists in this tournament");
+        }
         Team team = new Team();
         team.setTournamentId(req.tournamentId());
         applyEditable(team, req);
@@ -78,6 +81,9 @@ public class TeamService {
     @Transactional
     public TeamResponse update(Long id, TeamRequest req) {
         Team team = getEntity(id);
+        if (teamRepository.existsByTournamentIdAndNameIgnoreCaseAndIdNot(team.getTournamentId(), req.name().trim(), id)) {
+            throw new ApiException(HttpStatus.CONFLICT, "A team with this name already exists in this tournament");
+        }
         applyEditable(team, req);
         return toResponse(teamRepository.save(team));
     }
