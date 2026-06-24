@@ -1,8 +1,9 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import {
+  Alert,
   Button,
   Dialog,
   DialogActions,
@@ -68,6 +69,7 @@ export function TournamentFormDialog({
 }) {
   const create = useCreateTournament();
   const update = useUpdateTournament();
+  const [submitError, setSubmitError] = useState<string | null>(null);
   const {
     register,
     handleSubmit,
@@ -77,6 +79,7 @@ export function TournamentFormDialog({
 
   useEffect(() => {
     if (open) {
+      setSubmitError(null);
       reset(
         tournament
           ? {
@@ -98,17 +101,22 @@ export function TournamentFormDialog({
   }, [open, tournament, reset]);
 
   async function onSubmit(values: FormValues) {
+    setSubmitError(null);
     const body = {
       ...values,
       startTime: `${values.startTime}:00`,
       registrationDeadline: values.registrationDeadline || null,
     };
-    if (tournament) {
-      await update.mutateAsync({ id: tournament.id, body });
-    } else {
-      await create.mutateAsync(body);
+    try {
+      if (tournament) {
+        await update.mutateAsync({ id: tournament.id, body });
+      } else {
+        await create.mutateAsync(body);
+      }
+      onClose();
+    } catch (err: any) {
+      setSubmitError(err?.response?.data?.message ?? 'Failed to save tournament');
     }
-    onClose();
   }
 
   return (
@@ -116,6 +124,11 @@ export function TournamentFormDialog({
       <form onSubmit={handleSubmit(onSubmit)}>
         <DialogTitle>{tournament ? 'Edit tournament' : 'New tournament'}</DialogTitle>
         <DialogContent>
+          {submitError && (
+            <Alert severity="error" sx={{ mb: 2 }}>
+              {submitError}
+            </Alert>
+          )}
           <Grid container spacing={2} sx={{ mt: 0 }}>
             <Grid item xs={12}>
               <TextField
