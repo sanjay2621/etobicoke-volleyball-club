@@ -1,3 +1,4 @@
+import { useRef } from 'react';
 import { Link as RouterLink, useNavigate } from 'react-router-dom';
 import {
   AppBar,
@@ -16,11 +17,13 @@ import {
   ListItemText,
   Stack,
   Toolbar,
+  Tooltip,
   Typography,
 } from '@mui/material';
+import AddPhotoAlternateIcon from '@mui/icons-material/AddPhotoAlternate';
 import SportsVolleyballIcon from '@mui/icons-material/SportsVolleyball';
 import StarIcon from '@mui/icons-material/Star';
-import { useMyPlayer } from '../../api/players';
+import { useMyPlayer, useUploadMyPhoto } from '../../api/players';
 import { useMyTeam, useMyRoster } from '../../api/teams';
 import { useAuth } from '../../auth/AuthContext';
 
@@ -44,6 +47,8 @@ export function PlayerDashboardPage() {
   const { data: roster } = useMyRoster(!!team);
   const { logout } = useAuth();
   const navigate = useNavigate();
+  const uploadMyPhoto = useUploadMyPhoto();
+  const photoInputRef = useRef<HTMLInputElement>(null);
 
   return (
     <Box sx={{ minHeight: '100vh', bgcolor: 'background.default' }}>
@@ -82,7 +87,46 @@ export function PlayerDashboardPage() {
             <Card sx={{ mb: 3 }}>
               <CardContent>
                 <Stack direction="row" spacing={3} alignItems="center">
-                  <Avatar src={player.photoUrl ?? undefined} sx={{ width: 80, height: 80 }} />
+                  <Box>
+                    <Tooltip title={player.photoUrl ? 'Change photo' : 'Upload photo'}>
+                      <Box
+                        sx={{ position: 'relative', display: 'inline-flex', cursor: 'pointer' }}
+                        onClick={() => photoInputRef.current?.click()}
+                      >
+                        <Avatar src={player.photoUrl ?? undefined} sx={{ width: 80, height: 80 }} />
+                        <Box
+                          sx={{
+                            position: 'absolute',
+                            inset: 0,
+                            borderRadius: '50%',
+                            bgcolor: 'rgba(0,0,0,0.4)',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            opacity: 0,
+                            transition: 'opacity 0.15s',
+                            '&:hover': { opacity: 1 },
+                          }}
+                        >
+                          <AddPhotoAlternateIcon sx={{ color: 'white', fontSize: 28 }} />
+                        </Box>
+                      </Box>
+                    </Tooltip>
+                    <Typography variant="caption" color="text.secondary" display="block" textAlign="center" mt={0.5}>
+                      {uploadMyPhoto.isPending ? 'Uploading…' : 'Click to change'}
+                    </Typography>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      hidden
+                      ref={photoInputRef}
+                      onChange={async (e) => {
+                        const file = e.target.files?.[0];
+                        if (file) await uploadMyPhoto.mutateAsync(file);
+                        e.target.value = '';
+                      }}
+                    />
+                  </Box>
                   <Box>
                     <Typography variant="h4">{player.fullName}</Typography>
                     <Stack direction="row" spacing={1} mt={1}>

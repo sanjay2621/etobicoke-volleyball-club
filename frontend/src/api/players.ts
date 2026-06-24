@@ -50,6 +50,19 @@ export function useUpdatePlayer() {
   });
 }
 
+export function useUploadMyPhoto() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (photo: File) => {
+      const form = new FormData();
+      form.append('photo', photo);
+      const res = await api.post<Player>('/players/me/photo', form);
+      return fixPlayer(res.data);
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['players', 'me'] }),
+  });
+}
+
 export function useDeletePlayer() {
   const qc = useQueryClient();
   return useMutation({

@@ -183,6 +183,17 @@ public class PlayerService {
     }
 
     @Transactional
+    public PlayerResponse uploadMyPhoto(MultipartFile photo) {
+        AuthenticatedUser user = SecurityUtils.currentUser();
+        if (user.playerId() == null) {
+            throw new NotFoundException("No player registration linked to this account");
+        }
+        Player player = getEntity(user.playerId());
+        player.setPhotoPath(fileStorageService.storePhoto(photo, player.getTournamentId()));
+        return toResponse(playerRepository.save(player));
+    }
+
+    @Transactional
     public PlayerResponse uploadPhoto(Long id, MultipartFile photo) {
         Player player = getEntity(id);
         player.setPhotoPath(fileStorageService.storePhoto(photo, player.getTournamentId()));
