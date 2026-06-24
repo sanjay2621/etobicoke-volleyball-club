@@ -22,6 +22,7 @@ import {
   ToggleButtonGroup,
   Typography,
 } from '@mui/material';
+import SportsVolleyballIcon from '@mui/icons-material/SportsVolleyball';
 import { POSITIONS, SKILL_LEVELS, TSHIRT_SIZES } from '../../types';
 import type { Position } from '../../types';
 import { useActivePublicTournaments } from '../../api/tournaments';
@@ -188,13 +189,42 @@ export function RegisterPage() {
   }
 
   return (
-    <Container maxWidth="md" sx={{ py: 5 }}>
-      <Button component={RouterLink} to="/" sx={{ mb: 1 }}>
-        ← Home
-      </Button>
-      <Typography variant="h3" gutterBottom>
-        Register to play
-      </Typography>
+    <Box sx={{ minHeight: '100vh', bgcolor: 'background.default' }}>
+      {/* Banner */}
+      <Box
+        sx={{
+          background: 'linear-gradient(135deg, #0F1D35 0%, #1A2B4A 45%, #2C4A7A 100%)',
+          color: 'common.white',
+          py: { xs: 5, md: 7 },
+          position: 'relative',
+          overflow: 'hidden',
+        }}
+      >
+        <SportsVolleyballIcon
+          sx={{ position: 'absolute', right: { xs: -40, md: 80 }, top: '50%', transform: 'translateY(-50%)', fontSize: { xs: 200, md: 320 }, opacity: 0.07, color: 'white' }}
+        />
+        <SportsVolleyballIcon
+          sx={{ position: 'absolute', left: -50, bottom: -40, fontSize: 220, opacity: 0.05, color: 'white' }}
+        />
+        <Container maxWidth="md" sx={{ position: 'relative', zIndex: 1 }}>
+          <Button component={RouterLink} to="/" sx={{ color: 'rgba(255,255,255,0.75)', mb: 2, '&:hover': { color: 'white' } }}>
+            ← Home
+          </Button>
+          <Stack direction="row" alignItems="center" spacing={2}>
+            <SportsVolleyballIcon sx={{ fontSize: 48, opacity: 0.9 }} />
+            <Box>
+              <Typography variant="h3" fontWeight={800} letterSpacing={-0.5}>
+                Register to Play
+              </Typography>
+              <Typography variant="body1" sx={{ opacity: 0.8, mt: 0.5 }}>
+                Etobicoke Volleyball Club — fill in your details below to secure your spot.
+              </Typography>
+            </Box>
+          </Stack>
+        </Container>
+      </Box>
+
+      <Container maxWidth="md" sx={{ py: 4 }}>
       {error && (
         <Alert severity="error" sx={{ mb: 2 }}>
           {error}
@@ -457,6 +487,7 @@ export function RegisterPage() {
           </Box>
         </CardContent>
       </Card>
-    </Container>
+      </Container>
+    </Box>
   );
 }

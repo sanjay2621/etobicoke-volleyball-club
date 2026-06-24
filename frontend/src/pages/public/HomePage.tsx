@@ -63,16 +63,52 @@ export function HomePage() {
 
       <Box
         sx={{
-          background: 'linear-gradient(135deg, #1A2B4A 0%, #2C4A7A 100%)',
+          background: 'linear-gradient(135deg, #0F1D35 0%, #1A2B4A 40%, #1E3A6E 75%, #2C4A7A 100%)',
           color: 'common.white',
-          py: { xs: 6, md: 10 },
+          py: { xs: 8, md: 12 },
+          position: 'relative',
+          overflow: 'hidden',
         }}
       >
-        <Container maxWidth="md">
-          <Typography variant="h2" gutterBottom>
-            Game on. Register your spot.
+        {/* Decorative volleyball shapes */}
+        <SportsVolleyballIcon
+          sx={{ position: 'absolute', right: { xs: -60, md: 40 }, top: '50%', transform: 'translateY(-50%)', fontSize: { xs: 280, md: 420 }, opacity: 0.07, color: 'white', pointerEvents: 'none' }}
+        />
+        <SportsVolleyballIcon
+          sx={{ position: 'absolute', left: { xs: -80, md: -40 }, bottom: -60, fontSize: { xs: 200, md: 300 }, opacity: 0.05, color: 'white', pointerEvents: 'none' }}
+        />
+        <SportsVolleyballIcon
+          sx={{ position: 'absolute', left: '45%', top: -40, fontSize: 140, opacity: 0.04, color: 'white', pointerEvents: 'none' }}
+        />
+
+        <Container maxWidth="md" sx={{ position: 'relative', zIndex: 1 }}>
+          <Box
+            sx={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 1,
+              bgcolor: 'rgba(255,255,255,0.12)',
+              borderRadius: 5,
+              px: 2,
+              py: 0.5,
+              mb: 3,
+            }}
+          >
+            <SportsVolleyballIcon sx={{ fontSize: 18 }} />
+            <Typography variant="caption" fontWeight={600} letterSpacing={1} sx={{ textTransform: 'uppercase' }}>
+              Etobicoke Volleyball Club
+            </Typography>
+          </Box>
+
+          <Typography variant="h2" fontWeight={900} letterSpacing={-1} gutterBottom sx={{ lineHeight: 1.1 }}>
+            Game on.{' '}
+            <Box component="span" sx={{ color: '#F97316' }}>
+              Register
+            </Box>{' '}
+            your spot.
           </Typography>
-          <Typography variant="h6" sx={{ opacity: 0.85, mb: featured?.registrationDeadline ? 1 : 4, fontWeight: 400 }}>
+
+          <Typography variant="h6" sx={{ opacity: 0.85, mb: featured?.registrationDeadline ? 1 : 4, fontWeight: 400, maxWidth: 540 }}>
             {featured
               ? `${featured.name} — ${new Date(featured.date).toLocaleDateString()} at ${featured.startTime?.slice(0, 5)}`
               : 'Sign up, get drafted, and hit the court.'}
@@ -90,10 +126,18 @@ export function HomePage() {
             </Typography>
           )}
           <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
-            <Button size="large" variant="contained" color="secondary" component={RouterLink} to="/register">
+            <Button
+              size="large"
+              variant="contained"
+              component={RouterLink}
+              to="/register"
+              sx={{ bgcolor: '#F97316', '&:hover': { bgcolor: '#EA6C0A' }, fontWeight: 700, px: 4 }}
+            >
               Register to play
             </Button>
-            <Button size="large" variant="outlined" color="inherit" component={RouterLink} to="/login">
+            <Button size="large" variant="outlined" color="inherit" component={RouterLink} to="/login"
+              sx={{ borderColor: 'rgba(255,255,255,0.5)', '&:hover': { borderColor: 'white', bgcolor: 'rgba(255,255,255,0.08)' } }}
+            >
               View my team
             </Button>
           </Stack>

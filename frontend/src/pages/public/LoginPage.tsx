@@ -13,6 +13,7 @@ import {
   TextField,
   Typography,
 } from '@mui/material';
+import SportsVolleyballIcon from '@mui/icons-material/SportsVolleyball';
 import { useAuth } from '../../auth/AuthContext';
 
 export function LoginPage() {
@@ -38,11 +39,41 @@ export function LoginPage() {
   }
 
   return (
-    <Box sx={{ minHeight: '100vh', display: 'grid', placeItems: 'center', bgcolor: 'background.default' }}>
+    <Box sx={{ minHeight: '100vh', bgcolor: 'background.default', display: 'flex', flexDirection: 'column' }}>
+      {/* Banner */}
+      <Box
+        sx={{
+          background: 'linear-gradient(135deg, #0F1D35 0%, #1A2B4A 45%, #2C4A7A 100%)',
+          color: 'common.white',
+          py: { xs: 5, md: 7 },
+          textAlign: 'center',
+          position: 'relative',
+          overflow: 'hidden',
+        }}
+      >
+        <SportsVolleyballIcon
+          sx={{ position: 'absolute', right: { xs: -30, md: 60 }, top: '50%', transform: 'translateY(-50%)', fontSize: { xs: 180, md: 260 }, opacity: 0.07, color: 'white' }}
+        />
+        <SportsVolleyballIcon
+          sx={{ position: 'absolute', left: { xs: -40, md: 20 }, bottom: -30, fontSize: { xs: 140, md: 200 }, opacity: 0.05, color: 'white' }}
+        />
+        <Container maxWidth="xs" sx={{ position: 'relative', zIndex: 1 }}>
+          <SportsVolleyballIcon sx={{ fontSize: 52, mb: 1, opacity: 0.9 }} />
+          <Typography variant="h4" fontWeight={800} letterSpacing={-0.5}>
+            Etobicoke Volleyball Club
+          </Typography>
+          <Typography variant="body1" sx={{ opacity: 0.75, mt: 1 }}>
+            Welcome back — log in to view your team and schedule.
+          </Typography>
+        </Container>
+      </Box>
+
+      {/* Form */}
+      <Box sx={{ flex: 1, display: 'grid', placeItems: 'center', py: 5 }}>
       <Container maxWidth="xs">
-        <Card>
-          <CardContent>
-            <Typography variant="h4" gutterBottom>
+        <Card elevation={3}>
+          <CardContent sx={{ p: 3 }}>
+            <Typography variant="h5" fontWeight={700} gutterBottom>
               Log in
             </Typography>
             {error && (
@@ -103,6 +134,7 @@ export function LoginPage() {
           </CardContent>
         </Card>
       </Container>
+      </Box>
     </Box>
   );
 }
