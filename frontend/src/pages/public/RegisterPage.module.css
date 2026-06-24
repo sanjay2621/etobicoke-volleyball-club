@@ -56,12 +56,12 @@
 }
 
 .homeLink {
-  color: rgba(255, 255, 255, 0.75);
+  color: rgba(255, 255, 255, 0.75) !important;
   margin-bottom: 16px;
 }
 
 .homeLink:hover {
-  color: white;
+  color: white !important;
 }
 
 .bannerMainIcon {
