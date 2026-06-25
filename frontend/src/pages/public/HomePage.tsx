@@ -35,6 +35,16 @@ import { usePublicSchedule, usePublicStandings } from '../../api/schedule';
 import type { MatchResponse, PublicTeam, StandingGroup, Tournament } from '../../types';
 import styles from './HomePage.module.css';
 
+function isRegistrationClosed(t: Tournament): boolean {
+  if (!t.registrationOpen) return true;
+  if (t.registrationDeadline) {
+    const deadline = new Date(t.registrationDeadline);
+    deadline.setHours(23, 59, 59, 999);
+    if (new Date() > deadline) return true;
+  }
+  return false;
+}
+
 export function HomePage() {
   const { data: tournaments } = useActivePublicTournaments();
   const [selectedId, setSelectedId] = useState<number | null>(null);
@@ -47,6 +57,7 @@ export function HomePage() {
   );
   const tournamentId = selectedId ?? sorted[0]?.id ?? null;
   const featured: Tournament | undefined = sorted.find((t) => t.id === tournamentId) ?? sorted[0];
+  const registrationClosed = featured ? isRegistrationClosed(featured) : false;
 
   return (
     <Box className={styles.root}>
@@ -102,15 +113,21 @@ export function HomePage() {
             </Typography>
           )}
           <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
-            <Button
-              size="large"
-              variant="contained"
-              component={RouterLink}
-              to="/register"
-              className={styles.heroRegisterBtn}
-            >
-              Register to play
-            </Button>
+            {registrationClosed ? (
+              <Button size="large" variant="contained" disabled className={styles.heroRegisterBtn}>
+                Registration closed
+              </Button>
+            ) : (
+              <Button
+                size="large"
+                variant="contained"
+                component={RouterLink}
+                to="/register"
+                className={styles.heroRegisterBtn}
+              >
+                Register to play
+              </Button>
+            )}
             <Button size="large" variant="outlined" color="inherit" component={RouterLink} to="/login"
               className={styles.heroLoginBtn}
             >

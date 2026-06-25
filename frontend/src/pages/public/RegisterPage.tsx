@@ -110,6 +110,22 @@ export function RegisterPage() {
   );
   const isReferee = (watch('preferredPositions') as string[]).includes('REFEREE');
 
+  function isRegistrationClosed(t: { registrationOpen: boolean; registrationDeadline?: string | null }): boolean {
+    if (!t.registrationOpen) return true;
+    if (t.registrationDeadline) {
+      const deadline = new Date(t.registrationDeadline);
+      deadline.setHours(23, 59, 59, 999);
+      if (new Date() > deadline) return true;
+    }
+    return false;
+  }
+
+  const openTournaments = useMemo(
+    () => (tournaments ?? []).filter((t) => !isRegistrationClosed(t)),
+    [tournaments],
+  );
+  const registrationClosed = selectedTournament ? isRegistrationClosed(selectedTournament) : false;
+
   function onPhotoChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0] ?? null;
     if (file && file.size > MAX_PHOTO_BYTES) {
@@ -239,7 +255,12 @@ export function RegisterPage() {
                       error={!!errors.tournamentId}
                       helperText={errors.tournamentId?.message}
                     >
-                      {tournaments?.map((t) => (
+                      {openTournaments.length === 0 && (
+                        <MenuItem disabled value="">
+                          No open tournaments
+                        </MenuItem>
+                      )}
+                      {openTournaments.map((t) => (
                         <MenuItem key={t.id} value={t.id}>
                           {t.name} — {new Date(t.date).toLocaleDateString()}
                         </MenuItem>
@@ -247,7 +268,12 @@ export function RegisterPage() {
                     </TextField>
                   )}
                 />
-                {selectedTournament?.registrationDeadline && (
+                {registrationClosed && (
+                  <Alert severity="error" className={styles.deadlineAlert}>
+                    Registration for this tournament is closed.
+                  </Alert>
+                )}
+                {!registrationClosed && selectedTournament?.registrationDeadline && (
                   <Alert severity="info" className={styles.deadlineAlert}>
                     Registration deadline:{' '}
                     <strong>
@@ -483,7 +509,7 @@ export function RegisterPage() {
                   variant="contained"
                   color="secondary"
                   size="large"
-                  disabled={isSubmitting}
+                  disabled={isSubmitting || registrationClosed || openTournaments.length === 0}
                 >
                   {isSubmitting ? 'Submitting…' : 'Submit registration'}
                 </Button>
