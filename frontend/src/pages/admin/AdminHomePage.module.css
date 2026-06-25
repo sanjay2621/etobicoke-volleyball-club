@@ -2,6 +2,11 @@
   min-width: 240px;
 }
 
+.tshirtStat {
+  text-align: center;
+  min-width: 40px;
+}
+
 @media (max-width: 599px) {
   .tournamentSelect {
     min-width: 0;
