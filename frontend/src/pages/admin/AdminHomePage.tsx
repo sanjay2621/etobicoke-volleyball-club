@@ -96,7 +96,7 @@ export function AdminHomePage() {
             value={players?.filter((p) => p.hasAccount).length ?? 0}
           />
 
-          <Grid item xs={12}>
+          <Grid item xs={12} md={6}>
             <Card>
               <CardContent>
                 <Typography color="text.secondary" gutterBottom>
