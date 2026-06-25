@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Box, Card, CardContent, Divider, Grid, MenuItem, Stack, TextField, Typography } from '@mui/material';
 import { useActiveTournaments } from '../../api/tournaments';
 import { usePlayers } from '../../api/players';
@@ -8,10 +9,13 @@ import { useDraftState } from '../../api/draft';
 import { TSHIRT_SIZES } from '../../types';
 import styles from './AdminHomePage.module.css';
 
-function StatCard({ label, value, hint }: { label: string; value: string | number; hint?: string }) {
+function StatCard({ label, value, hint, onClick }: { label: string; value: string | number; hint?: string; onClick?: () => void }) {
   return (
     <Grid item xs={6} sm={4} md={3}>
-      <Card>
+      <Card
+        onClick={onClick}
+        sx={onClick ? { cursor: 'pointer', '&:hover': { boxShadow: 4 } } : undefined}
+      >
         <CardContent>
           <Typography variant="h4" color="primary">
             {value}
@@ -29,6 +33,7 @@ function StatCard({ label, value, hint }: { label: string; value: string | numbe
 }
 
 export function AdminHomePage() {
+  const navigate = useNavigate();
   const { data: tournaments } = useActiveTournaments();
   const [tournamentId, setTournamentId] = useState<number | null>(null);
 
@@ -80,24 +85,29 @@ export function AdminHomePage() {
 
       {selected && (
         <Grid container spacing={2}>
-          <StatCard label="Registered players" value={players?.length ?? 0} />
-          <StatCard label="Teams" value={teams?.length ?? 0} />
+          <StatCard label="Registered players" value={players?.length ?? 0} onClick={() => navigate('/admin/players')} />
+          <StatCard label="Teams" value={teams?.length ?? 0} onClick={() => navigate('/admin/teams')} />
           <StatCard
             label="Matches"
             value={matches.length}
             hint={matches.length ? `${completed} completed` : 'not scheduled yet'}
+            onClick={() => navigate('/admin/schedule')}
           />
-          <StatCard label="Draft" value={draft?.status?.replace('_', ' ') ?? '—'} />
-          <StatCard label="Status" value={selected.status} />
-          <StatCard label="Registration" value={selected.registrationOpen ? 'Open' : 'Closed'} />
+          <StatCard label="Draft" value={draft?.status?.replace('_', ' ') ?? '—'} onClick={() => navigate('/admin/draft')} />
+          <StatCard label="Status" value={selected.status} onClick={() => navigate('/admin/tournaments')} />
+          <StatCard label="Registration" value={selected.registrationOpen ? 'Open' : 'Closed'} onClick={() => navigate('/admin/tournaments')} />
           <StatCard label="Courts" value={selected.numberOfCourts} />
           <StatCard
             label="Players w/ login"
             value={players?.filter((p) => p.hasAccount).length ?? 0}
+            onClick={() => navigate('/admin/players')}
           />
 
           <Grid item xs={12} md={6}>
-            <Card>
+            <Card
+              onClick={() => navigate('/admin/tshirts')}
+              sx={{ cursor: 'pointer', '&:hover': { boxShadow: 4 } }}
+            >
               <CardContent>
                 <Typography color="text.secondary" gutterBottom>
                   T-Shirt Sizes Required
