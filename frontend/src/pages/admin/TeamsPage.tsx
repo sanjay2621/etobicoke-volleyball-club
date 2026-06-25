@@ -66,6 +66,12 @@ export function TeamsPage() {
     return set;
   }, [teams]);
 
+  const assignedRefereeIds = useMemo(() => {
+    const set = new Set<number>();
+    teams?.forEach((t) => { if (t.refereePlayerId != null) set.add(t.refereePlayerId); });
+    return set;
+  }, [teams]);
+
   const availablePlayers = useMemo(
     () => players?.filter((p) => !assignedIds.has(p.id) && !p.preferredPositions.includes('REFEREE')) ?? [],
     [players, assignedIds],
@@ -127,7 +133,7 @@ export function TeamsPage() {
         )}
         {teams?.map((team) => (
           <Grid item xs={12} md={6} lg={4} key={team.id}>
-            <TeamCard team={team} available={availablePlayers} allPlayers={players ?? []} />
+            <TeamCard team={team} available={availablePlayers} allPlayers={players ?? []} assignedRefereeIds={assignedRefereeIds} />
           </Grid>
         ))}
       </Grid>
@@ -164,10 +170,12 @@ function TeamCard({
   team,
   available,
   allPlayers,
+  assignedRefereeIds,
 }: {
   team: Team;
   available: Player[];
   allPlayers: Player[];
+  assignedRefereeIds: Set<number>;
 }) {
   const addMember = useAddMember();
   const removeMember = useRemoveMember();
@@ -180,10 +188,13 @@ function TeamCard({
     ? allPlayers.find((p) => p.id === team.refereePlayerId)?.fullName ?? `#${team.refereePlayerId}`
     : null;
 
-  // Only players who registered as a referee (picked the REFEREE position) can be assigned.
+  // Only referees not already assigned to another team; always include this team's current referee.
   const refereeOptions = useMemo(
-    () => allPlayers.filter((p) => p.preferredPositions.includes('REFEREE')),
-    [allPlayers],
+    () => allPlayers.filter(
+      (p) => p.preferredPositions.includes('REFEREE') &&
+        (!assignedRefereeIds.has(p.id) || p.id === team.refereePlayerId),
+    ),
+    [allPlayers, assignedRefereeIds, team.refereePlayerId],
   );
 
   return (
