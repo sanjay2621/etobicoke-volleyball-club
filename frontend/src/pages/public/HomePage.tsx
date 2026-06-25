@@ -80,13 +80,6 @@ export function HomePage() {
         <SportsVolleyballIcon className={styles.heroDecor3} />
 
         <Container maxWidth="md" className={styles.heroContainer}>
-          <Box className={styles.heroPill}>
-            <SportsVolleyballIcon className={styles.heroPillIcon} />
-            <Typography variant="caption" fontWeight={600} letterSpacing={1} className={styles.heroPillText}>
-              Etobicoke Volleyball Club
-            </Typography>
-          </Box>
-
           <Typography variant="h2" fontWeight={900} letterSpacing={-1} className={styles.heroHeading}>
             Game on.{' '}
             <Box component="span" className={styles.heroAccent}>

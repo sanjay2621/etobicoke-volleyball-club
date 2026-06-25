@@ -18,14 +18,14 @@
 .hero {
   background: linear-gradient(135deg, #0F1D35 0%, #1A2B4A 40%, #1E3A6E 75%, #2C4A7A 100%);
   color: white;
-  padding: 64px 0;
+  padding: 40px 0;
   position: relative;
   overflow: hidden;
 }
 
 @media (min-width: 900px) {
   .hero {
-    padding: 96px 0;
+    padding: 56px 0;
   }
 }
 
