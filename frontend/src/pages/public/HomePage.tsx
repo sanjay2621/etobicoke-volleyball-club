@@ -120,95 +120,54 @@ export function HomePage() {
         </Container>
       </Box>
 
-      {/* Volleyball court banner */}
-      <Box className={styles.courtBanner} aria-hidden="true">
-        <svg viewBox="0 0 1600 240" className={styles.courtSvg} preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
-          <defs>
-            <linearGradient id="courtBg" x1="0" y1="0" x2="1" y2="1">
-              <stop offset="0%" stopColor="#0a1628" />
-              <stop offset="60%" stopColor="#1a2b4a" />
-              <stop offset="100%" stopColor="#0d2438" />
-            </linearGradient>
-            <radialGradient id="ballGlow" cx="50%" cy="50%" r="50%">
-              <stop offset="0%" stopColor="#F97316" stopOpacity="0.25" />
-              <stop offset="100%" stopColor="#F97316" stopOpacity="0" />
-            </radialGradient>
-          </defs>
-
-          {/* Background */}
-          <rect width="1600" height="240" fill="url(#courtBg)" />
-
-          {/* Court floor */}
-          <rect x="0" y="200" width="1600" height="40" fill="rgba(249,115,22,0.05)" />
-          <line x1="0" y1="200" x2="1600" y2="200" stroke="rgba(255,255,255,0.15)" strokeWidth="2" />
-
-          {/* Glow accents */}
-          <ellipse cx="800" cy="240" rx="600" ry="80" fill="rgba(249,115,22,0.04)" />
-          <circle cx="200" cy="120" r="180" fill="rgba(30,58,120,0.12)" />
-          <circle cx="1400" cy="60" r="140" fill="rgba(30,58,120,0.1)" />
-
+      <Box className={styles.contentWrapper}>
+        {/* Volleyball court background */}
+        <svg viewBox="0 0 1600 600" className={styles.courtBgSvg} aria-hidden="true" preserveAspectRatio="xMidYTop slice" xmlns="http://www.w3.org/2000/svg">
           {/* Net left pole */}
-          <rect x="200" y="30" width="8" height="175" fill="rgba(255,255,255,0.6)" rx="4" />
+          <rect x="60" y="20" width="7" height="220" fill="rgba(15,29,53,0.12)" rx="3" />
           {/* Net right pole */}
-          <rect x="1392" y="30" width="8" height="175" fill="rgba(255,255,255,0.6)" rx="4" />
+          <rect x="1533" y="20" width="7" height="220" fill="rgba(15,29,53,0.12)" rx="3" />
 
           {/* Top cable */}
-          <path d="M204 34 Q800 24 1396 34" stroke="white" strokeWidth="4" fill="none" opacity="0.85" />
-          {/* Bottom white tape */}
-          <path d="M204 175" stroke="white" strokeWidth="3" fill="none" opacity="0.5" />
-          <line x1="204" y1="175" x2="1396" y2="175" stroke="rgba(255,255,255,0.45)" strokeWidth="3" />
+          <path d="M64 23 Q800 13 1537 23" stroke="rgba(15,29,53,0.18)" strokeWidth="3.5" fill="none" />
+          {/* Bottom tape */}
+          <line x1="64" y1="200" x2="1537" y2="200" stroke="rgba(15,29,53,0.18)" strokeWidth="3" />
 
           {/* Net horizontal lines */}
-          <line x1="206" y1="58"  x2="1394" y2="58"  stroke="rgba(255,255,255,0.14)" strokeWidth="1" />
-          <line x1="206" y1="78"  x2="1394" y2="78"  stroke="rgba(255,255,255,0.14)" strokeWidth="1" />
-          <line x1="206" y1="98"  x2="1394" y2="98"  stroke="rgba(255,255,255,0.14)" strokeWidth="1" />
-          <line x1="206" y1="118" x2="1394" y2="118" stroke="white"                  strokeWidth="3.5" opacity="0.55" />
-          <line x1="206" y1="138" x2="1394" y2="138" stroke="rgba(255,255,255,0.14)" strokeWidth="1" />
-          <line x1="206" y1="158" x2="1394" y2="158" stroke="rgba(255,255,255,0.14)" strokeWidth="1" />
+          <line x1="65" y1="50"  x2="1535" y2="50"  stroke="rgba(15,29,53,0.07)" strokeWidth="1" />
+          <line x1="65" y1="75"  x2="1535" y2="75"  stroke="rgba(15,29,53,0.07)" strokeWidth="1" />
+          <line x1="65" y1="100" x2="1535" y2="100" stroke="rgba(15,29,53,0.07)" strokeWidth="1" />
+          <line x1="65" y1="125" x2="1535" y2="125" stroke="rgba(15,29,53,0.12)" strokeWidth="2.5" />
+          <line x1="65" y1="150" x2="1535" y2="150" stroke="rgba(15,29,53,0.07)" strokeWidth="1" />
+          <line x1="65" y1="175" x2="1535" y2="175" stroke="rgba(15,29,53,0.07)" strokeWidth="1" />
 
           {/* Net vertical lines */}
-          {Array.from({ length: 40 }, (_, i) => (
-            <line key={i} x1={238 + i * 29} y1="34" x2={238 + i * 29} y2="175"
-              stroke="rgba(255,255,255,0.13)" strokeWidth="1" />
+          {Array.from({ length: 50 }, (_, i) => (
+            <line key={i} x1={95 + i * 29} y1="23" x2={95 + i * 29} y2="200"
+              stroke="rgba(15,29,53,0.06)" strokeWidth="1" />
           ))}
 
-          {/* Ball glow */}
-          <ellipse cx="1080" cy="35" rx="90" ry="70" fill="url(#ballGlow)" />
-
           {/* Volleyball */}
-          <circle cx="1080" cy="28" r="44" fill="#F97316" />
-          <circle cx="1080" cy="28" r="44" fill="none" stroke="rgba(255,255,255,0.25)" strokeWidth="1.5" />
-          {/* Ball seam curves */}
-          <path d="M1044 12 Q1080 -4 1116 12"  stroke="white" strokeWidth="2.5" fill="none" opacity="0.7" />
-          <path d="M1034 32 Q1080 20 1126 32"  stroke="white" strokeWidth="2.5" fill="none" opacity="0.7" />
-          <path d="M1042 52 Q1080 62 1118 52"  stroke="white" strokeWidth="2.5" fill="none" opacity="0.7" />
-          <path d="M1065 -14 Q1076 28 1065 70" stroke="white" strokeWidth="2"   fill="none" opacity="0.5" />
-          <path d="M1095 -14 Q1084 28 1095 70" stroke="white" strokeWidth="2"   fill="none" opacity="0.5" />
+          <circle cx="1320" cy="72" r="52" fill="rgba(249,115,22,0.13)" />
+          <circle cx="1320" cy="72" r="52" fill="none" stroke="rgba(249,115,22,0.2)" strokeWidth="2" />
+          <path d="M1278 54 Q1320 36 1362 54"  stroke="rgba(249,115,22,0.22)" strokeWidth="3" fill="none" />
+          <path d="M1268 76 Q1320 62 1372 76"  stroke="rgba(249,115,22,0.22)" strokeWidth="3" fill="none" />
+          <path d="M1276 98 Q1320 108 1364 98" stroke="rgba(249,115,22,0.22)" strokeWidth="3" fill="none" />
+          <path d="M1303 24 Q1316 72 1303 120"  stroke="rgba(249,115,22,0.16)" strokeWidth="2" fill="none" />
+          <path d="M1337 24 Q1324 72 1337 120"  stroke="rgba(249,115,22,0.16)" strokeWidth="2" fill="none" />
 
           {/* Player silhouette — jumping spike */}
-          <g opacity="0.18" fill="white">
-            {/* Head */}
-            <circle cx="1148" cy="88" r="17" />
-            {/* Torso */}
-            <ellipse cx="1148" cy="130" rx="14" ry="26" />
-            {/* Right arm raised to spike */}
-            <path d="M1140 110 Q1110 72 1085 48" stroke="white" strokeWidth="11" fill="none" strokeLinecap="round" />
-            {/* Left arm balanced out */}
-            <path d="M1156 118 Q1180 130 1190 148" stroke="white" strokeWidth="10" fill="none" strokeLinecap="round" />
-            {/* Left leg bent back */}
-            <path d="M1142 155 Q1124 185 1118 210" stroke="white" strokeWidth="11" fill="none" strokeLinecap="round" />
-            <path d="M1118 210 Q1108 228 1115 238" stroke="white" strokeWidth="9"  fill="none" strokeLinecap="round" />
-            {/* Right leg extending */}
-            <path d="M1154 155 Q1170 185 1178 212" stroke="white" strokeWidth="11" fill="none" strokeLinecap="round" />
-            <path d="M1178 212 Q1185 228 1180 240" stroke="white" strokeWidth="9"  fill="none" strokeLinecap="round" />
+          <g fill="rgba(15,29,53,0.09)" stroke="rgba(15,29,53,0.09)">
+            <circle cx="1390" cy="110" r="20" />
+            <ellipse cx="1390" cy="160" rx="16" ry="30" />
+            <path d="M1382 135 Q1348 95 1322 68"  strokeWidth="13" strokeLinecap="round" fill="none" />
+            <path d="M1398 142 Q1424 155 1435 175" strokeWidth="12" strokeLinecap="round" fill="none" />
+            <path d="M1382 188 Q1364 220 1356 248" strokeWidth="13" strokeLinecap="round" fill="none" />
+            <path d="M1398 188 Q1416 220 1424 248" strokeWidth="13" strokeLinecap="round" fill="none" />
           </g>
-
-          {/* Subtle top fade overlay */}
-          <rect width="1600" height="24" fill="url(#courtBg)" opacity="0.6" />
         </svg>
-      </Box>
 
-      <Container maxWidth="lg" className={styles.contentContainer}>
+        <Container maxWidth="lg" className={styles.contentContainer}>
         {sorted.length === 0 ? (
           <Typography color="text.secondary">No tournaments published yet — check back soon.</Typography>
         ) : (
@@ -252,6 +211,7 @@ export function HomePage() {
           </>
         )}
       </Container>
+      </Box>
     </Box>
   );
 }
