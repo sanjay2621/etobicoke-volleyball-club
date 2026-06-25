@@ -13,7 +13,7 @@ function StatCard({ label, value, hint }: { label: string; value: string | numbe
     <Grid item xs={6} sm={4} md={3}>
       <Card>
         <CardContent>
-          <Typography variant="h3" color="primary">
+          <Typography variant="h4" color="primary">
             {value}
           </Typography>
           <Typography color="text.secondary">{label}</Typography>
