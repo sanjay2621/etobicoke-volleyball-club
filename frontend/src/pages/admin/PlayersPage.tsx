@@ -52,10 +52,10 @@ export function PlayersPage() {
     }
   }, [tournaments, tournamentId]);
 
-  const assignedIds = useMemo(() => {
-    const set = new Set<number>();
-    teams?.forEach((t) => t.members.forEach((m) => set.add(m.playerId)));
-    return set;
+  const playerTeamMap = useMemo(() => {
+    const map = new Map<number, string>();
+    teams?.forEach((t) => t.members.forEach((m) => map.set(m.playerId, t.name)));
+    return map;
   }, [teams]);
 
   const nonReferees = useMemo(
@@ -134,29 +134,32 @@ export function PlayersPage() {
               <TableCell>Email</TableCell>
               <TableCell>Payment</TableCell>
               <TableCell>Account</TableCell>
+              <TableCell>Assigned Team</TableCell>
               <TableCell align="right">Actions</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
             {isLoading && (
               <TableRow>
-                <TableCell colSpan={10}>Loading…</TableCell>
+                <TableCell colSpan={11}>Loading…</TableCell>
               </TableRow>
             )}
             {!isLoading && filtered.length === 0 && (
               <TableRow>
-                <TableCell colSpan={10}>
+                <TableCell colSpan={11}>
                   <Box className={styles.emptyCell}>
                     {search ? 'No players match your search.' : 'No registrations yet for this tournament.'}
                   </Box>
                 </TableCell>
               </TableRow>
             )}
-            {filtered.map((p) => (
+            {filtered.map((p) => {
+              const assignedTeam = playerTeamMap.get(p.id);
+              return (
               <TableRow
                 key={p.id}
                 hover
-                className={assignedIds.has(p.id) ? styles.assignedRow : ''}
+                className={assignedTeam ? styles.assignedRow : ''}
               >
                 <TableCell>
                   <Box className={styles.avatarWrapper}>
@@ -199,6 +202,13 @@ export function PlayersPage() {
                   />
                 </TableCell>
                 <TableCell>{p.hasAccount ? '✓' : '—'}</TableCell>
+                <TableCell>
+                  {assignedTeam ? (
+                    <Chip label={assignedTeam} size="small" color="success" variant="outlined" />
+                  ) : (
+                    '—'
+                  )}
+                </TableCell>
                 <TableCell align="right">
                   <IconButton size="small" aria-label="edit" onClick={() => setEditing(p)}>
                     <EditIcon fontSize="small" />
@@ -215,7 +225,8 @@ export function PlayersPage() {
                   </IconButton>
                 </TableCell>
               </TableRow>
-            ))}
+              );
+            })}
           </TableBody>
         </Table>
       </TableContainer>
