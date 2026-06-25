@@ -160,24 +160,24 @@
 
 /* Content wrapper with background SVG */
 .contentWrapper {
-  position: relative;
   background-color: #F7F9FC;
-  overflow: hidden;
-  min-height: 500px;
+  display: grid;
+  grid-template-columns: 1fr;
 }
 
 .courtBgSvg {
-  position: absolute;
-  top: 0;
-  left: 0;
+  grid-row: 1;
+  grid-column: 1;
   width: 100%;
-  height: 100%;
+  height: auto;
+  align-self: start;
   pointer-events: none;
-  z-index: 0;
 }
 
 /* Content */
 .contentContainer {
+  grid-row: 1;
+  grid-column: 1;
   padding-top: 40px;
   padding-bottom: 40px;
   position: relative;
