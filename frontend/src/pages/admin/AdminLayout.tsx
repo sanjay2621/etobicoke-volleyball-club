@@ -23,6 +23,7 @@ import PersonIcon from '@mui/icons-material/Person';
 import SportsIcon from '@mui/icons-material/Sports';
 import HowToRegIcon from '@mui/icons-material/HowToReg';
 import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
+import CheckroomIcon from '@mui/icons-material/Checkroom';
 import { useAuth } from '../../auth/AuthContext';
 import styles from './AdminLayout.module.css';
 
@@ -34,6 +35,7 @@ const NAV = [
   { to: '/admin/teams', label: 'Teams', icon: <GroupsIcon /> },
   { to: '/admin/draft', label: 'Draft', icon: <HowToRegIcon /> },
   { to: '/admin/schedule', label: 'Schedule', icon: <CalendarMonthIcon /> },
+  { to: '/admin/tshirts', label: 'T-Shirts', icon: <CheckroomIcon /> },
 ];
 
 export function AdminLayout() {
