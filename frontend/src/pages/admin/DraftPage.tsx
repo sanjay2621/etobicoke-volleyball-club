@@ -140,7 +140,7 @@ export function DraftPage() {
                                   {m.captain && <StarIcon fontSize="inherit" color="warning" />}
                                 </Stack>
                               }
-                              secondary={m.draftRound ? `R${m.draftRound}` : m.captain ? 'Captain' : null}
+                              secondary={m.draftRound ? `Round ${m.draftRound}` : null}
                             />
                           </ListItem>
                         ))}
