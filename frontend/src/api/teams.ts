@@ -44,7 +44,15 @@ export function useTeams(tournamentId: number | null) {
 export function useMyTeam(enabled = true) {
   return useQuery({
     queryKey: ['teams', 'my'],
-    queryFn: () => api.get<Team>('/teams/my').then((r) => fixTeam(r.data)),
+    queryFn: async () => {
+      try {
+        const r = await api.get<Team>('/teams/my');
+        return fixTeam(r.data);
+      } catch (err: any) {
+        if (err?.response?.status === 404) return null;
+        throw err;
+      }
+    },
     enabled,
     retry: false,
   });
