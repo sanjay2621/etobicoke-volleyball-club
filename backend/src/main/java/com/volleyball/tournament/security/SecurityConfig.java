@@ -47,7 +47,8 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         // Public: registration, login, password reset, photo viewing.
                         .requestMatchers(HttpMethod.POST, "/api/auth/login", "/api/auth/refresh",
-                                "/api/auth/register-account", "/api/auth/reset-password").permitAll()
+                                "/api/auth/register-account", "/api/auth/request-password-reset",
+                                "/api/auth/reset-password").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/players").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/tournaments/public/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/teams/public",

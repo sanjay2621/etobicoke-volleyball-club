@@ -18,6 +18,17 @@ spring:
   flyway:
     enabled: true
     baseline-on-migrate: true
+  mail:
+    host: smtp-relay.brevo.com
+    port: 587
+    username: ${MAIL_USERNAME}
+    password: ${MAIL_PASSWORD}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
   servlet:
     multipart:
       # Kept above app.storage.max-photo-bytes so the app's own validation returns a clean

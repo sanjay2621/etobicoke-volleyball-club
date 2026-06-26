@@ -1,12 +1,16 @@
 package com.volleyball.tournament.auth.service;
 
 import com.volleyball.tournament.auth.PlayerDirectory;
+import com.volleyball.tournament.auth.entity.PasswordResetToken;
 import com.volleyball.tournament.auth.entity.Role;
 import com.volleyball.tournament.auth.entity.UserAccount;
 import com.volleyball.tournament.auth.model.AuthResponse;
 import com.volleyball.tournament.auth.model.LoginRequest;
 import com.volleyball.tournament.auth.model.RefreshRequest;
 import com.volleyball.tournament.auth.model.RegisterAccountRequest;
+import com.volleyball.tournament.auth.model.RequestPasswordResetRequest;
+import com.volleyball.tournament.auth.model.ResetPasswordRequest;
+import com.volleyball.tournament.auth.repository.PasswordResetTokenRepository;
 import com.volleyball.tournament.auth.repository.UserAccountRepository;
 import com.volleyball.tournament.common.exception.ApiException;
 import com.volleyball.tournament.security.JwtService;
@@ -22,15 +26,23 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.security.SecureRandom;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
+
 @Service
 @RequiredArgsConstructor
 public class AuthService {
 
     private final UserAccountRepository userAccountRepository;
+    private final PasswordResetTokenRepository passwordResetTokenRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
     private final AuthenticationManager authenticationManager;
     private final ObjectProvider<PlayerDirectory> playerDirectory;
+    private final EmailService emailService;
+
+    private final SecureRandom secureRandom = new SecureRandom();
 
     @Transactional
     public AuthResponse registerAccount(RegisterAccountRequest req) {
@@ -55,19 +67,53 @@ public class AuthService {
         return issueTokens(account);
     }
 
-    /**
-     * Resets the password for a player who has registered for a tournament. Creates the login if it
-     * does not exist yet, or overwrites the existing password. Matches the existing email-only trust
-     * model (no email verification), used by the "Forgot password?" flow.
-     */
     @Transactional
-    public AuthResponse resetPassword(RegisterAccountRequest req) {
+    public void requestPasswordReset(RequestPasswordResetRequest req) {
         String email = req.email().trim().toLowerCase();
+        PlayerDirectory directory = playerDirectory.getIfAvailable();
+        boolean playerExists = directory != null &&
+                directory.findActivePlayerIdByEmail(email).isPresent();
+        if (!playerExists) {
+            // Return silently so we don't reveal whether an email is registered
+            return;
+        }
+
+        // Invalidate any previous unused codes for this email
+        passwordResetTokenRepository.markAllUsedForEmail(email);
+
+        String code = String.format("%06d", secureRandom.nextInt(1_000_000));
+        PasswordResetToken token = new PasswordResetToken();
+        token.setEmail(email);
+        token.setCode(code);
+        token.setExpiresAt(Instant.now().plus(15, ChronoUnit.MINUTES));
+        passwordResetTokenRepository.save(token);
+
+        emailService.sendPasswordResetCode(email, code);
+    }
+
+    @Transactional
+    public AuthResponse resetPassword(ResetPasswordRequest req) {
+        String email = req.email().trim().toLowerCase();
+
+        PasswordResetToken token = passwordResetTokenRepository
+                .findTopByEmailIgnoreCaseAndUsedFalseOrderByCreatedAtDesc(email)
+                .orElseThrow(() -> new ApiException(HttpStatus.BAD_REQUEST, "Invalid or expired code"));
+
+        if (!token.getCode().equals(req.code())) {
+            throw new ApiException(HttpStatus.BAD_REQUEST, "Invalid or expired code");
+        }
+        if (Instant.now().isAfter(token.getExpiresAt())) {
+            throw new ApiException(HttpStatus.BAD_REQUEST, "Code has expired. Please request a new one.");
+        }
+
+        token.setUsed(true);
+        passwordResetTokenRepository.save(token);
+
         PlayerDirectory directory = playerDirectory.getIfAvailable();
         Long playerId = (directory == null ? java.util.Optional.<Long>empty()
                 : directory.findActivePlayerIdByEmail(email))
                 .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND,
-                        "No player registration found for this email. Register for a tournament first."));
+                        "No player registration found for this email."));
 
         UserAccount account = userAccountRepository.findByEmailIgnoreCase(email)
                 .orElseGet(() -> {
