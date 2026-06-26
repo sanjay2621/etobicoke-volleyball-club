@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { TruncatedText } from '../../components/TruncatedText';
 import {
   Alert,
   Avatar,
@@ -125,8 +126,8 @@ export function DraftPage() {
                   >
                     <CardContent>
                       <Stack direction="row" justifyContent="space-between" alignItems="center">
-                        <Typography variant="subtitle1" fontWeight={700}>
-                          {team.name}
+                        <Typography variant="subtitle1" fontWeight={700} sx={{ flex: 1, minWidth: 0, mr: 1 }}>
+                          <TruncatedText text={team.name} />
                         </Typography>
                         <Chip size="small" label={`${team.memberCount}`} />
                       </Stack>
@@ -135,12 +136,15 @@ export function DraftPage() {
                           <ListItem key={m.playerId} disableGutters>
                             <ListItemText
                               primary={
-                                <Stack direction="row" spacing={0.5} alignItems="center">
-                                  <span>{m.fullName}</span>
+                                <Stack direction="row" spacing={0.5} alignItems="center" sx={{ minWidth: 0 }}>
+                                  <Box sx={{ minWidth: 0, flex: 1 }}>
+                                    <TruncatedText text={m.fullName} />
+                                  </Box>
                                   {m.captain && <StarIcon fontSize="inherit" color="warning" />}
                                 </Stack>
                               }
                               secondary={m.draftRound ? `Round ${m.draftRound}` : null}
+                              sx={{ minWidth: 0 }}
                             />
                           </ListItem>
                         ))}
@@ -181,8 +185,9 @@ export function DraftPage() {
                           <Avatar src={p.photoUrl ?? undefined} className={styles.avatar} />
                         </ListItemAvatar>
                         <ListItemText
-                          primary={p.fullName}
-                          secondary={`${p.preferredPositions.join(', ')}${p.skillLevel ? ' · ' + p.skillLevel : ''}`}
+                          primary={<TruncatedText text={p.fullName} />}
+                          secondary={<TruncatedText text={`${p.preferredPositions.join(', ')}${p.skillLevel ? ' · ' + p.skillLevel : ''}`} />}
+                          sx={{ minWidth: 0 }}
                         />
                       </ListItem>
                     ))}

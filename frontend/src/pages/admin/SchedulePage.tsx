@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { TruncatedText } from '../../components/TruncatedText';
 import {
   Alert,
   Box,
@@ -172,17 +173,17 @@ function PodiumCard({
         <Box className={styles.podiumItem}>
           <Box className={styles.medalEmoji}>🥈</Box>
           <Typography className={styles.podiumLabel}>Runner-Up</Typography>
-          <Typography variant="h6" className={styles.podiumTeam}>{silver ?? '—'}</Typography>
+          <Typography variant="h6" className={styles.podiumTeam}><TruncatedText text={silver ?? '—'} /></Typography>
         </Box>
         <Box className={`${styles.podiumItem} ${styles.podiumGold}`}>
           <Box className={styles.medalEmoji}>🥇</Box>
           <Typography className={styles.podiumLabel}>Champion</Typography>
-          <Typography variant="h5" className={styles.podiumTeamGold}>{gold ?? '—'}</Typography>
+          <Typography variant="h5" className={styles.podiumTeamGold}><TruncatedText text={gold ?? '—'} /></Typography>
         </Box>
         <Box className={styles.podiumItem}>
           <Box className={styles.medalEmoji}>{bronze ? '🥉' : '—'}</Box>
           <Typography className={styles.podiumLabel}>Third Place</Typography>
-          <Typography variant="h6" className={styles.podiumTeam}>{bronze ?? 'TBD'}</Typography>
+          <Typography variant="h6" className={styles.podiumTeam}><TruncatedText text={bronze ?? 'TBD'} /></Typography>
         </Box>
       </Box>
     </Paper>
@@ -233,12 +234,12 @@ function MatchTable({
                 <TableCell>{time}</TableCell>
                 <TableCell>{m.court ?? '—'}</TableCell>
                 {showGroup && <TableCell>{m.groupLabel}</TableCell>}
-                <TableCell>
+                <TableCell sx={{ maxWidth: 180 }}>
                   <Box className={m.winnerTeamId === m.homeTeamId ? styles.matchCellBold : styles.matchCellNormal}>
-                    {m.homeTeamName ?? 'TBD'}
+                    <TruncatedText text={m.homeTeamName ?? 'TBD'} />
                   </Box>
                   <Box className={m.winnerTeamId === m.awayTeamId ? styles.matchCellBold : styles.matchCellNormal}>
-                    {m.awayTeamName ?? 'TBD'}
+                    <TruncatedText text={m.awayTeamName ?? 'TBD'} />
                   </Box>
                   {m.bracketSlot && <Chip size="small" label={m.bracketSlot} className={styles.bracketChip} />}
                 </TableCell>
@@ -279,7 +280,7 @@ function StandingsTable({ group }: { group: StandingGroup }) {
             {group.rows.map((r) => (
               <TableRow key={r.teamId} className={r.rank <= 2 ? styles.topTwoRow : ''}>
                 <TableCell>{r.rank}</TableCell>
-                <TableCell>{r.teamName}</TableCell>
+                <TableCell sx={{ maxWidth: 150 }}><TruncatedText text={r.teamName} /></TableCell>
                 <TableCell align="right">{r.wins}</TableCell>
                 <TableCell align="right">{r.losses}</TableCell>
                 <TableCell align="right">{r.setsWon}-{r.setsLost}</TableCell>

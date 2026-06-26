@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { TruncatedText } from '../../components/TruncatedText';
 import {
   Alert,
   Autocomplete,
@@ -201,7 +202,9 @@ function TeamCard({
     <Card className={styles.teamCard}>
       <CardContent>
         <Stack direction="row" justifyContent="space-between" alignItems="center">
-          <Typography variant="h6">{team.name}</Typography>
+          <Typography variant="h6" sx={{ flex: 1, minWidth: 0, mr: 1 }}>
+            <TruncatedText text={team.name} />
+          </Typography>
           <Box>
             {team.groupLabel && <Chip size="small" label={`Group ${team.groupLabel}`} className={styles.groupChip} />}
             <Chip size="small" label={`${team.memberCount} players`} />
@@ -252,8 +255,9 @@ function TeamCard({
                 <Avatar src={m.photoUrl ?? undefined} className={styles.memberAvatar} />
               </ListItemAvatar>
               <ListItemText
-                primary={m.fullName}
-                secondary={m.preferredPositions.join(', ')}
+                primary={<TruncatedText text={m.fullName} />}
+                secondary={<TruncatedText text={m.preferredPositions.join(', ')} />}
+                sx={{ minWidth: 0 }}
               />
             </ListItem>
           ))}

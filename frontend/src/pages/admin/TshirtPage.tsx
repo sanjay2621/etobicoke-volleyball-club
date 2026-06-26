@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { TruncatedText } from '../../components/TruncatedText';
 import {
   Box,
   MenuItem,
@@ -110,7 +111,7 @@ export function TshirtPage() {
           <TableBody>
             {rows.map((row) => (
               <TableRow key={row.teamName} hover>
-                <TableCell>{row.teamName}</TableCell>
+                <TableCell sx={{ maxWidth: 200 }}><TruncatedText text={row.teamName} /></TableCell>
                 {TSHIRT_SIZES.map((sz) => (
                   <TableCell key={sz} align="center">
                     {row.counts[sz] > 0 ? row.counts[sz] : '—'}

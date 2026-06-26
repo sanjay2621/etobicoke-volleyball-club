@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
 import { Link as RouterLink } from 'react-router-dom';
+import { TruncatedText } from '../../components/TruncatedText';
 import {
   AppBar,
   Avatar,
@@ -248,7 +249,9 @@ function TeamCard({ team }: { team: PublicTeam }) {
     <Card className={styles.teamCard}>
       <CardContent>
         <Stack direction="row" justifyContent="space-between" alignItems="center" mb={1}>
-          <Typography variant="h6">{team.name}</Typography>
+          <Typography variant="h6" sx={{ flex: 1, minWidth: 0, mr: 1 }}>
+            <TruncatedText text={team.name} />
+          </Typography>
           {team.groupLabel && <Chip size="small" label={`Group ${team.groupLabel}`} />}
         </Stack>
         <Stack spacing={1}>
@@ -260,7 +263,9 @@ function TeamCard({ team }: { team: PublicTeam }) {
           {team.members.map((m) => (
             <Stack key={m.playerId} direction="row" spacing={1.5} alignItems="center">
               <Avatar src={m.photoUrl ?? undefined} className={styles.memberAvatar} />
-              <Typography>{m.fullName}</Typography>
+              <Typography sx={{ minWidth: 0, flex: 1 }}>
+                <TruncatedText text={m.fullName} />
+              </Typography>
               {m.captain && (
                 <Tooltip title="Captain">
                   <StarIcon fontSize="small" color="warning" />
@@ -272,8 +277,8 @@ function TeamCard({ team }: { team: PublicTeam }) {
         {team.refereeName && (
           <Stack direction="row" spacing={1} alignItems="center" mt={1.5} pt={1.5} className={styles.refereeSection}>
             <SportsIcon fontSize="small" color="action" />
-            <Typography variant="body2" color="text.secondary">
-              Referee: <strong>{team.refereeName}</strong>
+            <Typography variant="body2" color="text.secondary" sx={{ minWidth: 0, flex: 1 }}>
+              <TruncatedText text={`Referee: ${team.refereeName}`} />
             </Typography>
           </Stack>
         )}
@@ -352,17 +357,17 @@ function PublicPodiumCard({
         <Box className={styles.podiumItem}>
           <Box className={styles.medalEmoji}>🥈</Box>
           <Typography className={styles.podiumLabel}>Runner-Up</Typography>
-          <Typography variant="h6" className={styles.podiumTeam}>{silver ?? '—'}</Typography>
+          <Typography variant="h6" className={styles.podiumTeam}><TruncatedText text={silver ?? '—'} /></Typography>
         </Box>
         <Box className={`${styles.podiumItem} ${styles.podiumGold}`}>
           <Box className={styles.medalEmoji}>🥇</Box>
           <Typography className={styles.podiumLabel}>Champion</Typography>
-          <Typography variant="h5" className={styles.podiumTeamGold}>{gold ?? '—'}</Typography>
+          <Typography variant="h5" className={styles.podiumTeamGold}><TruncatedText text={gold ?? '—'} /></Typography>
         </Box>
         <Box className={styles.podiumItem}>
           <Box className={styles.medalEmoji}>{bronze ? '🥉' : '—'}</Box>
           <Typography className={styles.podiumLabel}>Third Place</Typography>
-          <Typography variant="h6" className={styles.podiumTeam}>{bronze ?? 'TBD'}</Typography>
+          <Typography variant="h6" className={styles.podiumTeam}><TruncatedText text={bronze ?? 'TBD'} /></Typography>
         </Box>
       </Box>
     </Paper>
@@ -393,12 +398,12 @@ function MatchTable({ matches, showGroup }: { matches: MatchResponse[]; showGrou
                 <TableCell>{time}</TableCell>
                 <TableCell>{m.court ?? '—'}</TableCell>
                 {showGroup && <TableCell>{m.groupLabel}</TableCell>}
-                <TableCell>
+                <TableCell sx={{ maxWidth: 180 }}>
                   <Box className={m.winnerTeamId === m.homeTeamId ? styles.matchCellBold : styles.matchCellNormal}>
-                    {m.homeTeamName ?? 'TBD'}
+                    <TruncatedText text={m.homeTeamName ?? 'TBD'} />
                   </Box>
                   <Box className={m.winnerTeamId === m.awayTeamId ? styles.matchCellBold : styles.matchCellNormal}>
-                    {m.awayTeamName ?? 'TBD'}
+                    <TruncatedText text={m.awayTeamName ?? 'TBD'} />
                   </Box>
                   {m.bracketSlot && <Chip size="small" label={m.bracketSlot} className={styles.bracketChip} />}
                 </TableCell>
@@ -451,7 +456,7 @@ function StandingsTable({ group }: { group: StandingGroup }) {
             {group.rows.map((r) => (
               <TableRow key={r.teamId} className={r.rank <= 2 ? styles.topTwoRow : ''}>
                 <TableCell>{r.rank}</TableCell>
-                <TableCell>{r.teamName}</TableCell>
+                <TableCell sx={{ maxWidth: 150 }}><TruncatedText text={r.teamName} /></TableCell>
                 <TableCell align="right">{r.wins}</TableCell>
                 <TableCell align="right">{r.losses}</TableCell>
                 <TableCell align="right">
