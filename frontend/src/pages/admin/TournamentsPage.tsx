@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { TruncatedText } from '../../components/TruncatedText';
 import {
   Box,
   Button,
@@ -80,7 +81,7 @@ export function TournamentsPage() {
             )}
             {tournaments?.map((t) => (
               <TableRow key={t.id} hover>
-                <TableCell>{t.name}</TableCell>
+                <TableCell sx={{ maxWidth: 200 }}><TruncatedText text={t.name} /></TableCell>
                 <TableCell>{new Date(t.date).toLocaleDateString()}</TableCell>
                 <TableCell>{t.startTime?.slice(0, 5)}</TableCell>
                 <TableCell>{t.numberOfCourts}</TableCell>

@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { TruncatedText } from '../../components/TruncatedText';
 import {
   Avatar,
   Box,
@@ -182,10 +183,10 @@ export function RefereesPage() {
                       </Tooltip>
                     </Box>
                   </TableCell>
-                  <TableCell>{p.fullName}</TableCell>
+                  <TableCell sx={{ maxWidth: 160 }}><TruncatedText text={p.fullName} /></TableCell>
                   <TableCell>{p.skillLevel ?? '—'}</TableCell>
-                  <TableCell>{p.phone}</TableCell>
-                  <TableCell>{p.email}</TableCell>
+                  <TableCell sx={{ maxWidth: 130 }}><TruncatedText text={p.phone} /></TableCell>
+                  <TableCell sx={{ maxWidth: 200 }}><TruncatedText text={p.email} /></TableCell>
                   <TableCell>
                     <Chip
                       label={p.paymentStatus}

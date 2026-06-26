@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { TruncatedText } from '../../components/TruncatedText';
 import {
   Avatar,
   Box,
@@ -182,7 +183,7 @@ export function PlayersPage() {
                     </Tooltip>
                   </Box>
                 </TableCell>
-                <TableCell>{p.fullName}</TableCell>
+                <TableCell sx={{ maxWidth: 160 }}><TruncatedText text={p.fullName} /></TableCell>
                 <TableCell>
                   <Stack direction="row" spacing={0.5} className={styles.positionsCell}>
                     {p.preferredPositions.map((pos) => (
@@ -192,8 +193,8 @@ export function PlayersPage() {
                 </TableCell>
                 <TableCell>{p.skillLevel ?? '—'}</TableCell>
                 <TableCell>{p.tshirtSize}</TableCell>
-                <TableCell>{p.phone}</TableCell>
-                <TableCell>{p.email}</TableCell>
+                <TableCell sx={{ maxWidth: 130 }}><TruncatedText text={p.phone} /></TableCell>
+                <TableCell sx={{ maxWidth: 200 }}><TruncatedText text={p.email} /></TableCell>
                 <TableCell>
                   <Chip
                     label={p.paymentStatus}

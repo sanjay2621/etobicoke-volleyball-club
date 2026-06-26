@@ -24,17 +24,18 @@ import AddPhotoAlternateIcon from '@mui/icons-material/AddPhotoAlternate';
 import SportsVolleyballIcon from '@mui/icons-material/SportsVolleyball';
 import StarIcon from '@mui/icons-material/Star';
 import { useMarkPayment, useMyPlayer, useUploadMyPhoto } from '../../api/players';
+import { TruncatedText } from '../../components/TruncatedText';
 import { useMyTeam, useMyRoster } from '../../api/teams';
 import { useAuth } from '../../auth/AuthContext';
 import styles from './PlayerDashboardPage.module.css';
 
 function Detail({ label, value }: { label: string; value?: string | number | null }) {
   return (
-    <Grid item xs={6} sm={4}>
+    <Grid item xs={6} sm={4} sx={{ minWidth: 0 }}>
       <Typography variant="caption" color="text.secondary">
         {label}
       </Typography>
-      <Typography>{value ?? '—'}</Typography>
+      <TruncatedText text={value} />
     </Grid>
   );
 }
@@ -199,8 +200,8 @@ export function PlayerDashboardPage() {
                                         .filter(Boolean)
                                         .join(' · ')}
                                     </Box>
-                                    <Box component="span" className={styles.inlineBlock}>
-                                      {[m.phone, m.email].filter(Boolean).join(' · ') || '—'}
+                                    <Box component="span" className={styles.inlineBlock} sx={{ display: 'block', minWidth: 0 }}>
+                                      <TruncatedText text={[m.phone, m.email].filter(Boolean).join(' · ') || '—'} />
                                     </Box>
                                   </>
                                 }
