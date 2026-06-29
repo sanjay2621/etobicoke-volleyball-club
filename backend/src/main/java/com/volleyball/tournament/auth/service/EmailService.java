@@ -17,7 +17,7 @@ import java.util.Map;
 public class EmailService {
 
     private static final String FROM_EMAIL = "etobicokevolleyballclub13@gmail.com";
-    private static final String FROM_NAME  = "Etobicoke Volleyball Club";
+    private static final String FROM_NAME  = "SANATANI Volleyball Club";
 
     private final RestClient restClient;
 
@@ -33,12 +33,12 @@ public class EmailService {
         Map<String, Object> body = Map.of(
                 "sender",      Map.of("email", FROM_EMAIL, "name", FROM_NAME),
                 "to",          List.of(Map.of("email", toEmail)),
-                "subject",     "Your password reset code — Etobicoke Volleyball Club",
+                "subject",     "Your password reset code — SANATANI Volleyball Club",
                 "textContent", "Hello,\n\n" +
-                               "You requested a password reset for your Etobicoke Volleyball Club account.\n\n" +
+                               "You requested a password reset for your SANATANI Volleyball Club account.\n\n" +
                                "Your verification code is: " + code + "\n\n" +
                                "This code expires in 15 minutes. If you did not request this, you can safely ignore this email.\n\n" +
-                               "— Etobicoke Volleyball Club"
+                               "— SANATANI Volleyball Club"
         );
         try {
             restClient.post()

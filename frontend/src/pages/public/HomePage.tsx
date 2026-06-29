@@ -66,7 +66,7 @@ export function HomePage() {
         <Toolbar>
           <SportsVolleyballIcon className={styles.appBarIcon} />
           <Typography variant="h6" className={styles.appBarTitle}>
-            Etobicoke Volleyball Club
+            SANATANI Volleyball Club
           </Typography>
           <Button color="inherit" component={RouterLink} to="/login">
             Log in

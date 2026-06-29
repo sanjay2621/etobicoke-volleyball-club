@@ -215,7 +215,7 @@ export function RegisterPage() {
                 Register to Play
               </Typography>
               <Typography variant="body1" className={styles.bannerSubtext}>
-                Etobicoke Volleyball Club — fill in your details below to secure your spot.
+                SANATANI Volleyball Club — fill in your details below to secure your spot.
               </Typography>
             </Box>
           </Stack>
