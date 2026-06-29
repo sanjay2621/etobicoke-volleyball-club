@@ -71,33 +71,37 @@ export function AdminLayout() {
     <Box className={styles.root}>
       <AppBar position="fixed" className={styles.appBar} elevation={0}>
         <Toolbar>
-          {isMobile && (
-            <IconButton
-              color="inherit"
-              edge="start"
-              onClick={() => setDrawerOpen(true)}
-              className={styles.menuBtn}
-            >
-              <MenuIcon />
-            </IconButton>
-          )}
-          <Typography variant="h6" className={styles.appBarTitle}>
-            Volleyball Admin
+          <Box sx={{ flex: 1, display: 'flex', alignItems: 'center' }}>
+            {isMobile && (
+              <IconButton
+                color="inherit"
+                edge="start"
+                onClick={() => setDrawerOpen(true)}
+                className={styles.menuBtn}
+              >
+                <MenuIcon />
+              </IconButton>
+            )}
+          </Box>
+          <Typography variant="h6" fontWeight={700}>
+            SANATANI Volleyball Club
           </Typography>
-          {!isMobile && (
-            <Typography variant="body2" className={styles.appBarEmail}>
-              {user?.email}
-            </Typography>
-          )}
-          <Button
-            color="inherit"
-            onClick={() => {
-              logout();
-              navigate('/login');
-            }}
-          >
-            Log out
-          </Button>
+          <Box sx={{ flex: 1, display: 'flex', justifyContent: 'flex-end', alignItems: 'center' }}>
+            {!isMobile && (
+              <Typography variant="body2" className={styles.appBarEmail}>
+                {user?.email}
+              </Typography>
+            )}
+            <Button
+              color="inherit"
+              onClick={() => {
+                logout();
+                navigate('/login');
+              }}
+            >
+              Log out
+            </Button>
+          </Box>
         </Toolbar>
       </AppBar>
 
