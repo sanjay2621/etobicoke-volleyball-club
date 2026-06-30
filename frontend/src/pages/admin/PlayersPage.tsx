@@ -17,6 +17,7 @@ import {
   TableContainer,
   TableHead,
   TableRow,
+  TableSortLabel,
   TextField,
   Tooltip,
   Typography,
@@ -46,6 +47,17 @@ export function PlayersPage() {
   const [editing, setEditing] = useState<Player | null>(null);
   const [search, setSearch] = useState('');
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [sortField, setSortField] = useState<'firstName' | 'lastName' | null>(null);
+  const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc');
+
+  function handleSort(field: 'firstName' | 'lastName') {
+    if (sortField === field) {
+      setSortDir((d) => (d === 'asc' ? 'desc' : 'asc'));
+    } else {
+      setSortField(field);
+      setSortDir('asc');
+    }
+  }
 
   useEffect(() => {
     if (tournamentId == null && tournaments && tournaments.length > 0) {
@@ -74,6 +86,17 @@ export function PlayersPage() {
         .includes(q),
     );
   }, [nonReferees, search]);
+
+  const sorted = useMemo(() => {
+    if (!sortField) return filtered;
+    return [...filtered].sort((a, b) => {
+      const va = a[sortField].toLowerCase();
+      const vb = b[sortField].toLowerCase();
+      if (va < vb) return sortDir === 'asc' ? -1 : 1;
+      if (va > vb) return sortDir === 'asc' ? 1 : -1;
+      return 0;
+    });
+  }, [filtered, sortField, sortDir]);
 
   return (
     <>
@@ -127,7 +150,24 @@ export function PlayersPage() {
           <TableHead>
             <TableRow>
               <TableCell />
-              <TableCell>Name</TableCell>
+              <TableCell sortDirection={sortField === 'firstName' ? sortDir : false}>
+                <TableSortLabel
+                  active={sortField === 'firstName'}
+                  direction={sortField === 'firstName' ? sortDir : 'asc'}
+                  onClick={() => handleSort('firstName')}
+                >
+                  First Name
+                </TableSortLabel>
+              </TableCell>
+              <TableCell sortDirection={sortField === 'lastName' ? sortDir : false}>
+                <TableSortLabel
+                  active={sortField === 'lastName'}
+                  direction={sortField === 'lastName' ? sortDir : 'asc'}
+                  onClick={() => handleSort('lastName')}
+                >
+                  Last Name
+                </TableSortLabel>
+              </TableCell>
               <TableCell>Positions</TableCell>
               <TableCell>Skill</TableCell>
               <TableCell>Shirt</TableCell>
@@ -142,19 +182,19 @@ export function PlayersPage() {
           <TableBody>
             {isLoading && (
               <TableRow>
-                <TableCell colSpan={11}>Loading…</TableCell>
+                <TableCell colSpan={12}>Loading…</TableCell>
               </TableRow>
             )}
-            {!isLoading && filtered.length === 0 && (
+            {!isLoading && sorted.length === 0 && (
               <TableRow>
-                <TableCell colSpan={11}>
+                <TableCell colSpan={12}>
                   <Box className={styles.emptyCell}>
                     {search ? 'No players match your search.' : 'No registrations yet for this tournament.'}
                   </Box>
                 </TableCell>
               </TableRow>
             )}
-            {filtered.map((p) => {
+            {sorted.map((p) => {
               const assignedTeam = playerTeamMap.get(p.id);
               return (
               <TableRow
@@ -183,7 +223,8 @@ export function PlayersPage() {
                     </Tooltip>
                   </Box>
                 </TableCell>
-                <TableCell sx={{ maxWidth: 160 }}><TruncatedText text={p.fullName} /></TableCell>
+                <TableCell sx={{ maxWidth: 120 }}><TruncatedText text={p.firstName} /></TableCell>
+                <TableCell sx={{ maxWidth: 120 }}><TruncatedText text={p.lastName} /></TableCell>
                 <TableCell>
                   <Stack direction="row" spacing={0.5} className={styles.positionsCell}>
                     {p.preferredPositions.map((pos) => (
