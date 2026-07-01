@@ -30,10 +30,10 @@ const NAV = [
   { to: '/admin/players', label: 'Players', icon: <PersonIcon /> },
   { to: '/admin/referees', label: 'Referees', icon: <SportsIcon /> },
   { to: '/admin/teams', label: 'Teams', icon: <GroupsIcon /> },
+  { to: '/admin/toss', label: 'Coin Toss', icon: <MonetizationOnIcon /> },
   { to: '/admin/draft', label: 'Draft', icon: <HowToRegIcon /> },
   { to: '/admin/schedule', label: 'Schedule', icon: <CalendarMonthIcon /> },
   { to: '/admin/tshirts', label: 'T-Shirts', icon: <CheckroomIcon /> },
-  { to: '/admin/toss', label: 'Coin Toss', icon: <MonetizationOnIcon /> },
 ];
 
 export function AdminLayout() {
