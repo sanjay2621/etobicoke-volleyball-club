@@ -1,0 +1,77 @@
+.tournamentSelect {
+  min-width: 200px;
+}
+
+.tossCard {
+  min-height: 420px;
+}
+
+.tossCardContent {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  height: 100%;
+  padding-bottom: 24px !important;
+}
+
+/* ── Coin ── */
+.coinWrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 32px 0 24px;
+  perspective: 600px;
+}
+
+.coin {
+  width: 130px;
+  height: 130px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, #ffe566, #d4a000 65%, #a87800);
+  border: 5px solid #c8960c;
+  box-shadow:
+    0 8px 28px rgba(0, 0, 0, 0.22),
+    inset 0 3px 6px rgba(255, 255, 255, 0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transform-style: preserve-3d;
+}
+
+.coinLabel {
+  font-size: 2.8rem;
+  font-weight: 900;
+  color: #6b4000;
+  line-height: 1;
+  user-select: none;
+}
+
+/* Silver face for TAILS */
+.coinTails {
+  background: radial-gradient(circle at 35% 35%, #f0f0f0, #a0a0a0 65%, #707070);
+  border-color: #999;
+}
+
+.coinTails .coinLabel {
+  color: #333;
+}
+
+/* Flip animation */
+.coinFlipping {
+  animation: coinFlip 2s cubic-bezier(0.45, 0.05, 0.55, 0.95) forwards;
+}
+
+@keyframes coinFlip {
+  0%   { transform: rotateY(0deg)    scale(1);    }
+  15%  { transform: rotateY(270deg)  scale(1.08); }
+  30%  { transform: rotateY(540deg)  scale(1);    }
+  45%  { transform: rotateY(810deg)  scale(1.08); }
+  60%  { transform: rotateY(1080deg) scale(1);    }
+  75%  { transform: rotateY(1350deg) scale(1.05); }
+  88%  { transform: rotateY(1620deg) scale(1.02); }
+  100% { transform: rotateY(1800deg) scale(1);    }
+}
+
+.flipBtn {
+  min-width: 160px;
+}

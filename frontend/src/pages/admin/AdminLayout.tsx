@@ -18,6 +18,8 @@ import PersonIcon from '@mui/icons-material/Person';
 import SportsIcon from '@mui/icons-material/Sports';
 import HowToRegIcon from '@mui/icons-material/HowToReg';
 import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
+import CheckroomIcon from '@mui/icons-material/Checkroom';
+import MonetizationOnIcon from '@mui/icons-material/MonetizationOn';
 import { useAuth } from '../../auth/AuthContext';
 
 const DRAWER_WIDTH = 230;
@@ -30,6 +32,8 @@ const NAV = [
   { to: '/admin/teams', label: 'Teams', icon: <GroupsIcon /> },
   { to: '/admin/draft', label: 'Draft', icon: <HowToRegIcon /> },
   { to: '/admin/schedule', label: 'Schedule', icon: <CalendarMonthIcon /> },
+  { to: '/admin/tshirts', label: 'T-Shirts', icon: <CheckroomIcon /> },
+  { to: '/admin/toss', label: 'Coin Toss', icon: <MonetizationOnIcon /> },
 ];
 
 export function AdminLayout() {

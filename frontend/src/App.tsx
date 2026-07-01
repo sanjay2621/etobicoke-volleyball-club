@@ -15,6 +15,8 @@ import { RefereesPage } from './pages/admin/RefereesPage';
 import { TeamsPage } from './pages/admin/TeamsPage';
 import { DraftPage } from './pages/admin/DraftPage';
 import { SchedulePage } from './pages/admin/SchedulePage';
+import { TshirtPage } from './pages/admin/TshirtPage';
+import { TossPage } from './pages/admin/TossPage';
 import { AdminHomePage } from './pages/admin/AdminHomePage';
 
 /** Public + player routes use the energetic playerTheme; /admin uses adminTheme. */
@@ -37,6 +39,8 @@ export function App() {
           <Route path="teams" element={<TeamsPage />} />
           <Route path="draft" element={<DraftPage />} />
           <Route path="schedule" element={<SchedulePage />} />
+          <Route path="tshirts" element={<TshirtPage />} />
+          <Route path="toss" element={<TossPage />} />
         </Route>
       </Route>
 
