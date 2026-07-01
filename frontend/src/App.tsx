@@ -1,5 +1,6 @@
 import { Navigate, Route, Routes } from 'react-router-dom';
 import { ThemeProvider } from '@mui/material/styles';
+import CssBaseline from '@mui/material/CssBaseline';
 import { adminTheme, playerTheme } from './theme/themes';
 import { RequireAuth } from './auth/guards';
 import { HomePage } from './pages/public/HomePage';
@@ -27,6 +28,7 @@ export function App() {
         path="/admin"
         element={
           <ThemeProvider theme={adminTheme}>
+            <CssBaseline />
             <RequireAuth role="ADMIN" />
           </ThemeProvider>
         }
@@ -48,6 +50,7 @@ export function App() {
         path="/*"
         element={
           <ThemeProvider theme={playerTheme}>
+            <CssBaseline />
             <PublicRoutes />
           </ThemeProvider>
         }
