@@ -1,0 +1,49 @@
+.root {
+  display: flex;
+  min-height: 100vh;
+  background-color: #EEF1F4;
+}
+
+.appBar {
+  z-index: 1201;
+}
+
+.menuBtn {
+  margin-right: 8px;
+}
+
+.appBarTitle {
+  flex-grow: 1;
+}
+
+.appBarEmail {
+  margin-right: 16px;
+  opacity: 0.85;
+}
+
+.drawer {
+  width: 230px;
+  flex-shrink: 0;
+}
+
+.drawer :global(.MuiDrawer-paper) {
+  width: 230px;
+  box-sizing: border-box;
+}
+
+.drawerMobile :global(.MuiDrawer-paper) {
+  width: 230px;
+  box-sizing: border-box;
+}
+
+.main {
+  flex-grow: 1;
+  padding: 24px;
+}
+
+.mainMobile {
+  flex-grow: 1;
+  padding: 16px;
+  width: 100%;
+  min-width: 0;
+}

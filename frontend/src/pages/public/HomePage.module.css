@@ -1,0 +1,302 @@
+/* Root */
+.root {
+  min-height: 100vh;
+  background-color: #F7F9FC;
+}
+
+/* AppBar */
+.appBarIcon {
+  margin-right: 8px;
+}
+
+.appBarTitle {
+  flex-grow: 1;
+  font-family: 'Poppins', sans-serif;
+}
+
+/* Hero */
+.hero {
+  background: linear-gradient(135deg, #0F1D35 0%, #1A2B4A 40%, #1E3A6E 75%, #2C4A7A 100%);
+  color: white;
+  padding: 40px 0;
+  position: relative;
+  overflow: hidden;
+}
+
+@media (min-width: 900px) {
+  .hero {
+    padding: 56px 0;
+  }
+}
+
+.heroDecor1 {
+  position: absolute;
+  right: -60px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 280px !important;
+  opacity: 0.07;
+  color: white;
+  pointer-events: none;
+}
+
+@media (min-width: 900px) {
+  .heroDecor1 {
+    right: 40px;
+    font-size: 420px !important;
+  }
+}
+
+.heroDecor2 {
+  position: absolute;
+  left: -80px;
+  bottom: -60px;
+  font-size: 200px !important;
+  opacity: 0.05;
+  color: white;
+  pointer-events: none;
+}
+
+@media (min-width: 900px) {
+  .heroDecor2 {
+    left: -40px;
+    font-size: 300px !important;
+  }
+}
+
+.heroDecor3 {
+  position: absolute;
+  left: 45%;
+  top: -40px;
+  font-size: 140px !important;
+  opacity: 0.04;
+  color: white;
+  pointer-events: none;
+}
+
+.heroContainer {
+  position: relative;
+  z-index: 1;
+}
+
+.heroPill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background-color: rgba(255, 255, 255, 0.12);
+  border-radius: 40px;
+  padding: 4px 16px;
+  margin-bottom: 24px;
+}
+
+.heroPillIcon {
+  font-size: 18px !important;
+}
+
+.heroPillText {
+  text-transform: uppercase;
+}
+
+.heroHeading {
+  line-height: 1.1;
+  margin-bottom: 16px !important;
+  font-size: 2rem !important;
+}
+
+@media (min-width: 600px) {
+  .heroHeading {
+    font-size: 2.75rem !important;
+  }
+}
+
+@media (min-width: 900px) {
+  .heroHeading {
+    font-size: 3.75rem !important;
+  }
+}
+
+.heroAccent {
+  color: #F97316;
+}
+
+.heroSubtext {
+  opacity: 0.85;
+  font-weight: 400;
+  max-width: 540px;
+  margin-bottom: 32px !important;
+}
+
+.heroSubtextWithDeadline {
+  opacity: 0.85;
+  font-weight: 400;
+  max-width: 540px;
+  margin-bottom: 16px !important;
+}
+
+.heroDeadlineText {
+  opacity: 0.75;
+  font-weight: 400;
+  margin-bottom: 12px !important;
+}
+
+.heroRegisterBtn {
+  background-color: #F97316 !important;
+  font-weight: 700;
+  padding: 0 32px;
+}
+
+.heroRegisterBtn:hover {
+  background-color: #EA6C0A !important;
+}
+
+.heroLoginBtn {
+  border-color: rgba(255, 255, 255, 0.5) !important;
+}
+
+.heroLoginBtn:hover {
+  border-color: white !important;
+  background-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+/* Content wrapper with background SVG */
+.contentWrapper {
+  background-color: #F7F9FC;
+  display: grid;
+  grid-template-columns: 1fr;
+}
+
+.courtBgSvg {
+  grid-row: 1;
+  grid-column: 1;
+  width: 100%;
+  height: auto;
+  align-self: start;
+  pointer-events: none;
+}
+
+/* Content */
+.contentContainer {
+  grid-row: 1;
+  grid-column: 1;
+  padding-top: 40px;
+  padding-bottom: 40px;
+  position: relative;
+  z-index: 1;
+}
+
+.tournamentSelect {
+  min-width: 240px;
+}
+
+@media (max-width: 599px) {
+  .tournamentSelect {
+    min-width: 0;
+    width: 100%;
+  }
+}
+
+.tabs {
+  margin-bottom: 24px;
+}
+
+/* TeamCard */
+.teamCard {
+  height: 100%;
+}
+
+.memberAvatar {
+  width: 32px;
+  height: 32px;
+}
+
+.refereeSection {
+  border-top: 1px solid rgba(0, 0, 0, 0.12);
+  padding-top: 12px;
+  margin-top: 12px;
+}
+
+/* MatchTable */
+.matchCellBold {
+  font-weight: 700;
+}
+
+.matchCellNormal {
+  font-weight: 400;
+}
+
+.bracketChip {
+  margin-top: 4px;
+}
+
+.playoffsHeading {
+  margin-top: 24px;
+}
+
+/* StandingsTable */
+.topTwoRow {
+  background-color: rgba(0, 0, 0, 0.04);
+}
+
+/* Podium card */
+.podiumCard {
+  padding: 32px 24px;
+  text-align: center;
+  background: linear-gradient(135deg, #1A2B4A 0%, #0F4C5C 100%) !important;
+  border-radius: 12px !important;
+}
+
+.podiumTitle {
+  font-weight: 800 !important;
+  color: #ffffff !important;
+  margin-bottom: 28px !important;
+  letter-spacing: 0.5px !important;
+}
+
+.podiumRow {
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.podiumItem {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  padding: 20px 24px;
+  min-width: 140px;
+  flex: 1;
+  max-width: 220px;
+}
+
+.podiumGold {
+  background: rgba(255, 215, 0, 0.18) !important;
+  border: 2px solid rgba(255, 215, 0, 0.55) !important;
+  padding: 28px 24px !important;
+  transform: translateY(-8px);
+}
+
+.medalEmoji {
+  font-size: 56px;
+  line-height: 1;
+  margin-bottom: 12px;
+}
+
+.podiumLabel {
+  color: rgba(255, 255, 255, 0.65) !important;
+  text-transform: uppercase !important;
+  letter-spacing: 1.2px !important;
+  font-size: 11px !important;
+  font-weight: 600 !important;
+  margin-bottom: 6px !important;
+}
+
+.podiumTeam {
+  color: #ffffff !important;
+  font-weight: 700 !important;
+}
+
+.podiumTeamGold {
+  color: #FFD700 !important;
+  font-weight: 800 !important;
+}

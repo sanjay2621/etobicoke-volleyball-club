@@ -1,0 +1,27 @@
+.tournamentSelect {
+  min-width: 220px;
+}
+
+.errorAlert {
+  margin-bottom: 16px;
+}
+
+.statusPaper {
+  padding: 16px;
+  margin-bottom: 16px;
+}
+
+.teamCardOnClock {
+  border-color: #E36414;
+  border-width: 2px;
+}
+
+.avatar {
+  width: 32px;
+  height: 32px;
+}
+
+.availableList {
+  max-height: 70vh;
+  overflow: auto;
+}

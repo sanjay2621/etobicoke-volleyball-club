@@ -1,0 +1,55 @@
+.tournamentSelect {
+  min-width: 220px;
+}
+
+.newTeamAlert {
+  margin-bottom: 8px;
+}
+
+.newTeamField {
+  margin-top: 8px;
+  min-width: 320px;
+}
+
+.teamCard {
+  height: 100%;
+}
+
+.groupChip {
+  margin-right: 8px;
+}
+
+.memberAvatar {
+  width: 32px;
+  height: 32px;
+}
+
+.autocompleteGrow {
+  flex-grow: 1;
+}
+
+.playerOption {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.playerOptionAvatar {
+  width: 28px;
+  height: 28px;
+  flex-shrink: 0;
+}
+
+.membersBox {
+  margin-top: 8px;
+}
+
+.addPlayerRow {
+  margin-top: 16px;
+}
+
+.refereeSection {
+  border-top: 1px solid rgba(0, 0, 0, 0.12);
+  padding-top: 12px;
+  margin-top: 12px;
+}

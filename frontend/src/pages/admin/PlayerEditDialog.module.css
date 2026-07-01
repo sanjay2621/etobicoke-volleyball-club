@@ -1,0 +1,8 @@
+.gridContainer {
+  margin-top: 0;
+}
+
+.positionsGroup {
+  flex-wrap: wrap;
+  gap: 4px;
+}

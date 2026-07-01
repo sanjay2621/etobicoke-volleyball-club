@@ -1,0 +1,168 @@
+.root {
+  min-height: 100vh;
+  background-color: #F7F9FC;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Banner */
+.banner {
+  background: linear-gradient(135deg, #0F1D35 0%, #1A2B4A 45%, #2C4A7A 100%);
+  color: white;
+  padding: 40px 0;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+
+@media (min-width: 900px) {
+  .banner {
+    padding: 56px 0;
+  }
+}
+
+.bannerDecorRight {
+  position: absolute;
+  right: -30px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 180px !important;
+  opacity: 0.07;
+  color: white;
+}
+
+@media (min-width: 900px) {
+  .bannerDecorRight {
+    right: 60px;
+    font-size: 260px !important;
+  }
+}
+
+.bannerDecorLeft {
+  position: absolute;
+  left: -40px;
+  bottom: -30px;
+  font-size: 140px !important;
+  opacity: 0.05;
+  color: white;
+}
+
+@media (min-width: 900px) {
+  .bannerDecorLeft {
+    left: 20px;
+    font-size: 200px !important;
+  }
+}
+
+.bannerContainer {
+  position: relative;
+  z-index: 1;
+}
+
+.bannerMainIcon {
+  font-size: 52px !important;
+  margin-bottom: 8px;
+  opacity: 0.9;
+}
+
+.bannerSubtext {
+  opacity: 0.75;
+  margin-top: 8px;
+}
+
+/* Form area */
+.formArea {
+  flex: 1;
+  display: grid;
+  place-items: center;
+  padding: 40px 0;
+  background: linear-gradient(160deg, #EEF4FF 0%, #E8F0FE 50%, #F0EEFF 100%);
+  position: relative;
+  overflow: hidden;
+}
+
+.formDecor1 {
+  position: absolute;
+  top: 24px;
+  left: 24px;
+  font-size: 90px !important;
+  color: #1A2B4A;
+  opacity: 0.07;
+  pointer-events: none;
+}
+
+.formDecor2 {
+  position: absolute;
+  top: 16px;
+  right: 60px;
+  font-size: 55px !important;
+  color: #2C4A7A;
+  opacity: 0.05;
+  pointer-events: none;
+}
+
+.formDecor3 {
+  position: absolute;
+  bottom: 40px;
+  left: 80px;
+  font-size: 70px !important;
+  color: #2C4A7A;
+  opacity: 0.05;
+  pointer-events: none;
+}
+
+.formDecor4 {
+  position: absolute;
+  bottom: 20px;
+  right: 24px;
+  font-size: 110px !important;
+  color: #1A2B4A;
+  opacity: 0.06;
+  pointer-events: none;
+}
+
+.formDecor5 {
+  position: absolute;
+  top: 45%;
+  left: 8%;
+  font-size: 44px !important;
+  color: #2C4A7A;
+  opacity: 0.04;
+  pointer-events: none;
+}
+
+.formDecor6 {
+  position: absolute;
+  top: 30%;
+  right: 6%;
+  font-size: 60px !important;
+  color: #1A2B4A;
+  opacity: 0.04;
+  pointer-events: none;
+}
+
+.formContainer {
+  position: relative;
+  z-index: 1;
+}
+
+.cardContent {
+  padding: 24px !important;
+}
+
+.errorAlert {
+  margin-bottom: 16px;
+}
+
+.submitBtn {
+  margin-top: 16px;
+}
+
+.forgotRow {
+  margin-top: 12px;
+}
+
+.divider {
+  margin-top: 16px;
+  margin-bottom: 16px;
+}

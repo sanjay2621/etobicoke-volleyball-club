@@ -1,0 +1,172 @@
+/* Success page */
+.successContainer {
+  padding-top: 64px;
+  padding-bottom: 64px;
+}
+
+/* Main layout */
+.root {
+  min-height: 100vh;
+}
+
+/* Banner */
+.banner {
+  background: linear-gradient(135deg, #0F1D35 0%, #1A2B4A 45%, #2C4A7A 100%);
+  color: white;
+  padding: 40px 0;
+  position: relative;
+  overflow: hidden;
+}
+
+@media (min-width: 900px) {
+  .banner {
+    padding: 56px 0;
+  }
+}
+
+.bannerDecorRight {
+  position: absolute;
+  right: -40px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 200px !important;
+  opacity: 0.07;
+  color: white;
+}
+
+@media (min-width: 900px) {
+  .bannerDecorRight {
+    right: 80px;
+    font-size: 320px !important;
+  }
+}
+
+.bannerDecorLeft {
+  position: absolute;
+  left: -50px;
+  bottom: -40px;
+  font-size: 220px !important;
+  opacity: 0.05;
+  color: white;
+}
+
+.bannerContainer {
+  position: relative;
+  z-index: 1;
+}
+
+.homeLink {
+  color: rgba(255, 255, 255, 0.75) !important;
+  margin-bottom: 16px;
+}
+
+.homeLink:hover {
+  color: white !important;
+}
+
+.bannerMainIcon {
+  font-size: 48px !important;
+  opacity: 0.9;
+}
+
+.bannerSubtext {
+  opacity: 0.8;
+  margin-top: 4px;
+}
+
+/* Form area */
+.formArea {
+  background: linear-gradient(160deg, #EEF4FF 0%, #E8F0FE 50%, #F0EEFF 100%);
+  position: relative;
+  overflow: hidden;
+  padding-bottom: 48px;
+}
+
+.formDecor1 {
+  position: absolute;
+  top: 24px;
+  right: 32px;
+  font-size: 100px !important;
+  color: #1A2B4A;
+  opacity: 0.06;
+  pointer-events: none;
+}
+
+.formDecor2 {
+  position: absolute;
+  top: 200px;
+  left: 16px;
+  font-size: 70px !important;
+  color: #2C4A7A;
+  opacity: 0.05;
+  pointer-events: none;
+}
+
+.formDecor3 {
+  position: absolute;
+  top: 40%;
+  right: 10px;
+  font-size: 55px !important;
+  color: #2C4A7A;
+  opacity: 0.04;
+  pointer-events: none;
+}
+
+.formDecor4 {
+  position: absolute;
+  bottom: 80px;
+  left: 60px;
+  font-size: 90px !important;
+  color: #1A2B4A;
+  opacity: 0.05;
+  pointer-events: none;
+}
+
+.formDecor5 {
+  position: absolute;
+  bottom: 20px;
+  right: 80px;
+  font-size: 65px !important;
+  color: #2C4A7A;
+  opacity: 0.04;
+  pointer-events: none;
+}
+
+.formDecor6 {
+  position: absolute;
+  top: 65%;
+  left: 45%;
+  font-size: 48px !important;
+  color: #1A2B4A;
+  opacity: 0.03;
+  pointer-events: none;
+}
+
+.formContainer {
+  padding-top: 32px;
+  padding-bottom: 32px;
+  position: relative;
+  z-index: 1;
+}
+
+.errorAlert {
+  margin-bottom: 16px;
+}
+
+.deadlineAlert {
+  margin-top: 8px;
+}
+
+.positionsGroup {
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.positionBtn {
+  border-radius: 8px;
+}
+
+.photoAvatar {
+  width: 56px;
+  height: 56px;
+}
