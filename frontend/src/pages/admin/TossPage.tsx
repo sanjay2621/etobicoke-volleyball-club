@@ -17,7 +17,8 @@ import { useSchedule } from '../../api/schedule';
 import { useTeams } from '../../api/teams';
 import styles from './TossPage.module.css';
 
-type Phase = 'setup' | 'flipping' | 'result';
+// 'revealing' = coin is edge-on, correct face about to expand into view
+type Phase = 'setup' | 'flipping' | 'revealing' | 'result';
 
 export function TossPage() {
   const { data: tournaments } = useActiveTournaments();
@@ -31,6 +32,7 @@ export function TossPage() {
   const [result, setResult] = useState<'HEADS' | 'TAILS' | null>(null);
   const [pendingResult, setPendingResult] = useState<'HEADS' | 'TAILS' | null>(null);
   const [phase, setPhase] = useState<Phase>('setup');
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     if (tournamentId == null && tournaments?.length) {
@@ -62,14 +64,28 @@ export function TossPage() {
     setCallingTeamId(null);
     setCall(null);
     setResult(null);
+    setPendingResult(null);
     setPhase('setup');
   }
 
-  function flipCoin() {
-    const outcome = Math.random() < 0.5 ? 'HEADS' : 'TAILS';
+  async function flipCoin() {
+    setLoading(true);
+    let outcome: 'HEADS' | 'TAILS';
+    try {
+      const res = await fetch('https://yesno.wtf/api');
+      const data = await res.json() as { answer: string };
+      outcome = data.answer === 'yes' ? 'HEADS' : 'TAILS';
+    } catch {
+      // Fallback if API is unreachable
+      outcome = Math.random() < 0.5 ? 'HEADS' : 'TAILS';
+    }
+    setLoading(false);
     setPendingResult(outcome);
     setPhase('flipping');
     setResult(null);
+    // At 1700ms the coin is edge-on — switch to the correct face
+    setTimeout(() => setPhase('revealing'), 1700);
+    // At 2000ms show the result text
     setTimeout(() => {
       setResult(outcome);
       setPhase('result');
@@ -93,6 +109,19 @@ export function TossPage() {
 
   const callingCaptain = callingTeamId != null ? captainMap.get(callingTeamId) : null;
   const won = phase === 'result' && result != null && call != null && result === call;
+
+  // Coin visual state: switch to correct face once the coin is edge-on
+  const showTails = (phase === 'revealing' || phase === 'result') && pendingResult === 'TAILS';
+  const coinClass = [
+    styles.coin,
+    showTails ? styles.coinTails : styles.coinHeads,
+    phase === 'flipping' ? styles.coinSpinning : '',
+    phase === 'revealing' ? styles.coinRevealing : '',
+  ].filter(Boolean).join(' ');
+  const coinLabel = phase === 'flipping' ? '?' : showTails ? 'T' : 'H';
+
+  const isFlipping = phase === 'flipping' || phase === 'revealing';
+  const isBusy = loading || isFlipping;
 
   const statusHint =
     !matchId
@@ -195,7 +224,7 @@ export function TossPage() {
                           fullWidth
                           variant={call === 'HEADS' ? 'contained' : 'outlined'}
                           color={call === 'HEADS' ? 'secondary' : 'inherit'}
-                          disabled={phase === 'flipping'}
+                          disabled={isFlipping}
                           onClick={() => setCall('HEADS')}
                         >
                           Heads
@@ -204,7 +233,7 @@ export function TossPage() {
                           fullWidth
                           variant={call === 'TAILS' ? 'contained' : 'outlined'}
                           color={call === 'TAILS' ? 'secondary' : 'inherit'}
-                          disabled={phase === 'flipping'}
+                          disabled={isFlipping}
                           onClick={() => setCall('TAILS')}
                         >
                           Tails
@@ -226,25 +255,24 @@ export function TossPage() {
                 Referee Toss
               </Typography>
 
-              {/* Coin — two-sided 3D: front=HEADS gold, back=TAILS silver */}
+              {/* Coin */}
               <Box className={styles.coinWrapper}>
-                <Box
-                  className={[
-                    styles.coinContainer,
-                    phase === 'flipping' && pendingResult === 'HEADS' ? styles.coinFlippingHeads : '',
-                    phase === 'flipping' && pendingResult === 'TAILS' ? styles.coinFlippingTails : '',
-                  ].filter(Boolean).join(' ')}
-                >
-                  <Box className={`${styles.coinFace} ${styles.coinFront}`}>
-                    <span className={styles.coinLabel}>H</span>
-                  </Box>
-                  <Box className={`${styles.coinFace} ${styles.coinBack}`}>
-                    <span className={styles.coinLabel}>T</span>
-                  </Box>
+                <Box className={coinClass}>
+                  <span className={styles.coinLabel}>{coinLabel}</span>
                 </Box>
               </Box>
 
-              {/* Result message */}
+              {/* Status / result */}
+              {phase === 'setup' && (
+                <Typography variant="body2" color="text.secondary" textAlign="center" mb={3}>
+                  {statusHint}
+                </Typography>
+              )}
+              {isFlipping && (
+                <Typography variant="body2" color="text.secondary" textAlign="center" mb={3}>
+                  Flipping…
+                </Typography>
+              )}
               {phase === 'result' && result && callingTeamName && (
                 <Box textAlign="center" mb={3}>
                   <Typography variant="h3" fontWeight={900} letterSpacing={2} mb={1}>
@@ -265,17 +293,6 @@ export function TossPage() {
                 </Box>
               )}
 
-              {phase !== 'result' && (
-                <Typography
-                  variant="body2"
-                  color="text.secondary"
-                  textAlign="center"
-                  mb={3}
-                >
-                  {statusHint}
-                </Typography>
-              )}
-
               {/* Action buttons */}
               <Stack direction="row" spacing={2} justifyContent="center">
                 {phase !== 'result' ? (
@@ -283,10 +300,10 @@ export function TossPage() {
                     variant="contained"
                     size="large"
                     className={styles.flipBtn}
-                    disabled={!matchId || !callingTeamId || !call || phase === 'flipping'}
-                    onClick={flipCoin}
+                    disabled={!matchId || !callingTeamId || !call || isBusy}
+                    onClick={() => { void flipCoin(); }}
                   >
-                    {phase === 'flipping' ? 'Flipping…' : '🪙 Flip Coin'}
+                    {loading ? 'Tossing…' : isFlipping ? 'Flipping…' : '🪙 Flip Coin'}
                   </Button>
                 ) : (
                   <>

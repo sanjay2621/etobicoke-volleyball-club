@@ -20,44 +20,40 @@
   justify-content: center;
   align-items: center;
   padding: 32px 0 24px;
-  perspective: 600px;
 }
 
-/* ── Spinning container (both faces live inside) ── */
-.coinContainer {
+/* ── Base coin ── */
+.coin {
   width: 130px;
   height: 130px;
-  position: relative;
-  transform-style: preserve-3d;
-}
-
-/* ── Shared face styles ── */
-.coinFace {
-  position: absolute;
-  inset: 0;
   border-radius: 50%;
+  border: 5px solid;
   display: flex;
   align-items: center;
   justify-content: center;
-  backface-visibility: hidden;
-  -webkit-backface-visibility: hidden;
-  border: 5px solid;
   box-shadow:
     0 8px 28px rgba(0, 0, 0, 0.22),
     inset 0 3px 6px rgba(255, 255, 255, 0.35);
 }
 
-/* HEADS — gold front face */
-.coinFront {
+/* HEADS face — gold */
+.coinHeads {
   background: radial-gradient(circle at 35% 35%, #ffe566, #d4a000 65%, #a87800);
   border-color: #c8960c;
 }
 
-/* TAILS — silver back face, pre-rotated 180° so it shows when container flips */
-.coinBack {
+.coinHeads .coinLabel {
+  color: #6b4000;
+}
+
+/* TAILS face — silver */
+.coinTails {
   background: radial-gradient(circle at 35% 35%, #f0f0f0, #a0a0a0 65%, #707070);
   border-color: #999;
-  transform: rotateY(180deg);
+}
+
+.coinTails .coinLabel {
+  color: #333;
 }
 
 .coinLabel {
@@ -67,44 +63,35 @@
   user-select: none;
 }
 
-.coinFront .coinLabel {
-  color: #6b4000;
+/* ── Spin animation (scaleX — works in all browsers, no 3D needed) ──
+   Coin flips fast, ending edge-on (scaleX = 0) at exactly 1700 ms.
+   The React timer then switches the face class before coinRevealing expands it. */
+.coinSpinning {
+  animation: coinSpin 1.7s ease-in forwards;
 }
 
-.coinBack .coinLabel {
-  color: #333;
+@keyframes coinSpin {
+  0%   { transform: scaleX(1)    scaleY(1);    }
+  9%   { transform: scaleX(0)    scaleY(1.06); }
+  18%  { transform: scaleX(1)    scaleY(1);    }
+  27%  { transform: scaleX(0)    scaleY(1.06); }
+  36%  { transform: scaleX(1)    scaleY(1);    }
+  45%  { transform: scaleX(0)    scaleY(1.06); }
+  54%  { transform: scaleX(1)    scaleY(1);    }
+  63%  { transform: scaleX(0)    scaleY(1.06); }
+  72%  { transform: scaleX(1)    scaleY(1);    }
+  82%  { transform: scaleX(0)    scaleY(1.06); }
+  100% { transform: scaleX(0)    scaleY(1.06); }
 }
 
-/* ── HEADS flip: ends at 1800° = 5 full rotations = front face visible ── */
-.coinFlippingHeads {
-  animation: coinFlipToHeads 2s cubic-bezier(0.45, 0.05, 0.55, 0.95) forwards;
+/* ── Reveal animation: expand from edge-on showing the correct face ── */
+.coinRevealing {
+  animation: coinReveal 0.3s ease-out both;
 }
 
-/* ── TAILS flip: ends at 1980° = 5.5 rotations = back face visible ── */
-.coinFlippingTails {
-  animation: coinFlipToTails 2s cubic-bezier(0.45, 0.05, 0.55, 0.95) forwards;
-}
-
-@keyframes coinFlipToHeads {
-  0%   { transform: rotateY(0deg)    scale(1);    }
-  15%  { transform: rotateY(270deg)  scale(1.08); }
-  30%  { transform: rotateY(540deg)  scale(1);    }
-  45%  { transform: rotateY(810deg)  scale(1.08); }
-  60%  { transform: rotateY(1080deg) scale(1);    }
-  75%  { transform: rotateY(1350deg) scale(1.05); }
-  88%  { transform: rotateY(1620deg) scale(1.02); }
-  100% { transform: rotateY(1800deg) scale(1);    }
-}
-
-@keyframes coinFlipToTails {
-  0%   { transform: rotateY(0deg)    scale(1);    }
-  15%  { transform: rotateY(270deg)  scale(1.08); }
-  30%  { transform: rotateY(540deg)  scale(1);    }
-  45%  { transform: rotateY(810deg)  scale(1.08); }
-  60%  { transform: rotateY(1080deg) scale(1);    }
-  75%  { transform: rotateY(1350deg) scale(1.05); }
-  88%  { transform: rotateY(1800deg) scale(1.02); }
-  100% { transform: rotateY(1980deg) scale(1);    }
+@keyframes coinReveal {
+  from { transform: scaleX(0)    scaleY(1.06); }
+  to   { transform: scaleX(1)    scaleY(1);    }
 }
 
 .flipBtn {
