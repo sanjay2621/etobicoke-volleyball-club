@@ -14,7 +14,7 @@
   padding-bottom: 24px !important;
 }
 
-/* ── Coin ── */
+/* ── Coin wrapper ── */
 .coinWrapper {
   display: flex;
   justify-content: center;
@@ -23,45 +23,69 @@
   perspective: 600px;
 }
 
-.coin {
+/* ── Spinning container (both faces live inside) ── */
+.coinContainer {
   width: 130px;
   height: 130px;
+  position: relative;
+  transform-style: preserve-3d;
+}
+
+/* ── Shared face styles ── */
+.coinFace {
+  position: absolute;
+  inset: 0;
   border-radius: 50%;
-  background: radial-gradient(circle at 35% 35%, #ffe566, #d4a000 65%, #a87800);
-  border: 5px solid #c8960c;
-  box-shadow:
-    0 8px 28px rgba(0, 0, 0, 0.22),
-    inset 0 3px 6px rgba(255, 255, 255, 0.35);
   display: flex;
   align-items: center;
   justify-content: center;
-  transform-style: preserve-3d;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  border: 5px solid;
+  box-shadow:
+    0 8px 28px rgba(0, 0, 0, 0.22),
+    inset 0 3px 6px rgba(255, 255, 255, 0.35);
+}
+
+/* HEADS — gold front face */
+.coinFront {
+  background: radial-gradient(circle at 35% 35%, #ffe566, #d4a000 65%, #a87800);
+  border-color: #c8960c;
+}
+
+/* TAILS — silver back face, pre-rotated 180° so it shows when container flips */
+.coinBack {
+  background: radial-gradient(circle at 35% 35%, #f0f0f0, #a0a0a0 65%, #707070);
+  border-color: #999;
+  transform: rotateY(180deg);
 }
 
 .coinLabel {
   font-size: 2.8rem;
   font-weight: 900;
-  color: #6b4000;
   line-height: 1;
   user-select: none;
 }
 
-/* Silver face for TAILS */
-.coinTails {
-  background: radial-gradient(circle at 35% 35%, #f0f0f0, #a0a0a0 65%, #707070);
-  border-color: #999;
+.coinFront .coinLabel {
+  color: #6b4000;
 }
 
-.coinTails .coinLabel {
+.coinBack .coinLabel {
   color: #333;
 }
 
-/* Flip animation */
-.coinFlipping {
-  animation: coinFlip 2s cubic-bezier(0.45, 0.05, 0.55, 0.95) forwards;
+/* ── HEADS flip: ends at 1800° = 5 full rotations = front face visible ── */
+.coinFlippingHeads {
+  animation: coinFlipToHeads 2s cubic-bezier(0.45, 0.05, 0.55, 0.95) forwards;
 }
 
-@keyframes coinFlip {
+/* ── TAILS flip: ends at 1980° = 5.5 rotations = back face visible ── */
+.coinFlippingTails {
+  animation: coinFlipToTails 2s cubic-bezier(0.45, 0.05, 0.55, 0.95) forwards;
+}
+
+@keyframes coinFlipToHeads {
   0%   { transform: rotateY(0deg)    scale(1);    }
   15%  { transform: rotateY(270deg)  scale(1.08); }
   30%  { transform: rotateY(540deg)  scale(1);    }
@@ -70,6 +94,17 @@
   75%  { transform: rotateY(1350deg) scale(1.05); }
   88%  { transform: rotateY(1620deg) scale(1.02); }
   100% { transform: rotateY(1800deg) scale(1);    }
+}
+
+@keyframes coinFlipToTails {
+  0%   { transform: rotateY(0deg)    scale(1);    }
+  15%  { transform: rotateY(270deg)  scale(1.08); }
+  30%  { transform: rotateY(540deg)  scale(1);    }
+  45%  { transform: rotateY(810deg)  scale(1.08); }
+  60%  { transform: rotateY(1080deg) scale(1);    }
+  75%  { transform: rotateY(1350deg) scale(1.05); }
+  88%  { transform: rotateY(1800deg) scale(1.02); }
+  100% { transform: rotateY(1980deg) scale(1);    }
 }
 
 .flipBtn {

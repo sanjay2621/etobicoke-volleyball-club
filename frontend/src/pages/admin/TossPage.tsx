@@ -29,6 +29,7 @@ export function TossPage() {
   const [callingTeamId, setCallingTeamId] = useState<number | null>(null);
   const [call, setCall] = useState<'HEADS' | 'TAILS' | null>(null);
   const [result, setResult] = useState<'HEADS' | 'TAILS' | null>(null);
+  const [pendingResult, setPendingResult] = useState<'HEADS' | 'TAILS' | null>(null);
   const [phase, setPhase] = useState<Phase>('setup');
 
   useEffect(() => {
@@ -65,15 +66,18 @@ export function TossPage() {
   }
 
   function flipCoin() {
+    const outcome = Math.random() < 0.5 ? 'HEADS' : 'TAILS';
+    setPendingResult(outcome);
     setPhase('flipping');
     setResult(null);
     setTimeout(() => {
-      setResult(Math.random() < 0.5 ? 'HEADS' : 'TAILS');
+      setResult(outcome);
       setPhase('result');
     }, 2000);
   }
 
   function reset() {
+    setPendingResult(null);
     setCallingTeamId(null);
     setCall(null);
     setResult(null);
@@ -222,26 +226,21 @@ export function TossPage() {
                 Referee Toss
               </Typography>
 
-              {/* Coin */}
+              {/* Coin — two-sided 3D: front=HEADS gold, back=TAILS silver */}
               <Box className={styles.coinWrapper}>
                 <Box
                   className={[
-                    styles.coin,
-                    phase === 'flipping' ? styles.coinFlipping : '',
-                    phase === 'result' && result === 'TAILS' ? styles.coinTails : '',
-                  ]
-                    .filter(Boolean)
-                    .join(' ')}
+                    styles.coinContainer,
+                    phase === 'flipping' && pendingResult === 'HEADS' ? styles.coinFlippingHeads : '',
+                    phase === 'flipping' && pendingResult === 'TAILS' ? styles.coinFlippingTails : '',
+                  ].filter(Boolean).join(' ')}
                 >
-                  <span className={styles.coinLabel}>
-                    {phase === 'flipping'
-                      ? '?'
-                      : phase === 'result'
-                      ? result === 'HEADS'
-                        ? 'H'
-                        : 'T'
-                      : '🪙'}
-                  </span>
+                  <Box className={`${styles.coinFace} ${styles.coinFront}`}>
+                    <span className={styles.coinLabel}>H</span>
+                  </Box>
+                  <Box className={`${styles.coinFace} ${styles.coinBack}`}>
+                    <span className={styles.coinLabel}>T</span>
+                  </Box>
                 </Box>
               </Box>
 
