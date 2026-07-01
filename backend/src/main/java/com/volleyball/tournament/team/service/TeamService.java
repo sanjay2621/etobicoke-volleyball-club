@@ -134,6 +134,13 @@ public class TeamService {
     }
 
     @Transactional
+    public TeamResponse setTshirtColor(Long teamId, String color) {
+        Team team = getEntity(teamId);
+        team.setTshirtColor(color == null || color.isBlank() ? null : color);
+        return toResponse(teamRepository.save(team));
+    }
+
+    @Transactional
     public TeamResponse setReferee(Long teamId, Long playerId) {
         Team team = getEntity(teamId);
         // Referee is a separate role and need not be a roster member.
@@ -267,7 +274,7 @@ public class TeamService {
 
         return new TeamResponse(team.getId(), team.getTournamentId(), team.getName(),
                 team.getCaptainPlayerId(), team.getRefereePlayerId(), team.getGroupLabel(),
-                team.getSeed(), views.size(), views);
+                team.getSeed(), views.size(), team.getTshirtColor(), views);
     }
 
     private Map<Long, Player> players(List<Long> ids) {

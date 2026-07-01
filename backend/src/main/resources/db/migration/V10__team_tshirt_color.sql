@@ -1,0 +1,1 @@
+ALTER TABLE team ADD COLUMN tshirt_color VARCHAR(50) NULL;

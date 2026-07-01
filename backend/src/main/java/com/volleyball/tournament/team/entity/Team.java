@@ -34,4 +34,7 @@ public class Team extends BaseEntity {
     /** Seeding within the tournament; drives group split + bracket placement. */
     @Column(nullable = false)
     private int seed = 0;
+
+    @Column(name = "tshirt_color", length = 50)
+    private String tshirtColor;
 }

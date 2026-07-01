@@ -1,9 +1,10 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo } from 'react';
 import { TruncatedText } from '../../components/TruncatedText';
 import {
   Box,
   MenuItem,
   Paper,
+  Select,
   Stack,
   Table,
   TableBody,
@@ -18,8 +19,27 @@ import CheckroomIcon from '@mui/icons-material/Checkroom';
 import { useActiveTournaments } from '../../api/tournaments';
 import { usePlayers } from '../../api/players';
 import { useTeams } from '../../api/teams';
-import { TSHIRT_SIZES } from '../../types';
+import { useSetTshirtColor } from '../../api/teams';
+import { TSHIRT_COLORS, TSHIRT_SIZES } from '../../types';
+import { useState } from 'react';
 import styles from './TshirtPage.module.css';
+
+function ColorSwatch({ hex, size = 14 }: { hex: string; size?: number }) {
+  return (
+    <Box
+      component="span"
+      sx={{
+        display: 'inline-block',
+        width: size,
+        height: size,
+        borderRadius: '50%',
+        bgcolor: hex,
+        border: '1px solid rgba(0,0,0,0.18)',
+        flexShrink: 0,
+      }}
+    />
+  );
+}
 
 export function TshirtPage() {
   const { data: tournaments } = useActiveTournaments();
@@ -33,6 +53,12 @@ export function TshirtPage() {
 
   const { data: players } = usePlayers(tournamentId);
   const { data: teams } = useTeams(tournamentId);
+  const setColor = useSetTshirtColor();
+
+  const colorMap = useMemo(
+    () => new Map(TSHIRT_COLORS.map((c) => [c.label, c.hex])),
+    [],
+  );
 
   const rows = useMemo(() => {
     if (!players || !teams) return [];
@@ -47,7 +73,6 @@ export function TshirtPage() {
         if (sz) counts[sz]++;
       }
 
-      // Referee may not be a roster member — count them separately if so
       if (team.refereePlayerId) {
         const memberIds = new Set(team.members.map((m) => m.playerId));
         if (!memberIds.has(team.refereePlayerId)) {
@@ -57,7 +82,7 @@ export function TshirtPage() {
       }
 
       const total = TSHIRT_SIZES.reduce((s, sz) => s + counts[sz], 0);
-      return { teamName: team.name, counts, total };
+      return { teamId: team.id, teamName: team.name, tshirtColor: team.tshirtColor ?? '', counts, total };
     });
   }, [players, teams]);
 
@@ -100,6 +125,7 @@ export function TshirtPage() {
           <TableHead>
             <TableRow className={styles.headerRow}>
               <TableCell>Team</TableCell>
+              <TableCell sx={{ minWidth: 170 }}>T-Shirt Color</TableCell>
               {TSHIRT_SIZES.map((sz) => (
                 <TableCell key={sz} align="center">
                   {sz}
@@ -111,7 +137,40 @@ export function TshirtPage() {
           <TableBody>
             {rows.map((row) => (
               <TableRow key={row.teamName} hover>
-                <TableCell sx={{ maxWidth: 200 }}><TruncatedText text={row.teamName} /></TableCell>
+                <TableCell sx={{ maxWidth: 180 }}><TruncatedText text={row.teamName} /></TableCell>
+                <TableCell sx={{ py: 0.5 }}>
+                  <Select
+                    size="small"
+                    displayEmpty
+                    value={row.tshirtColor}
+                    onChange={(e) =>
+                      setColor.mutate({ teamId: row.teamId, color: e.target.value || null })
+                    }
+                    renderValue={(val) => {
+                      if (!val) return <Typography variant="body2" color="text.disabled">— pick color —</Typography>;
+                      const hex = colorMap.get(val as string);
+                      return (
+                        <Stack direction="row" spacing={1} alignItems="center">
+                          {hex && <ColorSwatch hex={hex} />}
+                          <Typography variant="body2">{val as string}</Typography>
+                        </Stack>
+                      );
+                    }}
+                    sx={{ minWidth: 160, fontSize: '0.875rem' }}
+                  >
+                    <MenuItem value="">
+                      <Typography variant="body2" color="text.secondary">— none —</Typography>
+                    </MenuItem>
+                    {TSHIRT_COLORS.map((c) => (
+                      <MenuItem key={c.label} value={c.label}>
+                        <Stack direction="row" spacing={1} alignItems="center">
+                          <ColorSwatch hex={c.hex} />
+                          <span>{c.label}</span>
+                        </Stack>
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </TableCell>
                 {TSHIRT_SIZES.map((sz) => (
                   <TableCell key={sz} align="center">
                     {row.counts[sz] > 0 ? row.counts[sz] : '—'}
@@ -125,6 +184,7 @@ export function TshirtPage() {
             {rows.length > 0 && (
               <TableRow className={styles.totalRow}>
                 <TableCell className={styles.totalCell}>Total</TableCell>
+                <TableCell />
                 {TSHIRT_SIZES.map((sz) => (
                   <TableCell key={sz} align="center" className={styles.totalCell}>
                     {totals[sz] > 0 ? totals[sz] : '—'}
@@ -137,7 +197,7 @@ export function TshirtPage() {
             )}
             {!rows.length && (
               <TableRow>
-                <TableCell colSpan={TSHIRT_SIZES.length + 2}>
+                <TableCell colSpan={TSHIRT_SIZES.length + 3}>
                   <Box className={styles.emptyCell}>No teams found for this tournament.</Box>
                 </TableCell>
               </TableRow>

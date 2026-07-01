@@ -72,3 +72,8 @@ export const useSetReferee = () =>
   useTeamMutation(({ teamId, playerId }: { teamId: number; playerId: number }) =>
     api.put(`/teams/${teamId}/referee/${playerId}`),
   );
+
+export const useSetTshirtColor = () =>
+  useTeamMutation(({ teamId, color }: { teamId: number; color: string | null }) =>
+    api.put(`/teams/${teamId}/tshirt-color`, { color }),
+  );

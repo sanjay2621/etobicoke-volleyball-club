@@ -11,5 +11,6 @@ public record TeamResponse(
         String groupLabel,
         int seed,
         int memberCount,
+        String tshirtColor,
         List<TeamMemberView> members) {
 }

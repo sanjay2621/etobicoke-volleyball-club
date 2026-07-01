@@ -118,6 +118,14 @@ public class TeamController {
         return teamService.setCaptain(id, playerId);
     }
 
+    @PutMapping("/{id}/tshirt-color")
+    @PreAuthorize("hasRole('ADMIN')")
+    public TeamResponse setTshirtColor(@PathVariable Long id,
+            @RequestBody(required = false) java.util.Map<String, String> body) {
+        String color = body != null ? body.get("color") : null;
+        return teamService.setTshirtColor(id, color);
+    }
+
     @PutMapping("/{id}/referee/{playerId}")
     @PreAuthorize("hasRole('ADMIN')")
     public TeamResponse setReferee(@PathVariable Long id, @PathVariable Long playerId) {

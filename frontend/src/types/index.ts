@@ -127,8 +127,44 @@ export type Team = {
   groupLabel?: string | null;
   seed: number;
   memberCount: number;
+  tshirtColor?: string | null;
   members: TeamMemberView[];
 };
+
+export type TshirtColor = { label: string; hex: string };
+
+export const TSHIRT_COLORS: TshirtColor[] = [
+  { label: 'White',           hex: '#FFFFFF' },
+  { label: 'Ash',             hex: '#B9B9B9' },
+  { label: 'Ice Grey',        hex: '#D8D8D8' },
+  { label: 'Sport Grey',      hex: '#8C8C8C' },
+  { label: 'Dark Heather',    hex: '#484848' },
+  { label: 'Charcoal',        hex: '#36454F' },
+  { label: 'Black',           hex: '#1A1A1A' },
+  { label: 'Midnight',        hex: '#191970' },
+  { label: 'Navy',            hex: '#1F305E' },
+  { label: 'Sapphire',        hex: '#0F4D92' },
+  { label: 'Royal',           hex: '#4169E1' },
+  { label: 'Sky',             hex: '#7EC8E3' },
+  { label: 'Light Blue',      hex: '#ADD8E6' },
+  { label: 'Forest Green',    hex: '#228B22' },
+  { label: 'Military Green',  hex: '#4B5320' },
+  { label: 'Kelly Green',     hex: '#4CBB17' },
+  { label: 'Safety Green',    hex: '#00B140' },
+  { label: 'Purple',          hex: '#6A0DAD' },
+  { label: 'Maroon',          hex: '#800000' },
+  { label: 'Cardinal Red',    hex: '#8C1515' },
+  { label: 'Red',             hex: '#CC0000' },
+  { label: 'Cherry Red',      hex: '#DE3163' },
+  { label: 'Safety Orange',   hex: '#FF6600' },
+  { label: 'Gold',            hex: '#C8960C' },
+  { label: 'Daisy',           hex: '#FFD700' },
+  { label: 'Sand',            hex: '#C2B280' },
+  { label: 'Dark Chocolate',  hex: '#3D1C0A' },
+  { label: 'Heliconia',       hex: '#E0115F' },
+  { label: 'Azalea',          hex: '#EF5B9C' },
+  { label: 'Coral Silk',      hex: '#F08080' },
+];
 
 export type PublicTeamMember = {
   playerId: number;
