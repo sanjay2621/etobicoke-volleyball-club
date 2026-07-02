@@ -74,16 +74,16 @@ export function SchedulePage() {
 
   return (
     <>
-      <Stack direction="row" justifyContent="space-between" alignItems="center" mb={2} flexWrap="wrap" gap={1}>
+      <Stack direction={{ xs: 'column', sm: 'row' }} justifyContent="space-between" alignItems={{ xs: 'stretch', sm: 'center' }} mb={2} gap={1}>
         <Typography variant="h4">Schedule &amp; Standings</Typography>
-        <Stack direction="row" spacing={2} alignItems="center">
+        <Stack direction="row" alignItems="center" flexWrap="wrap" gap={1}>
           <TextField
             select
             size="small"
             label="Tournament"
             value={tournamentId ?? ''}
             onChange={(e) => setTournamentId(Number(e.target.value))}
-            sx={{ minWidth: 200 }}
+            className={styles.tournamentSelect}
           >
             {tournaments?.map((t) => (
               <MenuItem key={t.id} value={t.id}>
@@ -92,6 +92,7 @@ export function SchedulePage() {
             ))}
           </TextField>
           <Button
+            size="small"
             variant="outlined"
             onClick={() => tournamentId && run(() => genPools.mutateAsync(tournamentId),
               'Generate the pool schedule? This replaces any existing matches.')}
@@ -99,12 +100,14 @@ export function SchedulePage() {
             Generate pools
           </Button>
           <Button
+            size="small"
             variant="contained"
             onClick={() => tournamentId && run(() => genPlayoffs.mutateAsync(tournamentId))}
           >
             Generate playoffs
           </Button>
           <Button
+            size="small"
             variant="outlined"
             startIcon={<DownloadIcon />}
             disabled={!tournamentId}
@@ -210,7 +213,7 @@ function MatchTable({
   }
   return (
     <TableContainer component={Paper} variant="outlined">
-      <Table size="small">
+      <Table size="small" sx={{ minWidth: 480 }}>
         <TableHead>
           <TableRow>
             <TableCell>Time</TableCell>
@@ -278,7 +281,7 @@ function StandingsTable({ group }: { group: StandingGroup }) {
             {group.rows.map((r) => (
               <TableRow key={r.teamId} sx={{ bgcolor: r.rank <= 2 ? 'action.hover' : undefined }}>
                 <TableCell>{r.rank}</TableCell>
-                <TableCell>{r.teamName}</TableCell>
+                <TableCell sx={{ maxWidth: 160, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{r.teamName}</TableCell>
                 <TableCell align="right">{r.wins}</TableCell>
                 <TableCell align="right">{r.losses}</TableCell>
                 <TableCell align="right">{r.setsWon}-{r.setsLost}</TableCell>
