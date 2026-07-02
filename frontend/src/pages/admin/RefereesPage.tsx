@@ -15,7 +15,7 @@ import {
   TableCell,
   TableContainer,
   TableHead,
-  TableRow,
+  TableRow, TableSortLabel,
   TextField,
   Typography,
 } from '@mui/material';
@@ -40,6 +40,17 @@ export function RefereesPage() {
   const [editing, setEditing] = useState<Player | null>(null);
   const [search, setSearch] = useState('');
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [sortField, setSortField] = useState<'firstName' | 'lastName'>('lastName');
+  const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc');
+
+  function toggleSort(field: 'firstName' | 'lastName') {
+    if (sortField === field) {
+      setSortDir((d) => (d === 'asc' ? 'desc' : 'asc'));
+    } else {
+      setSortField(field);
+      setSortDir('asc');
+    }
+  }
 
   useEffect(() => {
     if (tournamentId == null && tournaments && tournaments.length > 0) {
@@ -63,14 +74,20 @@ export function RefereesPage() {
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
-    if (!q) return referees;
-    return referees.filter((p) =>
-      [p.fullName, p.email, p.phone, p.paymentStatus, p.skillLevel ?? '', p.preferredPositions.join(' ')]
-        .join(' ')
-        .toLowerCase()
-        .includes(q),
-    );
-  }, [referees, search]);
+    const base = !q
+      ? referees
+      : referees.filter((p) =>
+          [p.fullName, p.email, p.phone, p.paymentStatus, p.skillLevel ?? '', p.preferredPositions.join(' ')]
+            .join(' ')
+            .toLowerCase()
+            .includes(q),
+        );
+    return [...base].sort((a, b) => {
+      const av = (a[sortField] ?? '').toLowerCase();
+      const bv = (b[sortField] ?? '').toLowerCase();
+      return sortDir === 'asc' ? av.localeCompare(bv) : bv.localeCompare(av);
+    });
+  }, [referees, search, sortField, sortDir]);
 
   return (
     <>
@@ -124,7 +141,24 @@ export function RefereesPage() {
           <TableHead>
             <TableRow>
               <TableCell />
-              <TableCell>Name</TableCell>
+              <TableCell sortDirection={sortField === 'firstName' ? sortDir : false}>
+                <TableSortLabel
+                  active={sortField === 'firstName'}
+                  direction={sortField === 'firstName' ? sortDir : 'asc'}
+                  onClick={() => toggleSort('firstName')}
+                >
+                  First Name
+                </TableSortLabel>
+              </TableCell>
+              <TableCell sortDirection={sortField === 'lastName' ? sortDir : false}>
+                <TableSortLabel
+                  active={sortField === 'lastName'}
+                  direction={sortField === 'lastName' ? sortDir : 'asc'}
+                  onClick={() => toggleSort('lastName')}
+                >
+                  Last Name
+                </TableSortLabel>
+              </TableCell>
               <TableCell>Skill</TableCell>
               <TableCell>Phone</TableCell>
               <TableCell>Email</TableCell>
@@ -137,12 +171,12 @@ export function RefereesPage() {
           <TableBody>
             {isLoading && (
               <TableRow>
-                <TableCell colSpan={9}>Loading…</TableCell>
+                <TableCell colSpan={10}>Loading…</TableCell>
               </TableRow>
             )}
             {!isLoading && filtered.length === 0 && (
               <TableRow>
-                <TableCell colSpan={9}>
+                <TableCell colSpan={10}>
                   <Box py={2} color="text.secondary">
                     {search
                       ? 'No referees match your search.'
@@ -166,7 +200,8 @@ export function RefereesPage() {
                       onClick={() => p.photoUrl && setPreviewUrl(p.photoUrl)}
                     />
                   </TableCell>
-                  <TableCell>{p.fullName}</TableCell>
+                  <TableCell>{p.firstName}</TableCell>
+                  <TableCell>{p.lastName}</TableCell>
                   <TableCell>{p.skillLevel ?? '—'}</TableCell>
                   <TableCell>{p.phone}</TableCell>
                   <TableCell>{p.email}</TableCell>
