@@ -33,6 +33,7 @@ import { useActivePublicTournaments } from '../../api/tournaments';
 import { usePublicTeams } from '../../api/teams';
 import { usePublicSchedule, usePublicStandings } from '../../api/schedule';
 import type { MatchResponse, PublicTeam, StandingGroup, Tournament } from '../../types';
+import styles from './HomePage.module.css';
 
 export function HomePage() {
   const { data: tournaments } = useActivePublicTournaments();
@@ -208,8 +209,26 @@ function ScheduleSection({ tournamentId }: { tournamentId: number | null }) {
   }
   const pool = schedule.filter((m) => m.stage === 'POOL');
   const bracket = schedule.filter((m) => m.stage !== 'POOL');
+
+  const finalMatch = bracket.find((m) => m.stage === 'FINAL');
+  const bronzeMatch = bracket.find((m) => m.stage === 'BRONZE');
+  const podium = finalMatch?.status === 'COMPLETE'
+    ? {
+        gold: finalMatch.winnerTeamId === finalMatch.homeTeamId ? finalMatch.homeTeamName : finalMatch.awayTeamName,
+        silver: finalMatch.winnerTeamId === finalMatch.homeTeamId ? finalMatch.awayTeamName : finalMatch.homeTeamName,
+        bronze: bronzeMatch?.status === 'COMPLETE'
+          ? (bronzeMatch.winnerTeamId === bronzeMatch.homeTeamId ? bronzeMatch.homeTeamName : bronzeMatch.awayTeamName)
+          : null,
+      }
+    : null;
+
   return (
     <>
+      {podium && (
+        <Box mb={3}>
+          <PublicPodiumCard gold={podium.gold} silver={podium.silver} bronze={podium.bronze} />
+        </Box>
+      )}
       <Typography variant="h6" gutterBottom>
         Pool matches
       </Typography>
@@ -223,6 +242,41 @@ function ScheduleSection({ tournamentId }: { tournamentId: number | null }) {
         </>
       )}
     </>
+  );
+}
+
+function PublicPodiumCard({
+  gold,
+  silver,
+  bronze,
+}: {
+  gold: string | null | undefined;
+  silver: string | null | undefined;
+  bronze: string | null | undefined;
+}) {
+  return (
+    <Paper className={styles.podiumCard} elevation={4}>
+      <Typography variant="h5" className={styles.podiumTitle}>
+        🏆 Tournament Results
+      </Typography>
+      <Box className={styles.podiumRow}>
+        <Box className={styles.podiumItem}>
+          <Box className={styles.medalEmoji}>🥈</Box>
+          <Typography className={styles.podiumLabel}>Runner-Up</Typography>
+          <Typography variant="h6" className={styles.podiumTeam}>{silver ?? '—'}</Typography>
+        </Box>
+        <Box className={`${styles.podiumItem} ${styles.podiumGold}`}>
+          <Box className={styles.medalEmoji}>🥇</Box>
+          <Typography className={styles.podiumLabel}>Champion</Typography>
+          <Typography variant="h5" className={styles.podiumTeamGold}>{gold ?? '—'}</Typography>
+        </Box>
+        <Box className={styles.podiumItem}>
+          <Box className={styles.medalEmoji}>{bronze ? '🥉' : '—'}</Box>
+          <Typography className={styles.podiumLabel}>Third Place</Typography>
+          <Typography variant="h6" className={styles.podiumTeam}>{bronze ?? 'TBD'}</Typography>
+        </Box>
+      </Box>
+    </Paper>
   );
 }
 
