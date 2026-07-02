@@ -24,5 +24,6 @@ public record TournamentRequest(
         @Min(2) @Max(20) Integer targetRosterSize,
         Boolean captainCountsInRoster,
         Boolean registrationOpen,
+        LocalDate registrationDeadline,
         TournamentStatus status) {
 }

@@ -33,6 +33,7 @@ export type Tournament = {
   captainCountsInRoster: boolean;
   draftRounds: number;
   registrationOpen: boolean;
+  registrationDeadline?: string | null;
   status: TournamentStatus;
 };
 
@@ -226,6 +227,7 @@ export type CaptainRosterMember = {
   skillLevel?: SkillLevel | null;
   preferredPositions: Position[];
   captain: boolean;
+  paymentStatus: PaymentStatus;
 };
 
 export type CaptainRoster = {
@@ -305,5 +307,6 @@ export type TournamentRequest = {
   targetRosterSize?: number;
   captainCountsInRoster?: boolean;
   registrationOpen?: boolean;
+  registrationDeadline?: string | null;
   status?: TournamentStatus;
 };

@@ -1,7 +1,9 @@
 package com.volleyball.tournament.tournament.service;
 
 import com.volleyball.tournament.auth.repository.UserAccountRepository;
+import com.volleyball.tournament.common.exception.ApiException;
 import com.volleyball.tournament.common.exception.NotFoundException;
+import org.springframework.http.HttpStatus;
 import com.volleyball.tournament.player.entity.Player;
 import com.volleyball.tournament.player.repository.PlayerRepository;
 import com.volleyball.tournament.tournament.entity.Tournament;
@@ -45,6 +47,9 @@ public class TournamentService {
 
     @Transactional
     public TournamentResponse create(TournamentRequest req) {
+        if (tournamentRepository.existsByNameIgnoreCase(req.name().trim())) {
+            throw new ApiException(HttpStatus.CONFLICT, "A tournament with this name already exists");
+        }
         Tournament t = new Tournament();
         apply(t, req);
         return tournamentMapper.toResponse(tournamentRepository.save(t));
@@ -52,6 +57,9 @@ public class TournamentService {
 
     @Transactional
     public TournamentResponse update(Long id, TournamentRequest req) {
+        if (tournamentRepository.existsByNameIgnoreCaseAndIdNot(req.name().trim(), id)) {
+            throw new ApiException(HttpStatus.CONFLICT, "A tournament with this name already exists");
+        }
         Tournament t = getEntity(id);
         apply(t, req);
         return tournamentMapper.toResponse(tournamentRepository.save(t));
@@ -89,6 +97,7 @@ public class TournamentService {
         t.setTargetRosterSize(orDefault(req.targetRosterSize(), t.getTargetRosterSize()));
         t.setCaptainCountsInRoster(orDefault(req.captainCountsInRoster(), t.isCaptainCountsInRoster()));
         t.setRegistrationOpen(orDefault(req.registrationOpen(), t.isRegistrationOpen()));
+        t.setRegistrationDeadline(req.registrationDeadline());
         t.setStatus(Optional.ofNullable(req.status()).orElse(t.getStatus() == null
                 ? TournamentStatus.SETUP : t.getStatus()));
     }

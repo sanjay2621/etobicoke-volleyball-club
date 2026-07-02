@@ -11,6 +11,7 @@ import {
   Typography,
 } from '@mui/material';
 import { useAuth } from '../../auth/AuthContext';
+import styles from './SetPasswordPage.module.css';
 
 export function SetPasswordPage() {
   const [params] = useSearchParams();
@@ -36,18 +37,18 @@ export function SetPasswordPage() {
   }
 
   return (
-    <Box sx={{ minHeight: '100vh', display: 'grid', placeItems: 'center', bgcolor: 'background.default' }}>
+    <Box className={styles.root}>
       <Container maxWidth="xs">
         <Card>
           <CardContent>
             <Typography variant="h4" gutterBottom>
               Set your password
             </Typography>
-            <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+            <Typography variant="body2" color="text.secondary" className={styles.subtitle}>
               Use the email you registered with.
             </Typography>
             {error && (
-              <Alert severity="error" sx={{ mb: 2 }}>
+              <Alert severity="error" className={styles.alert}>
                 {error}
               </Alert>
             )}
@@ -77,7 +78,7 @@ export function SetPasswordPage() {
                 color="secondary"
                 fullWidth
                 size="large"
-                sx={{ mt: 2 }}
+                className={styles.submitBtn}
                 disabled={submitting}
               >
                 {submitting ? 'Creating…' : 'Create login'}

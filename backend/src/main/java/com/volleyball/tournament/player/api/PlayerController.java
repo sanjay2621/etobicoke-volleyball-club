@@ -1,5 +1,6 @@
 package com.volleyball.tournament.player.api;
 
+import com.volleyball.tournament.player.entity.PaymentStatus;
 import com.volleyball.tournament.player.model.PlayerRegistrationRequest;
 import com.volleyball.tournament.player.model.PlayerResponse;
 import com.volleyball.tournament.player.model.PlayerUpdateRequest;
@@ -15,6 +16,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -93,6 +95,30 @@ public class PlayerController {
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         playerService.delete(id);
         return ResponseEntity.noContent().build();
+    }
+
+    /** Captain marks a player on their own team as PAID or UNPAID. */
+    @PatchMapping("/{id}/payment")
+    public PlayerResponse markPayment(
+            @PathVariable Long id,
+            @RequestBody java.util.Map<String, String> body) {
+        PaymentStatus status = PaymentStatus.valueOf(body.get("paymentStatus"));
+        return playerService.captainMarkPayment(id, status);
+    }
+
+    /** Player uploads or replaces their own photo. */
+    @PostMapping(value = "/me/photo", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public PlayerResponse uploadMyPhoto(@RequestPart("photo") MultipartFile photo) {
+        return playerService.uploadMyPhoto(photo);
+    }
+
+    /** Admin uploads or replaces a player's photo. */
+    @PostMapping(value = "/{id}/photo", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PreAuthorize("hasRole('ADMIN')")
+    public PlayerResponse uploadPhoto(
+            @PathVariable Long id,
+            @RequestPart("photo") MultipartFile photo) {
+        return playerService.uploadPhoto(id, photo);
     }
 
     /** Public photo endpoint (referenced by PlayerResponse.photoUrl). */

@@ -26,8 +26,7 @@ import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
 import CheckroomIcon from '@mui/icons-material/Checkroom';
 import MonetizationOnIcon from '@mui/icons-material/MonetizationOn';
 import { useAuth } from '../../auth/AuthContext';
-
-const DRAWER_WIDTH = 230;
+import styles from './AdminLayout.module.css';
 
 const NAV = [
   { to: '/admin', label: 'Dashboard', icon: <DashboardIcon />, exact: true },
@@ -49,8 +48,8 @@ export function AdminLayout() {
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const [drawerOpen, setDrawerOpen] = useState(false);
 
-  const drawerContent = (
-    <List>
+  const navList = (
+    <List onClick={() => isMobile && setDrawerOpen(false)}>
       {NAV.map((item) => {
         const selected = item.exact
           ? location.pathname === item.to
@@ -61,7 +60,6 @@ export function AdminLayout() {
             component={RouterLink}
             to={item.to}
             selected={selected}
-            onClick={() => isMobile && setDrawerOpen(false)}
           >
             <ListItemIcon>{item.icon}</ListItemIcon>
             <ListItemText primary={item.label} />
@@ -72,65 +70,62 @@ export function AdminLayout() {
   );
 
   return (
-    <Box sx={{ display: 'flex', minHeight: '100vh', bgcolor: 'background.default' }}>
-      <AppBar position="fixed" sx={{ zIndex: (t) => t.zIndex.drawer + 1 }} elevation={0}>
+    <Box className={styles.root}>
+      <AppBar position="fixed" className={styles.appBar} elevation={0}>
         <Toolbar>
-          {isMobile && (
-            <IconButton
+          <Box sx={{ flex: 1, display: 'flex', alignItems: 'center' }}>
+            {isMobile && (
+              <IconButton
+                color="inherit"
+                edge="start"
+                onClick={() => setDrawerOpen(true)}
+                className={styles.menuBtn}
+              >
+                <MenuIcon />
+              </IconButton>
+            )}
+          </Box>
+          <Typography variant="h6" fontWeight={700}>
+            SANATANI Volleyball Club
+          </Typography>
+          <Box sx={{ flex: 1, display: 'flex', justifyContent: 'flex-end', alignItems: 'center' }}>
+            {!isMobile && (
+              <Typography variant="body2" className={styles.appBarEmail}>
+                {user?.email}
+              </Typography>
+            )}
+            <Button
               color="inherit"
-              edge="start"
-              onClick={() => setDrawerOpen(true)}
-              sx={{ mr: 1 }}
+              onClick={() => {
+                logout();
+                navigate('/login');
+              }}
             >
-              <MenuIcon />
-            </IconButton>
-          )}
-          <Typography variant="h6" sx={{ flexGrow: 1 }}>
-            Volleyball Admin
-          </Typography>
-          <Typography variant="body2" sx={{ mr: 2, opacity: 0.85, display: { xs: 'none', sm: 'block' } }}>
-            {user?.email}
-          </Typography>
-          <Button
-            color="inherit"
-            onClick={() => {
-              logout();
-              navigate('/login');
-            }}
-          >
-            Log out
-          </Button>
+              Log out
+            </Button>
+          </Box>
         </Toolbar>
       </AppBar>
 
-      {/* Mobile: temporary drawer that slides in over content */}
       {isMobile ? (
         <Drawer
           variant="temporary"
           open={drawerOpen}
           onClose={() => setDrawerOpen(false)}
+          className={styles.drawerMobile}
           ModalProps={{ keepMounted: true }}
-          sx={{ [`& .MuiDrawer-paper`]: { width: DRAWER_WIDTH, boxSizing: 'border-box' } }}
         >
           <Toolbar />
-          {drawerContent}
+          {navList}
         </Drawer>
       ) : (
-        /* Desktop: permanent drawer always visible */
-        <Drawer
-          variant="permanent"
-          sx={{
-            width: DRAWER_WIDTH,
-            flexShrink: 0,
-            [`& .MuiDrawer-paper`]: { width: DRAWER_WIDTH, boxSizing: 'border-box' },
-          }}
-        >
+        <Drawer variant="permanent" className={styles.drawer}>
           <Toolbar />
-          {drawerContent}
+          {navList}
         </Drawer>
       )}
 
-      <Box component="main" sx={{ flexGrow: 1, p: { xs: 2, md: 3 } }}>
+      <Box component="main" className={isMobile ? styles.mainMobile : styles.main}>
         <Toolbar />
         <Outlet />
       </Box>

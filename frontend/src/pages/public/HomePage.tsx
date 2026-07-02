@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
 import { Link as RouterLink } from 'react-router-dom';
+import { TruncatedText } from '../../components/TruncatedText';
 import {
   AppBar,
   Avatar,
@@ -35,6 +36,16 @@ import { usePublicSchedule, usePublicStandings } from '../../api/schedule';
 import type { MatchResponse, PublicTeam, StandingGroup, Tournament } from '../../types';
 import styles from './HomePage.module.css';
 
+function isRegistrationClosed(t: Tournament): boolean {
+  if (!t.registrationOpen) return true;
+  if (t.registrationDeadline) {
+    const deadline = new Date(t.registrationDeadline);
+    deadline.setHours(23, 59, 59, 999);
+    if (new Date() > deadline) return true;
+  }
+  return false;
+}
+
 export function HomePage() {
   const { data: tournaments } = useActivePublicTournaments();
   const [selectedId, setSelectedId] = useState<number | null>(null);
@@ -47,14 +58,15 @@ export function HomePage() {
   );
   const tournamentId = selectedId ?? sorted[0]?.id ?? null;
   const featured: Tournament | undefined = sorted.find((t) => t.id === tournamentId) ?? sorted[0];
+  const registrationClosed = featured ? isRegistrationClosed(featured) : false;
 
   return (
-    <Box sx={{ minHeight: '100vh', bgcolor: 'background.default' }}>
+    <Box className={styles.root}>
       <AppBar position="static" color="primary" elevation={0}>
         <Toolbar>
-          <SportsVolleyballIcon sx={{ mr: 1 }} />
-          <Typography variant="h6" sx={{ flexGrow: 1, fontFamily: 'Poppins' }}>
-            Etobicoke Volleyball Club
+          <SportsVolleyballIcon className={styles.appBarIcon} />
+          <Typography variant="h6" className={styles.appBarTitle}>
+            SANATANI Volleyball Club
           </Typography>
           <Button color="inherit" component={RouterLink} to="/login">
             Log in
@@ -62,34 +74,111 @@ export function HomePage() {
         </Toolbar>
       </AppBar>
 
-      <Box
-        sx={{
-          background: 'linear-gradient(135deg, #1A2B4A 0%, #2C4A7A 100%)',
-          color: 'common.white',
-          py: { xs: 6, md: 10 },
-        }}
-      >
-        <Container maxWidth="md">
-          <Typography variant="h2" gutterBottom>
-            Game on. Register your spot.
+      <Box className={styles.hero}>
+        {/* Decorative volleyball shapes */}
+        <SportsVolleyballIcon className={styles.heroDecor1} />
+        <SportsVolleyballIcon className={styles.heroDecor2} />
+        <SportsVolleyballIcon className={styles.heroDecor3} />
+
+        <Container maxWidth="md" className={styles.heroContainer}>
+          <Typography variant="h2" fontWeight={900} letterSpacing={-1} className={styles.heroHeading}>
+            Game on.{' '}
+            <Box component="span" className={styles.heroAccent}>
+              Register
+            </Box>{' '}
+            your spot.
           </Typography>
-          <Typography variant="h6" sx={{ opacity: 0.85, mb: 4, fontWeight: 400 }}>
+
+          <Typography variant="h6" className={featured?.registrationDeadline ? styles.heroSubtextWithDeadline : styles.heroSubtext}>
             {featured
               ? `${featured.name} — ${new Date(featured.date).toLocaleDateString()} at ${featured.startTime?.slice(0, 5)}`
               : 'Sign up, get drafted, and hit the court.'}
           </Typography>
+          {featured?.registrationDeadline && (
+            <Typography variant="body1" className={styles.heroDeadlineText}>
+              Registration deadline:{' '}
+              <strong>
+                {new Date(featured.registrationDeadline).toLocaleDateString('en-CA', {
+                  year: 'numeric',
+                  month: 'long',
+                  day: 'numeric',
+                })}
+              </strong>
+            </Typography>
+          )}
           <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
-            <Button size="large" variant="contained" color="secondary" component={RouterLink} to="/register">
-              Register to play
-            </Button>
-            <Button size="large" variant="outlined" color="inherit" component={RouterLink} to="/login">
+            {registrationClosed ? (
+              <Button size="large" variant="contained" disabled className={styles.heroRegisterBtn}>
+                Registration closed
+              </Button>
+            ) : (
+              <Button
+                size="large"
+                variant="contained"
+                component={RouterLink}
+                to="/register"
+                className={styles.heroRegisterBtn}
+              >
+                Register to play
+              </Button>
+            )}
+            <Button size="large" variant="outlined" color="inherit" component={RouterLink} to="/login"
+              className={styles.heroLoginBtn}
+            >
               View my team
             </Button>
           </Stack>
         </Container>
       </Box>
 
-      <Container maxWidth="lg" sx={{ py: 5 }}>
+      <Box className={styles.contentWrapper}>
+        {/* Volleyball court background */}
+        <svg viewBox="0 0 1600 600" className={styles.courtBgSvg} aria-hidden="true" preserveAspectRatio="xMidYTop slice" xmlns="http://www.w3.org/2000/svg">
+          {/* Net left pole */}
+          <rect x="60" y="20" width="7" height="220" fill="rgba(15,29,53,0.12)" rx="3" />
+          {/* Net right pole */}
+          <rect x="1533" y="20" width="7" height="220" fill="rgba(15,29,53,0.12)" rx="3" />
+
+          {/* Top cable */}
+          <path d="M64 23 Q800 13 1537 23" stroke="rgba(15,29,53,0.18)" strokeWidth="3.5" fill="none" />
+          {/* Bottom tape */}
+          <line x1="64" y1="200" x2="1537" y2="200" stroke="rgba(15,29,53,0.18)" strokeWidth="3" />
+
+          {/* Net horizontal lines */}
+          <line x1="65" y1="50"  x2="1535" y2="50"  stroke="rgba(15,29,53,0.07)" strokeWidth="1" />
+          <line x1="65" y1="75"  x2="1535" y2="75"  stroke="rgba(15,29,53,0.07)" strokeWidth="1" />
+          <line x1="65" y1="100" x2="1535" y2="100" stroke="rgba(15,29,53,0.07)" strokeWidth="1" />
+          <line x1="65" y1="125" x2="1535" y2="125" stroke="rgba(15,29,53,0.12)" strokeWidth="2.5" />
+          <line x1="65" y1="150" x2="1535" y2="150" stroke="rgba(15,29,53,0.07)" strokeWidth="1" />
+          <line x1="65" y1="175" x2="1535" y2="175" stroke="rgba(15,29,53,0.07)" strokeWidth="1" />
+
+          {/* Net vertical lines */}
+          {Array.from({ length: 50 }, (_, i) => (
+            <line key={i} x1={95 + i * 29} y1="23" x2={95 + i * 29} y2="200"
+              stroke="rgba(15,29,53,0.06)" strokeWidth="1" />
+          ))}
+
+          {/* Volleyball */}
+          <circle cx="1320" cy="72" r="52" fill="rgba(249,115,22,0.13)" />
+          <circle cx="1320" cy="72" r="52" fill="none" stroke="rgba(249,115,22,0.2)" strokeWidth="2" />
+          <path d="M1278 54 Q1320 36 1362 54"  stroke="rgba(249,115,22,0.22)" strokeWidth="3" fill="none" />
+          <path d="M1268 76 Q1320 62 1372 76"  stroke="rgba(249,115,22,0.22)" strokeWidth="3" fill="none" />
+          <path d="M1276 98 Q1320 108 1364 98" stroke="rgba(249,115,22,0.22)" strokeWidth="3" fill="none" />
+          <path d="M1303 24 Q1316 72 1303 120"  stroke="rgba(249,115,22,0.16)" strokeWidth="2" fill="none" />
+          <path d="M1337 24 Q1324 72 1337 120"  stroke="rgba(249,115,22,0.16)" strokeWidth="2" fill="none" />
+
+          {/* Player silhouette — jumping spike */}
+          <g fill="rgba(15,29,53,0.09)" stroke="rgba(15,29,53,0.09)">
+            <circle cx="1390" cy="110" r="20" />
+            <ellipse cx="1390" cy="160" rx="16" ry="30" />
+            <path d="M1382 135 Q1348 95 1322 68"  strokeWidth="13" strokeLinecap="round" fill="none" />
+            <path d="M1398 142 Q1424 155 1435 175" strokeWidth="12" strokeLinecap="round" fill="none" />
+            <path d="M1382 188 Q1364 220 1356 248" strokeWidth="13" strokeLinecap="round" fill="none" />
+            <path d="M1398 188 Q1416 220 1424 248" strokeWidth="13" strokeLinecap="round" fill="none" />
+          </g>
+        </svg>
+
+        <Container maxWidth="lg" className={styles.contentContainer}>
         {sorted.length === 0 ? (
           <Typography color="text.secondary">No tournaments published yet — check back soon.</Typography>
         ) : (
@@ -111,7 +200,7 @@ export function HomePage() {
                   setSelectedId(Number(e.target.value));
                   setTab(0);
                 }}
-                sx={{ minWidth: 240 }}
+                className={styles.tournamentSelect}
               >
                 {sorted.map((t) => (
                   <MenuItem key={t.id} value={t.id}>
@@ -121,7 +210,7 @@ export function HomePage() {
               </TextField>
             </Stack>
 
-            <Tabs value={tab} onChange={(_, v) => setTab(v)} sx={{ mb: 3 }}>
+            <Tabs value={tab} onChange={(_, v) => setTab(v)} className={styles.tabs}>
               <Tab label="Teams" />
               <Tab label="Schedule & Results" />
               <Tab label="Standings" />
@@ -133,6 +222,7 @@ export function HomePage() {
           </>
         )}
       </Container>
+      </Box>
     </Box>
   );
 }
@@ -156,10 +246,12 @@ function TeamsSection({ tournamentId }: { tournamentId: number | null }) {
 
 function TeamCard({ team }: { team: PublicTeam }) {
   return (
-    <Card sx={{ height: '100%' }}>
+    <Card className={styles.teamCard}>
       <CardContent>
         <Stack direction="row" justifyContent="space-between" alignItems="center" mb={1}>
-          <Typography variant="h6">{team.name}</Typography>
+          <Typography variant="h6" sx={{ flex: 1, minWidth: 0, mr: 1 }}>
+            <TruncatedText text={team.name} />
+          </Typography>
           {team.groupLabel && <Chip size="small" label={`Group ${team.groupLabel}`} />}
         </Stack>
         <Stack spacing={1}>
@@ -170,8 +262,10 @@ function TeamCard({ team }: { team: PublicTeam }) {
           )}
           {team.members.map((m) => (
             <Stack key={m.playerId} direction="row" spacing={1.5} alignItems="center">
-              <Avatar src={m.photoUrl ?? undefined} sx={{ width: 32, height: 32 }} />
-              <Typography>{m.fullName}</Typography>
+              <Avatar src={m.photoUrl ?? undefined} className={styles.memberAvatar} />
+              <Typography sx={{ minWidth: 0, flex: 1 }}>
+                <TruncatedText text={m.fullName} />
+              </Typography>
               {m.captain && (
                 <Tooltip title="Captain">
                   <StarIcon fontSize="small" color="warning" />
@@ -181,10 +275,10 @@ function TeamCard({ team }: { team: PublicTeam }) {
           ))}
         </Stack>
         {team.refereeName && (
-          <Stack direction="row" spacing={1} alignItems="center" mt={1.5} pt={1.5} sx={{ borderTop: 1, borderColor: 'divider' }}>
+          <Stack direction="row" spacing={1} alignItems="center" mt={1.5} pt={1.5} className={styles.refereeSection}>
             <SportsIcon fontSize="small" color="action" />
-            <Typography variant="body2" color="text.secondary">
-              Referee: <strong>{team.refereeName}</strong>
+            <Typography variant="body2" color="text.secondary" sx={{ minWidth: 0, flex: 1 }}>
+              <TruncatedText text={`Referee: ${team.refereeName}`} />
             </Typography>
           </Stack>
         )}
@@ -235,7 +329,7 @@ function ScheduleSection({ tournamentId }: { tournamentId: number | null }) {
       <MatchTable matches={pool} showGroup />
       {bracket.length > 0 && (
         <>
-          <Typography variant="h6" gutterBottom sx={{ mt: 3 }}>
+          <Typography variant="h6" gutterBottom className={styles.playoffsHeading}>
             Playoffs
           </Typography>
           <MatchTable matches={bracket} />
@@ -263,17 +357,17 @@ function PublicPodiumCard({
         <Box className={styles.podiumItem}>
           <Box className={styles.medalEmoji}>🥈</Box>
           <Typography className={styles.podiumLabel}>Runner-Up</Typography>
-          <Typography variant="h6" className={styles.podiumTeam}>{silver ?? '—'}</Typography>
+          <Typography variant="h6" className={styles.podiumTeam}><TruncatedText text={silver ?? '—'} /></Typography>
         </Box>
         <Box className={`${styles.podiumItem} ${styles.podiumGold}`}>
           <Box className={styles.medalEmoji}>🥇</Box>
           <Typography className={styles.podiumLabel}>Champion</Typography>
-          <Typography variant="h5" className={styles.podiumTeamGold}>{gold ?? '—'}</Typography>
+          <Typography variant="h5" className={styles.podiumTeamGold}><TruncatedText text={gold ?? '—'} /></Typography>
         </Box>
         <Box className={styles.podiumItem}>
           <Box className={styles.medalEmoji}>{bronze ? '🥉' : '—'}</Box>
           <Typography className={styles.podiumLabel}>Third Place</Typography>
-          <Typography variant="h6" className={styles.podiumTeam}>{bronze ?? 'TBD'}</Typography>
+          <Typography variant="h6" className={styles.podiumTeam}><TruncatedText text={bronze ?? 'TBD'} /></Typography>
         </Box>
       </Box>
     </Paper>
@@ -304,14 +398,14 @@ function MatchTable({ matches, showGroup }: { matches: MatchResponse[]; showGrou
                 <TableCell>{time}</TableCell>
                 <TableCell>{m.court ?? '—'}</TableCell>
                 {showGroup && <TableCell>{m.groupLabel}</TableCell>}
-                <TableCell>
-                  <Box sx={{ fontWeight: m.winnerTeamId === m.homeTeamId ? 700 : 400 }}>
-                    {m.homeTeamName ?? 'TBD'}
+                <TableCell sx={{ maxWidth: 180 }}>
+                  <Box className={m.winnerTeamId === m.homeTeamId ? styles.matchCellBold : styles.matchCellNormal}>
+                    <TruncatedText text={m.homeTeamName ?? 'TBD'} />
                   </Box>
-                  <Box sx={{ fontWeight: m.winnerTeamId === m.awayTeamId ? 700 : 400 }}>
-                    {m.awayTeamName ?? 'TBD'}
+                  <Box className={m.winnerTeamId === m.awayTeamId ? styles.matchCellBold : styles.matchCellNormal}>
+                    <TruncatedText text={m.awayTeamName ?? 'TBD'} />
                   </Box>
-                  {m.bracketSlot && <Chip size="small" label={m.bracketSlot} sx={{ mt: 0.5 }} />}
+                  {m.bracketSlot && <Chip size="small" label={m.bracketSlot} className={styles.bracketChip} />}
                 </TableCell>
                 <TableCell>{scoreLabel(m)}</TableCell>
               </TableRow>
@@ -360,9 +454,9 @@ function StandingsTable({ group }: { group: StandingGroup }) {
           </TableHead>
           <TableBody>
             {group.rows.map((r) => (
-              <TableRow key={r.teamId} sx={{ bgcolor: r.rank <= 2 ? 'action.hover' : undefined }}>
+              <TableRow key={r.teamId} className={r.rank <= 2 ? styles.topTwoRow : ''}>
                 <TableCell>{r.rank}</TableCell>
-                <TableCell>{r.teamName}</TableCell>
+                <TableCell sx={{ maxWidth: 150 }}><TruncatedText text={r.teamName} /></TableCell>
                 <TableCell align="right">{r.wins}</TableCell>
                 <TableCell align="right">{r.losses}</TableCell>
                 <TableCell align="right">

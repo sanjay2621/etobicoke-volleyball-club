@@ -1,8 +1,9 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import {
+  Alert,
   Button,
   Dialog,
   DialogActions,
@@ -17,6 +18,7 @@ import {
   useUpdateTournament,
 } from '../../api/tournaments';
 import type { Tournament, TournamentStatus } from '../../types';
+import styles from './TournamentFormDialog.module.css';
 
 const STATUSES: TournamentStatus[] = [
   'SETUP',
@@ -31,6 +33,7 @@ const schema = z.object({
   name: z.string().min(1, 'Required'),
   date: z.string().min(1, 'Required'),
   startTime: z.string().min(1, 'Required'),
+  registrationDeadline: z.string().optional(),
   venue: z.string().optional(),
   numberOfCourts: z.coerce.number().int().min(1).max(50),
   breakMinutes: z.coerce.number().int().min(0).max(60),
@@ -46,6 +49,7 @@ const DEFAULTS: FormValues = {
   name: '',
   date: '',
   startTime: '08:00',
+  registrationDeadline: '',
   venue: '',
   numberOfCourts: 4,
   breakMinutes: 10,
@@ -66,6 +70,7 @@ export function TournamentFormDialog({
 }) {
   const create = useCreateTournament();
   const update = useUpdateTournament();
+  const [submitError, setSubmitError] = useState<string | null>(null);
   const {
     register,
     handleSubmit,
@@ -75,12 +80,14 @@ export function TournamentFormDialog({
 
   useEffect(() => {
     if (open) {
+      setSubmitError(null);
       reset(
         tournament
           ? {
               name: tournament.name,
               date: tournament.date,
               startTime: tournament.startTime?.slice(0, 5),
+              registrationDeadline: tournament.registrationDeadline ?? '',
               venue: tournament.venue ?? '',
               numberOfCourts: tournament.numberOfCourts,
               breakMinutes: tournament.breakMinutes,
@@ -95,13 +102,22 @@ export function TournamentFormDialog({
   }, [open, tournament, reset]);
 
   async function onSubmit(values: FormValues) {
-    const body = { ...values, startTime: `${values.startTime}:00` };
-    if (tournament) {
-      await update.mutateAsync({ id: tournament.id, body });
-    } else {
-      await create.mutateAsync(body);
+    setSubmitError(null);
+    const body = {
+      ...values,
+      startTime: `${values.startTime}:00`,
+      registrationDeadline: values.registrationDeadline || null,
+    };
+    try {
+      if (tournament) {
+        await update.mutateAsync({ id: tournament.id, body });
+      } else {
+        await create.mutateAsync(body);
+      }
+      onClose();
+    } catch (err: any) {
+      setSubmitError(err?.response?.data?.message ?? 'Failed to save tournament');
     }
-    onClose();
   }
 
   return (
@@ -109,7 +125,12 @@ export function TournamentFormDialog({
       <form onSubmit={handleSubmit(onSubmit)}>
         <DialogTitle>{tournament ? 'Edit tournament' : 'New tournament'}</DialogTitle>
         <DialogContent>
-          <Grid container spacing={2} sx={{ mt: 0 }}>
+          {submitError && (
+            <Alert severity="error" className={styles.errorAlert}>
+              {submitError}
+            </Alert>
+          )}
+          <Grid container spacing={2} className={styles.gridContainer}>
             <Grid item xs={12}>
               <TextField
                 label="Tournament name"
@@ -141,6 +162,16 @@ export function TournamentFormDialog({
                 helperText={errors.startTime?.message}
               />
             </Grid>
+            <Grid item xs={6}>
+              <TextField
+                label="Registration deadline"
+                type="date"
+                fullWidth
+                InputLabelProps={{ shrink: true }}
+                {...register('registrationDeadline')}
+              />
+            </Grid>
+            <Grid item xs={6} />
             <Grid item xs={12}>
               <TextField label="Venue" fullWidth {...register('venue')} />
             </Grid>

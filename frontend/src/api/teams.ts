@@ -1,12 +1,25 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { api } from './client';
+import { api, fixPhotoUrl } from './client';
 import type { CaptainRoster, PublicTeam, Team, TeamRequest } from '../types';
+
+const fixTeam = (t: Team): Team => ({
+  ...t,
+  members: t.members.map((m) => ({ ...m, photoUrl: fixPhotoUrl(m.photoUrl) })),
+});
+const fixPublicTeam = (t: PublicTeam): PublicTeam => ({
+  ...t,
+  members: t.members.map((m) => ({ ...m, photoUrl: fixPhotoUrl(m.photoUrl) })),
+});
+const fixRoster = (r: CaptainRoster): CaptainRoster => ({
+  ...r,
+  members: r.members.map((m) => ({ ...m, photoUrl: fixPhotoUrl(m.photoUrl) })),
+});
 
 export function usePublicTeams(tournamentId: number | null) {
   return useQuery({
     queryKey: ['teams', 'public', tournamentId],
     queryFn: () =>
-      api.get<PublicTeam[]>(`/teams/public?tournamentId=${tournamentId}`).then((r) => r.data),
+      api.get<PublicTeam[]>(`/teams/public?tournamentId=${tournamentId}`).then((r) => r.data.map(fixPublicTeam)),
     enabled: tournamentId != null,
   });
 }
@@ -14,7 +27,7 @@ export function usePublicTeams(tournamentId: number | null) {
 export function useMyRoster(enabled = true) {
   return useQuery({
     queryKey: ['teams', 'my', 'roster'],
-    queryFn: () => api.get<CaptainRoster>('/teams/my/roster').then((r) => r.data),
+    queryFn: () => api.get<CaptainRoster>('/teams/my/roster').then((r) => fixRoster(r.data)),
     enabled,
     retry: false,
   });
@@ -23,7 +36,7 @@ export function useMyRoster(enabled = true) {
 export function useTeams(tournamentId: number | null) {
   return useQuery({
     queryKey: ['teams', tournamentId],
-    queryFn: () => api.get<Team[]>(`/teams?tournamentId=${tournamentId}`).then((r) => r.data),
+    queryFn: () => api.get<Team[]>(`/teams?tournamentId=${tournamentId}`).then((r) => r.data.map(fixTeam)),
     enabled: tournamentId != null,
   });
 }
@@ -31,7 +44,15 @@ export function useTeams(tournamentId: number | null) {
 export function useMyTeam(enabled = true) {
   return useQuery({
     queryKey: ['teams', 'my'],
-    queryFn: () => api.get<Team>('/teams/my').then((r) => r.data),
+    queryFn: async () => {
+      try {
+        const r = await api.get<Team>('/teams/my');
+        return fixTeam(r.data);
+      } catch (err: any) {
+        if (err?.response?.status === 404) return null;
+        throw err;
+      }
+    },
     enabled,
     retry: false,
   });

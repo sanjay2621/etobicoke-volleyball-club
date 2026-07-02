@@ -13,4 +13,8 @@ public interface TeamRepository extends JpaRepository<Team, Long> {
     List<Team> findByCaptainPlayerId(Long playerId);
 
     List<Team> findByRefereePlayerId(Long playerId);
+
+    boolean existsByTournamentIdAndNameIgnoreCase(Long tournamentId, String name);
+
+    boolean existsByTournamentIdAndNameIgnoreCaseAndIdNot(Long tournamentId, String name, Long id);
 }

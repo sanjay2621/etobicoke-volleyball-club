@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { TruncatedText } from '../../components/TruncatedText';
 import {
   Avatar,
   Box,
@@ -15,21 +16,24 @@ import {
   TableCell,
   TableContainer,
   TableHead,
-  TableRow, TableSortLabel,
+  TableRow,
+  TableSortLabel,
   TextField,
+  Tooltip,
   Typography,
 } from '@mui/material';
-import { green } from '@mui/material/colors';
+import AddPhotoAlternateIcon from '@mui/icons-material/AddPhotoAlternate';
 import DeleteIcon from '@mui/icons-material/Delete';
 import DownloadIcon from '@mui/icons-material/Download';
 import EditIcon from '@mui/icons-material/Edit';
 import SearchIcon from '@mui/icons-material/Search';
 import { useActiveTournaments } from '../../api/tournaments';
-import { useDeletePlayer, usePlayers } from '../../api/players';
+import { useDeletePlayer, usePlayers, useUploadPlayerPhoto } from '../../api/players';
 import { useTeams } from '../../api/teams';
 import { downloadFile } from '../../api/client';
 import type { Player } from '../../types';
 import { PlayerEditDialog } from './PlayerEditDialog';
+import styles from './RefereesPage.module.css';
 
 export function RefereesPage() {
   const { data: tournaments } = useActiveTournaments();
@@ -37,13 +41,16 @@ export function RefereesPage() {
   const { data: players, isLoading } = usePlayers(tournamentId);
   const { data: teams } = useTeams(tournamentId);
   const del = useDeletePlayer();
+  const uploadPhoto = useUploadPlayerPhoto();
+  const photoInputRef = useRef<HTMLInputElement>(null);
+  const [uploadingId, setUploadingId] = useState<number | null>(null);
   const [editing, setEditing] = useState<Player | null>(null);
   const [search, setSearch] = useState('');
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-  const [sortField, setSortField] = useState<'firstName' | 'lastName'>('lastName');
+  const [sortField, setSortField] = useState<'firstName' | 'lastName' | null>(null);
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc');
 
-  function toggleSort(field: 'firstName' | 'lastName') {
+  function handleSort(field: 'firstName' | 'lastName') {
     if (sortField === field) {
       setSortDir((d) => (d === 'asc' ? 'desc' : 'asc'));
     } else {
@@ -74,20 +81,25 @@ export function RefereesPage() {
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
-    const base = !q
-      ? referees
-      : referees.filter((p) =>
-          [p.fullName, p.email, p.phone, p.paymentStatus, p.skillLevel ?? '', p.preferredPositions.join(' ')]
-            .join(' ')
-            .toLowerCase()
-            .includes(q),
-        );
-    return [...base].sort((a, b) => {
-      const av = (a[sortField] ?? '').toLowerCase();
-      const bv = (b[sortField] ?? '').toLowerCase();
-      return sortDir === 'asc' ? av.localeCompare(bv) : bv.localeCompare(av);
+    if (!q) return referees;
+    return referees.filter((p) =>
+      [p.fullName, p.email, p.phone, p.paymentStatus, p.skillLevel ?? '', p.preferredPositions.join(' ')]
+        .join(' ')
+        .toLowerCase()
+        .includes(q),
+    );
+  }, [referees, search]);
+
+  const sorted = useMemo(() => {
+    if (!sortField) return filtered;
+    return [...filtered].sort((a, b) => {
+      const va = a[sortField].toLowerCase();
+      const vb = b[sortField].toLowerCase();
+      if (va < vb) return sortDir === 'asc' ? -1 : 1;
+      if (va > vb) return sortDir === 'asc' ? 1 : -1;
+      return 0;
     });
-  }, [referees, search, sortField, sortDir]);
+  }, [filtered, sortField, sortDir]);
 
   return (
     <>
@@ -106,7 +118,7 @@ export function RefereesPage() {
                 </InputAdornment>
               ),
             }}
-            sx={{ minWidth: 240 }}
+            className={styles.searchField}
           />
           <TextField
             select
@@ -114,7 +126,7 @@ export function RefereesPage() {
             label="Tournament"
             value={tournamentId ?? ''}
             onChange={(e) => setTournamentId(Number(e.target.value))}
-            sx={{ minWidth: 200 }}
+            className={styles.tournamentSelect}
           >
             {tournaments?.map((t) => (
               <MenuItem key={t.id} value={t.id}>
@@ -145,7 +157,7 @@ export function RefereesPage() {
                 <TableSortLabel
                   active={sortField === 'firstName'}
                   direction={sortField === 'firstName' ? sortDir : 'asc'}
-                  onClick={() => toggleSort('firstName')}
+                  onClick={() => handleSort('firstName')}
                 >
                   First Name
                 </TableSortLabel>
@@ -154,7 +166,7 @@ export function RefereesPage() {
                 <TableSortLabel
                   active={sortField === 'lastName'}
                   direction={sortField === 'lastName' ? sortDir : 'asc'}
-                  onClick={() => toggleSort('lastName')}
+                  onClick={() => handleSort('lastName')}
                 >
                   Last Name
                 </TableSortLabel>
@@ -174,10 +186,10 @@ export function RefereesPage() {
                 <TableCell colSpan={10}>Loading…</TableCell>
               </TableRow>
             )}
-            {!isLoading && filtered.length === 0 && (
+            {!isLoading && sorted.length === 0 && (
               <TableRow>
                 <TableCell colSpan={10}>
-                  <Box py={2} color="text.secondary">
+                  <Box className={styles.emptyCell}>
                     {search
                       ? 'No referees match your search.'
                       : 'No players have registered as referee for this tournament.'}
@@ -185,26 +197,37 @@ export function RefereesPage() {
                 </TableCell>
               </TableRow>
             )}
-            {filtered.map((p) => {
+            {sorted.map((p) => {
               const assignedTeam = refereeTeamMap.get(p.id);
               return (
                 <TableRow
                   key={p.id}
                   hover
-                  sx={{ bgcolor: assignedTeam ? green[50] : undefined }}
+                  className={assignedTeam ? styles.assignedRow : ''}
                 >
                   <TableCell>
-                    <Avatar
-                      src={p.photoUrl ?? undefined}
-                      sx={{ width: 32, height: 32, cursor: p.photoUrl ? 'pointer' : 'default' }}
-                      onClick={() => p.photoUrl && setPreviewUrl(p.photoUrl)}
-                    />
+                    <Box className={styles.avatarWrapper}>
+                      <Avatar
+                        src={p.photoUrl ?? undefined}
+                        className={p.photoUrl ? styles.avatarClickable : styles.avatar}
+                        onClick={() => p.photoUrl && setPreviewUrl(p.photoUrl)}
+                      />
+                      <Tooltip title="Upload photo">
+                        <IconButton
+                          size="small"
+                          className={styles.photoUploadBtn}
+                          onClick={() => { setUploadingId(p.id); photoInputRef.current?.click(); }}
+                        >
+                          <AddPhotoAlternateIcon className={styles.photoUploadIcon} />
+                        </IconButton>
+                      </Tooltip>
+                    </Box>
                   </TableCell>
-                  <TableCell>{p.firstName}</TableCell>
-                  <TableCell>{p.lastName}</TableCell>
+                  <TableCell sx={{ maxWidth: 120 }}><TruncatedText text={p.firstName} /></TableCell>
+                  <TableCell sx={{ maxWidth: 120 }}><TruncatedText text={p.lastName} /></TableCell>
                   <TableCell>{p.skillLevel ?? '—'}</TableCell>
-                  <TableCell>{p.phone}</TableCell>
-                  <TableCell>{p.email}</TableCell>
+                  <TableCell sx={{ maxWidth: 130 }}><TruncatedText text={p.phone} /></TableCell>
+                  <TableCell sx={{ maxWidth: 200 }}><TruncatedText text={p.email} /></TableCell>
                   <TableCell>
                     <Chip
                       label={p.paymentStatus}
@@ -242,10 +265,23 @@ export function RefereesPage() {
         </Table>
       </TableContainer>
 
+      <input
+        type="file"
+        accept="image/*"
+        hidden
+        ref={photoInputRef}
+        onChange={async (e) => {
+          const file = e.target.files?.[0];
+          if (file && uploadingId != null) await uploadPhoto.mutateAsync({ id: uploadingId, photo: file });
+          e.target.value = '';
+          setUploadingId(null);
+        }}
+      />
+
       <PlayerEditDialog player={editing} onClose={() => setEditing(null)} />
 
       <Dialog open={!!previewUrl} onClose={() => setPreviewUrl(null)} maxWidth="sm" fullWidth>
-        <Box sx={{ p: 1, display: 'flex', justifyContent: 'center', bgcolor: 'black' }}>
+        <Box className={styles.photoPreviewBox}>
           <img
             src={previewUrl ?? ''}
             alt="Referee photo"

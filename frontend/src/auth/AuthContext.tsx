@@ -12,7 +12,8 @@ type AuthContextValue = {
   user: AuthState;
   login: (email: string, password: string) => Promise<AuthResponse>;
   registerAccount: (email: string, password: string) => Promise<AuthResponse>;
-  resetPassword: (email: string, password: string) => Promise<AuthResponse>;
+  requestPasswordReset: (email: string) => Promise<void>;
+  resetPassword: (email: string, code: string, password: string) => Promise<AuthResponse>;
   logout: () => void;
 };
 
@@ -52,8 +53,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const res = await api.post<AuthResponse>('/auth/register-account', { email, password });
         return persist(res.data);
       },
-      resetPassword: async (email, password) => {
-        const res = await api.post<AuthResponse>('/auth/reset-password', { email, password });
+      requestPasswordReset: async (email) => {
+        await api.post('/auth/request-password-reset', { email });
+      },
+      resetPassword: async (email, code, password) => {
+        const res = await api.post<AuthResponse>('/auth/reset-password', { email, code, password });
         return persist(res.data);
       },
       logout: () => {

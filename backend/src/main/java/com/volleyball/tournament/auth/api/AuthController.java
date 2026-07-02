@@ -4,6 +4,8 @@ import com.volleyball.tournament.auth.model.AuthResponse;
 import com.volleyball.tournament.auth.model.LoginRequest;
 import com.volleyball.tournament.auth.model.RefreshRequest;
 import com.volleyball.tournament.auth.model.RegisterAccountRequest;
+import com.volleyball.tournament.auth.model.RequestPasswordResetRequest;
+import com.volleyball.tournament.auth.model.ResetPasswordRequest;
 import com.volleyball.tournament.auth.service.AuthService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -31,8 +33,14 @@ public class AuthController {
         return ResponseEntity.status(HttpStatus.CREATED).body(authService.registerAccount(req));
     }
 
+    @PostMapping("/request-password-reset")
+    public ResponseEntity<Void> requestPasswordReset(@Valid @RequestBody RequestPasswordResetRequest req) {
+        authService.requestPasswordReset(req);
+        return ResponseEntity.ok().build();
+    }
+
     @PostMapping("/reset-password")
-    public AuthResponse resetPassword(@Valid @RequestBody RegisterAccountRequest req) {
+    public AuthResponse resetPassword(@Valid @RequestBody ResetPasswordRequest req) {
         return authService.resetPassword(req);
     }
 

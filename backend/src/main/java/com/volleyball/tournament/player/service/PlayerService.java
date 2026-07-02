@@ -161,6 +161,32 @@ public class PlayerService {
         return toResponse(playerRepository.save(player));
     }
 
+    /** Captain marks a player on their own team as PAID or UNPAID. */
+    @Transactional
+    public PlayerResponse captainMarkPayment(Long targetPlayerId, PaymentStatus status) {
+        AuthenticatedUser caller = SecurityUtils.currentUser();
+        if (caller.playerId() == null) {
+            throw new ApiException(HttpStatus.FORBIDDEN, "No player account linked");
+        }
+        Player captain = getEntity(caller.playerId());
+        // Find the team where the caller is captain and the target is a member.
+        List<com.volleyball.tournament.team.entity.Team> captainTeams =
+                teamRepository.findByCaptainPlayerId(caller.playerId());
+        boolean targetInTeam = captainTeams.stream().anyMatch(t ->
+                teamMemberRepository.existsByTeamIdAndPlayerId(t.getId(), targetPlayerId));
+        if (captainTeams.isEmpty() || !targetInTeam) {
+            throw new ApiException(HttpStatus.FORBIDDEN,
+                    "You can only update payment for players on your own team");
+        }
+        Player target = getEntity(targetPlayerId);
+        if (!target.getTournamentId().equals(captain.getTournamentId())) {
+            throw new ApiException(HttpStatus.FORBIDDEN,
+                    "You can only update payment for players on your own team");
+        }
+        target.setPaymentStatus(status);
+        return toResponse(playerRepository.save(target));
+    }
+
     @Transactional
     public void delete(Long id) {
         Player player = getEntity(id);
@@ -180,6 +206,24 @@ public class PlayerService {
         });
         player.setDeleted(true);
         playerRepository.save(player);
+    }
+
+    @Transactional
+    public PlayerResponse uploadMyPhoto(MultipartFile photo) {
+        AuthenticatedUser user = SecurityUtils.currentUser();
+        if (user.playerId() == null) {
+            throw new NotFoundException("No player registration linked to this account");
+        }
+        Player player = getEntity(user.playerId());
+        player.setPhotoPath(fileStorageService.storePhoto(photo, player.getTournamentId()));
+        return toResponse(playerRepository.save(player));
+    }
+
+    @Transactional
+    public PlayerResponse uploadPhoto(Long id, MultipartFile photo) {
+        Player player = getEntity(id);
+        player.setPhotoPath(fileStorageService.storePhoto(photo, player.getTournamentId()));
+        return toResponse(playerRepository.save(player));
     }
 
     @Transactional(readOnly = true)

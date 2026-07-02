@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
+import { TruncatedText } from '../../components/TruncatedText';
 import {
+  Alert,
   Autocomplete,
   Avatar,
   Box,
@@ -41,6 +43,7 @@ import {
   useTeams,
 } from '../../api/teams';
 import type { Player, Team } from '../../types';
+import styles from './TeamsPage.module.css';
 
 export function TeamsPage() {
   const { data: tournaments } = useActiveTournaments();
@@ -50,6 +53,7 @@ export function TeamsPage() {
   const createTeam = useCreateTeam();
   const [newOpen, setNewOpen] = useState(false);
   const [newName, setNewName] = useState('');
+  const [newError, setNewError] = useState<string | null>(null);
 
   useEffect(() => {
     if (tournamentId == null && tournaments && tournaments.length > 0) {
@@ -63,30 +67,41 @@ export function TeamsPage() {
     return set;
   }, [teams]);
 
+  const assignedRefereeIds = useMemo(() => {
+    const set = new Set<number>();
+    teams?.forEach((t) => { if (t.refereePlayerId != null) set.add(t.refereePlayerId); });
+    return set;
+  }, [teams]);
+
   const availablePlayers = useMemo(
-    () => players?.filter((p) => !assignedIds.has(p.id)) ?? [],
+    () => players?.filter((p) => !assignedIds.has(p.id) && !p.preferredPositions.includes('REFEREE')) ?? [],
     [players, assignedIds],
   );
 
   async function onCreate() {
     if (!tournamentId || !newName.trim()) return;
-    await createTeam.mutateAsync({ tournamentId, name: newName.trim() });
-    setNewName('');
-    setNewOpen(false);
+    setNewError(null);
+    try {
+      await createTeam.mutateAsync({ tournamentId, name: newName.trim() });
+      setNewName('');
+      setNewOpen(false);
+    } catch (err: any) {
+      setNewError(err?.response?.data?.message ?? 'Failed to create team');
+    }
   }
 
   return (
     <>
-      <Stack direction="row" justifyContent="space-between" alignItems="center" mb={2}>
+      <Stack direction="row" justifyContent="space-between" alignItems="center" mb={2} flexWrap="wrap" gap={1}>
         <Typography variant="h4">Teams</Typography>
-        <Stack direction="row" spacing={2}>
+        <Stack direction="row" spacing={1} flexWrap="wrap">
           <TextField
             select
             size="small"
             label="Tournament"
             value={tournamentId ?? ''}
             onChange={(e) => setTournamentId(Number(e.target.value))}
-            sx={{ minWidth: 220 }}
+            className={styles.tournamentSelect}
           >
             {tournaments?.map((t) => (
               <MenuItem key={t.id} value={t.id}>
@@ -119,25 +134,31 @@ export function TeamsPage() {
         )}
         {teams?.map((team) => (
           <Grid item xs={12} md={6} lg={4} key={team.id}>
-            <TeamCard team={team} available={availablePlayers} allPlayers={players ?? []} />
+            <TeamCard team={team} available={availablePlayers} allPlayers={players ?? []} assignedRefereeIds={assignedRefereeIds} />
           </Grid>
         ))}
       </Grid>
 
-      <Dialog open={newOpen} onClose={() => setNewOpen(false)}>
+      <Dialog open={newOpen} onClose={() => { setNewOpen(false); setNewError(null); setNewName(''); }}>
         <DialogTitle>New team</DialogTitle>
         <DialogContent>
+          {newError && (
+            <Alert severity="error" className={styles.newTeamAlert}>
+              {newError}
+            </Alert>
+          )}
           <TextField
             autoFocus
             label="Team name"
             value={newName}
-            onChange={(e) => setNewName(e.target.value)}
-            sx={{ mt: 1, minWidth: 320 }}
+            onChange={(e) => { setNewName(e.target.value); setNewError(null); }}
+            onKeyDown={(e) => e.key === 'Enter' && onCreate()}
+            className={styles.newTeamField}
           />
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setNewOpen(false)}>Cancel</Button>
-          <Button variant="contained" onClick={onCreate}>
+          <Button onClick={() => { setNewOpen(false); setNewError(null); setNewName(''); }}>Cancel</Button>
+          <Button variant="contained" onClick={onCreate} disabled={!newName.trim()}>
             Create
           </Button>
         </DialogActions>
@@ -150,10 +171,12 @@ function TeamCard({
   team,
   available,
   allPlayers,
+  assignedRefereeIds,
 }: {
   team: Team;
   available: Player[];
   allPlayers: Player[];
+  assignedRefereeIds: Set<number>;
 }) {
   const addMember = useAddMember();
   const removeMember = useRemoveMember();
@@ -166,19 +189,24 @@ function TeamCard({
     ? allPlayers.find((p) => p.id === team.refereePlayerId)?.fullName ?? `#${team.refereePlayerId}`
     : null;
 
-  // Only players who registered as a referee (picked the REFEREE position) can be assigned.
+  // Only referees not already assigned to another team; always include this team's current referee.
   const refereeOptions = useMemo(
-    () => allPlayers.filter((p) => p.preferredPositions.includes('REFEREE')),
-    [allPlayers],
+    () => allPlayers.filter(
+      (p) => p.preferredPositions.includes('REFEREE') &&
+        (!assignedRefereeIds.has(p.id) || p.id === team.refereePlayerId),
+    ),
+    [allPlayers, assignedRefereeIds, team.refereePlayerId],
   );
 
   return (
-    <Card sx={{ height: '100%' }}>
+    <Card className={styles.teamCard}>
       <CardContent>
         <Stack direction="row" justifyContent="space-between" alignItems="center">
-          <Typography variant="h6">{team.name}</Typography>
+          <Typography variant="h6" sx={{ flex: 1, minWidth: 0, mr: 1 }}>
+            <TruncatedText text={team.name} />
+          </Typography>
           <Box>
-            {team.groupLabel && <Chip size="small" label={`Group ${team.groupLabel}`} sx={{ mr: 1 }} />}
+            {team.groupLabel && <Chip size="small" label={`Group ${team.groupLabel}`} className={styles.groupChip} />}
             <Chip size="small" label={`${team.memberCount} players`} />
             <IconButton
               size="small"
@@ -193,7 +221,7 @@ function TeamCard({
           </Box>
         </Stack>
 
-        <Box mt={1}>
+        <Box className={styles.membersBox}>
           {team.members.length === 0 && (
             <Typography variant="body2" color="text.secondary">
               No players yet.
@@ -224,27 +252,28 @@ function TeamCard({
               }
             >
               <ListItemAvatar>
-                <Avatar src={m.photoUrl ?? undefined} sx={{ width: 32, height: 32 }} />
+                <Avatar src={m.photoUrl ?? undefined} className={styles.memberAvatar} />
               </ListItemAvatar>
               <ListItemText
-                primary={m.fullName}
-                secondary={m.preferredPositions.join(', ')}
+                primary={<TruncatedText text={m.fullName} />}
+                secondary={<TruncatedText text={m.preferredPositions.join(', ')} />}
+                sx={{ minWidth: 0 }}
               />
             </ListItem>
           ))}
         </Box>
 
-        <Stack direction="row" spacing={1} mt={2}>
+        <Stack direction="row" spacing={1} className={styles.addPlayerRow}>
           <Autocomplete
             size="small"
-            sx={{ flexGrow: 1 }}
+            className={styles.autocompleteGrow}
             options={available}
             value={toAdd}
             onChange={(_, v) => setToAdd(v)}
             getOptionLabel={(p) => p.fullName}
             renderOption={({ key, ...props }, p) => (
-              <Box key={key} component="li" {...props} sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                <Avatar src={p.photoUrl ?? undefined} sx={{ width: 28, height: 28, flexShrink: 0 }} />
+              <Box key={key} component="li" {...props} className={styles.playerOption}>
+                <Avatar src={p.photoUrl ?? undefined} className={styles.playerOptionAvatar} />
                 {p.fullName}
               </Box>
             )}
@@ -264,11 +293,11 @@ function TeamCard({
           </Button>
         </Stack>
 
-        <Stack direction="row" spacing={1} mt={2} alignItems="center">
+        <Stack direction="row" spacing={1} alignItems="center" className={styles.refereeSection}>
           <SportsIcon fontSize="small" color="action" />
           <Autocomplete
             size="small"
-            sx={{ flexGrow: 1 }}
+            className={styles.autocompleteGrow}
             options={refereeOptions}
             value={allPlayers.find((p) => p.id === team.refereePlayerId) ?? null}
             onChange={(_, v) => setReferee.mutate({ teamId: team.id, playerId: v ? v.id : 0 })}

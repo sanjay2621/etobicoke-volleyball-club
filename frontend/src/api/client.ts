@@ -20,7 +20,15 @@ export const tokenStore = {
   },
 };
 
-export const api = axios.create({ baseURL: (import.meta.env.VITE_API_URL ?? '') + '/api' });
+const apiBaseURL = (import.meta.env.VITE_API_URL ?? '') + '/api';
+
+export const api = axios.create({ baseURL: apiBaseURL });
+
+/** Makes a relative /api/... photo path absolute in production. No-op in local dev. */
+export function fixPhotoUrl(url: string | null | undefined): string | null | undefined {
+  if (!url || url.startsWith('http')) return url;
+  return `${import.meta.env.VITE_API_URL ?? ''}${url}`;
+}
 
 /** Fetches a file (with the auth header via the interceptor) and triggers a browser download. */
 export async function downloadFile(path: string, filename: string) {
@@ -58,7 +66,7 @@ api.interceptors.response.use(
       try {
         if (!refreshing) {
           refreshing = axios
-            .post((import.meta.env.VITE_API_URL ?? '') + '/api/auth/refresh', { refreshToken: tokenStore.refresh })
+            .post(`${apiBaseURL}/auth/refresh`, { refreshToken: tokenStore.refresh })
             .then((r) => {
               tokenStore.set(r.data.accessToken, r.data.refreshToken);
               return r.data.accessToken as string;

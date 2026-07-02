@@ -26,7 +26,7 @@ spring:
       max-request-size: 15MB
 
 server:
-  port: 8080
+  port: ${PORT:8080}
   tomcat:
     # Let Tomcat read (swallow) an over-limit request body so a proper error response can be
     # returned, instead of aborting the connection (which surfaces as ERR_CONNECTION_RESET).
@@ -47,6 +47,8 @@ app:
     password: ${ADMIN_PASSWORD:admin123}
   cors:
     allowed-origins: ${CORS_ORIGINS:http://localhost:5173}
+  brevo:
+    api-key: ${BREVO_API_KEY}
 
 logging:
   level:

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Link as RouterLink, useNavigate } from 'react-router-dom';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -22,38 +22,59 @@ import {
   ToggleButtonGroup,
   Typography,
 } from '@mui/material';
+import SportsVolleyballIcon from '@mui/icons-material/SportsVolleyball';
 import { POSITIONS, SKILL_LEVELS, TSHIRT_SIZES } from '../../types';
 import type { Position } from '../../types';
 import { useActivePublicTournaments } from '../../api/tournaments';
 import { useRegisterPlayer } from '../../api/players';
+import styles from './RegisterPage.module.css';
+
+function formatPhone(v: string): string {
+  const d = v.replace(/\D/g, '').slice(0, 10);
+  if (d.length === 0) return '';
+  if (d.length <= 3) return `(${d}`;
+  if (d.length <= 6) return `(${d.slice(0, 3)})-${d.slice(3)}`;
+  return `(${d.slice(0, 3)})-${d.slice(3, 6)}-${d.slice(6)}`;
+}
+
+const phoneRule = z
+  .string()
+  .refine((v) => v.replace(/\D/g, '').length === 10, 'Enter a 10-digit phone number, e.g. (416)-555-1234');
 
 const schema = z.object({
   tournamentId: z.coerce.number().int().positive('Choose a tournament'),
   firstName: z.string().min(1, 'Required'),
   middleName: z.string().optional(),
   lastName: z.string().min(1, 'Required'),
-  phone: z.string().min(7, 'Enter a valid phone number'),
-  email: z.string().email('Enter a valid email'),
-  line1: z.string().optional(),
-  city: z.string().optional(),
-  province: z.string().optional(),
-  postalCode: z.string().optional(),
+  phone: phoneRule,
+  email: z.string().email('Enter a valid email address'),
+  line1: z.string().min(3, 'Enter a valid street address'),
+  city: z.string().min(2, 'Enter a valid city'),
+  province: z.string().min(2, 'Enter a valid province'),
+  postalCode: z.string().refine(
+    (v) => /^[A-Za-z]\d[A-Za-z]\s?\d[A-Za-z]\d$/.test(v.trim()),
+    'Enter a valid postal code, e.g. M4B 1B3',
+  ),
   country: z.string().min(1),
   preferredPositions: z.array(z.string()).refine(
     (val) => (val.includes('REFEREE') ? val.length === 1 : val.length === 2),
     { message: 'Select Referee only, or pick exactly two positions' },
   ),
   tshirtSize: z.enum(['S', 'M', 'L', 'XL', 'XXL', 'XXXL']),
-  emergencyContactName: z.string().optional(),
-  emergencyContactPhone: z.string().optional(),
+  emergencyContactName: z.string().min(1, 'Required'),
+  emergencyContactPhone: phoneRule,
   skillLevel: z.string().optional(),
   waiverAccepted: z.literal(true, { errorMap: () => ({ message: 'You must accept the waiver' }) }),
   photoConsent: z.boolean().optional(),
+}).superRefine((data, ctx) => {
+  const isReferee = data.preferredPositions.includes('REFEREE');
+  if (!isReferee && !data.skillLevel) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'Required', path: ['skillLevel'] });
+  }
 });
 
 type FormValues = z.infer<typeof schema>;
 
-/** Keep in sync with backend app.storage.max-photo-bytes (10 MB). */
 const MAX_PHOTO_BYTES = 10 * 1024 * 1024;
 
 export function RegisterPage() {
@@ -69,6 +90,7 @@ export function RegisterPage() {
     register: field,
     handleSubmit,
     control,
+    watch,
     formState: { errors, isSubmitting },
   } = useForm<FormValues>({
     resolver: zodResolver(schema),
@@ -79,6 +101,29 @@ export function RegisterPage() {
       photoConsent: false,
     } as Partial<FormValues> as FormValues,
   });
+
+  const selectedTournamentId = watch('tournamentId');
+  const selectedTournament = useMemo(
+    () => tournaments?.find((t) => t.id === Number(selectedTournamentId)),
+    [tournaments, selectedTournamentId],
+  );
+  const isReferee = (watch('preferredPositions') as string[]).includes('REFEREE');
+
+  function isRegistrationClosed(t: { registrationOpen: boolean; registrationDeadline?: string | null }): boolean {
+    if (!t.registrationOpen) return true;
+    if (t.registrationDeadline) {
+      const deadline = new Date(t.registrationDeadline);
+      deadline.setHours(23, 59, 59, 999);
+      if (new Date() > deadline) return true;
+    }
+    return false;
+  }
+
+  const openTournaments = useMemo(
+    () => (tournaments ?? []).filter((t) => !isRegistrationClosed(t)),
+    [tournaments],
+  );
+  const registrationClosed = selectedTournament ? isRegistrationClosed(selectedTournament) : false;
 
   function onPhotoChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0] ?? null;
@@ -130,7 +175,7 @@ export function RegisterPage() {
 
   if (doneEmail) {
     return (
-      <Container maxWidth="sm" sx={{ py: 8 }}>
+      <Container maxWidth="sm" className={styles.successContainer}>
         <Card>
           <CardContent>
             <Typography variant="h4" gutterBottom>
@@ -153,203 +198,304 @@ export function RegisterPage() {
   }
 
   return (
-    <Container maxWidth="md" sx={{ py: 5 }}>
-      <Button component={RouterLink} to="/" sx={{ mb: 1 }}>
-        ← Home
-      </Button>
-      <Typography variant="h3" gutterBottom>
-        Register to play
-      </Typography>
-      {error && (
-        <Alert severity="error" sx={{ mb: 2 }}>
-          {error}
-        </Alert>
-      )}
-      <Card>
-        <CardContent>
-          <Box component="form" onSubmit={handleSubmit(onSubmit)}>
-            <Grid container spacing={2}>
-              <Grid item xs={12}>
-                <Controller
-                  control={control}
-                  name="tournamentId"
-                  render={({ field: f }) => (
-                    <TextField
-                      select
-                      label="Tournament"
-                      fullWidth
-                      value={f.value ?? ''}
-                      onChange={f.onChange}
-                      error={!!errors.tournamentId}
-                      helperText={errors.tournamentId?.message}
-                    >
-                      {tournaments?.map((t) => (
-                        <MenuItem key={t.id} value={t.id}>
-                          {t.name} — {new Date(t.date).toLocaleDateString()}
-                        </MenuItem>
+    <Box className={styles.root}>
+      <Box className={styles.banner}>
+        <SportsVolleyballIcon className={styles.bannerDecorRight} />
+        <SportsVolleyballIcon className={styles.bannerDecorLeft} />
+        <Container maxWidth="md" className={styles.bannerContainer}>
+          <Button component={RouterLink} to="/" className={styles.homeLink}>
+            ← Home
+          </Button>
+          <Stack direction={{ xs: 'column', sm: 'row' }} alignItems={{ xs: 'flex-start', sm: 'center' }} spacing={2}>
+            <SportsVolleyballIcon className={styles.bannerMainIcon} />
+            <Box>
+              <Typography variant="h4" fontWeight={800} letterSpacing={-0.5}>
+                Register to Play
+              </Typography>
+              <Typography variant="body1" className={styles.bannerSubtext}>
+                SANATANI Volleyball Club — fill in your details below to secure your spot.
+              </Typography>
+            </Box>
+          </Stack>
+        </Container>
+      </Box>
+
+      <Box className={styles.formArea}>
+        <SportsVolleyballIcon className={styles.formDecor1} />
+        <SportsVolleyballIcon className={styles.formDecor2} />
+        <SportsVolleyballIcon className={styles.formDecor3} />
+        <SportsVolleyballIcon className={styles.formDecor4} />
+        <SportsVolleyballIcon className={styles.formDecor5} />
+        <SportsVolleyballIcon className={styles.formDecor6} />
+
+        <Container maxWidth="md" className={styles.formContainer}>
+          {error && (
+            <Alert severity="error" className={styles.errorAlert}>
+              {error}
+            </Alert>
+          )}
+          <Card>
+            <CardContent>
+              <Box component="form" onSubmit={handleSubmit(onSubmit)}>
+                <Grid container spacing={2}>
+                  <Grid item xs={12}>
+                    <Controller
+                      control={control}
+                      name="tournamentId"
+                      render={({ field: f }) => (
+                        <TextField
+                          select
+                          label="Tournament"
+                          fullWidth
+                          value={f.value ?? ''}
+                          onChange={f.onChange}
+                          error={!!errors.tournamentId}
+                          helperText={errors.tournamentId?.message}
+                        >
+                          {openTournaments.length === 0 && (
+                            <MenuItem disabled value="">
+                              No open tournaments
+                            </MenuItem>
+                          )}
+                          {openTournaments.map((t) => (
+                            <MenuItem key={t.id} value={t.id}>
+                              {t.name} — {new Date(t.date).toLocaleDateString()}
+                            </MenuItem>
+                          ))}
+                        </TextField>
+                      )}
+                    />
+                    {registrationClosed && (
+                      <Alert severity="error" className={styles.deadlineAlert}>
+                        Registration for this tournament is closed.
+                      </Alert>
+                    )}
+                    {!registrationClosed && selectedTournament?.registrationDeadline && (
+                      <Alert severity="info" className={styles.deadlineAlert}>
+                        Registration deadline:{' '}
+                        <strong>
+                          {new Date(selectedTournament.registrationDeadline).toLocaleDateString('en-CA', {
+                            year: 'numeric',
+                            month: 'long',
+                            day: 'numeric',
+                          })}
+                        </strong>
+                      </Alert>
+                    )}
+                  </Grid>
+
+                  <Grid item xs={12} sm={4}>
+                    <TextField label="First name" fullWidth {...field('firstName')}
+                      error={!!errors.firstName} helperText={errors.firstName?.message} />
+                  </Grid>
+                  <Grid item xs={12} sm={4}>
+                    <TextField label="Middle name" fullWidth {...field('middleName')} />
+                  </Grid>
+                  <Grid item xs={12} sm={4}>
+                    <TextField label="Last name" fullWidth {...field('lastName')}
+                      error={!!errors.lastName} helperText={errors.lastName?.message} />
+                  </Grid>
+
+                  <Grid item xs={12} sm={6}>
+                    {(() => {
+                      const reg = field('phone');
+                      return (
+                        <TextField
+                          label="Phone"
+                          fullWidth
+                          placeholder="(416)-555-1234"
+                          {...reg}
+                          onChange={(e) => {
+                            e.target.value = formatPhone(e.target.value);
+                            reg.onChange(e);
+                          }}
+                          inputProps={{ maxLength: 14 }}
+                          error={!!errors.phone}
+                          helperText={errors.phone?.message}
+                        />
+                      );
+                    })()}
+                  </Grid>
+                  <Grid item xs={12} sm={6}>
+                    <TextField label="Email" type="email" fullWidth {...field('email')}
+                      error={!!errors.email} helperText={errors.email?.message} />
+                  </Grid>
+
+                  <Grid item xs={12}>
+                    <Typography variant="subtitle2" color="text.secondary">Address</Typography>
+                  </Grid>
+                  <Grid item xs={12} sm={6}>
+                    <TextField label="Street address" fullWidth {...field('line1')}
+                      error={!!errors.line1} helperText={errors.line1?.message} />
+                  </Grid>
+                  <Grid item xs={6} sm={3}>
+                    <TextField label="City" fullWidth {...field('city')}
+                      error={!!errors.city} helperText={errors.city?.message} />
+                  </Grid>
+                  <Grid item xs={6} sm={3}>
+                    <TextField label="Province" fullWidth {...field('province')}
+                      error={!!errors.province} helperText={errors.province?.message} />
+                  </Grid>
+                  <Grid item xs={6} sm={3}>
+                    <TextField label="Postal code" fullWidth placeholder="M4B 1B3" {...field('postalCode')}
+                      error={!!errors.postalCode} helperText={errors.postalCode?.message} />
+                  </Grid>
+                  <Grid item xs={6} sm={3}>
+                    <TextField label="Country" fullWidth {...field('country')} />
+                  </Grid>
+
+                  <Grid item xs={12}>
+                    <Controller
+                      control={control}
+                      name="preferredPositions"
+                      render={({ field: f }) => {
+                        const isRef = (f.value as string[]).includes('REFEREE');
+                        return (
+                          <>
+                            <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                              {isRef ? 'Position — Referee selected' : 'Two best positions'}
+                            </Typography>
+                            <ToggleButtonGroup
+                              value={f.value}
+                              onChange={(_, val: string[]) => {
+                                if (val.includes('REFEREE')) {
+                                  f.onChange(['REFEREE']);
+                                } else if (val.length <= 2) {
+                                  f.onChange(val);
+                                }
+                              }}
+                              className={styles.positionsGroup}
+                            >
+                              {POSITIONS.map((p) => (
+                                <ToggleButton
+                                  key={p}
+                                  value={p}
+                                  disabled={isRef && p !== 'REFEREE'}
+                                  className={styles.positionBtn}
+                                >
+                                  {p}
+                                </ToggleButton>
+                              ))}
+                            </ToggleButtonGroup>
+                          </>
+                        );
+                      }}
+                    />
+                    {errors.preferredPositions && (
+                      <FormHelperText error>{errors.preferredPositions.message as string}</FormHelperText>
+                    )}
+                  </Grid>
+
+                  <Grid item xs={6} sm={3}>
+                    <TextField select label="T-shirt size" fullWidth defaultValue="M" {...field('tshirtSize')}>
+                      {TSHIRT_SIZES.map((s) => (
+                        <MenuItem key={s} value={s}>{s}</MenuItem>
                       ))}
                     </TextField>
+                  </Grid>
+                  {!isReferee && (
+                    <Grid item xs={6} sm={3}>
+                      <TextField
+                        select
+                        label="Skill level *"
+                        fullWidth
+                        defaultValue=""
+                        {...field('skillLevel')}
+                        error={!!errors.skillLevel}
+                        helperText={errors.skillLevel?.message}
+                      >
+                        <MenuItem value="">—</MenuItem>
+                        {SKILL_LEVELS.map((s) => (
+                          <MenuItem key={s} value={s}>{s}</MenuItem>
+                        ))}
+                      </TextField>
+                    </Grid>
                   )}
-                />
-              </Grid>
+                  <Grid item xs={12} sm={6}>
+                    <Stack direction="row" spacing={2} alignItems="center">
+                      <Avatar src={photoPreview ?? undefined} className={styles.photoAvatar} />
+                      <Button variant="outlined" component="label">
+                        Upload photo
+                        <input hidden type="file" accept="image/*" onChange={onPhotoChange} />
+                      </Button>
+                    </Stack>
+                  </Grid>
 
-              <Grid item xs={12} sm={4}>
-                <TextField label="First name" fullWidth {...field('firstName')}
-                  error={!!errors.firstName} helperText={errors.firstName?.message} />
-              </Grid>
-              <Grid item xs={12} sm={4}>
-                <TextField label="Middle name" fullWidth {...field('middleName')} />
-              </Grid>
-              <Grid item xs={12} sm={4}>
-                <TextField label="Last name" fullWidth {...field('lastName')}
-                  error={!!errors.lastName} helperText={errors.lastName?.message} />
-              </Grid>
-
-              <Grid item xs={12} sm={6}>
-                <TextField label="Phone" fullWidth {...field('phone')}
-                  error={!!errors.phone} helperText={errors.phone?.message} />
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <TextField label="Email" type="email" fullWidth {...field('email')}
-                  error={!!errors.email} helperText={errors.email?.message} />
-              </Grid>
-
-              <Grid item xs={12}>
-                <Typography variant="subtitle2" color="text.secondary">Address</Typography>
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <TextField label="Street address" fullWidth {...field('line1')} />
-              </Grid>
-              <Grid item xs={6} sm={3}>
-                <TextField label="City" fullWidth {...field('city')} />
-              </Grid>
-              <Grid item xs={6} sm={3}>
-                <TextField label="Province" fullWidth {...field('province')} />
-              </Grid>
-              <Grid item xs={6} sm={3}>
-                <TextField label="Postal code" fullWidth {...field('postalCode')} />
-              </Grid>
-              <Grid item xs={6} sm={3}>
-                <TextField label="Country" fullWidth {...field('country')} />
-              </Grid>
-
-              <Grid item xs={12}>
-                <Controller
-                  control={control}
-                  name="preferredPositions"
-                  render={({ field: f }) => {
-                    const isReferee = (f.value as string[]).includes('REFEREE');
-                    return (
-                      <>
-                        <Typography variant="subtitle2" color="text.secondary" gutterBottom>
-                          {isReferee ? 'Position — Referee selected' : 'Two best positions'}
-                        </Typography>
-                        <ToggleButtonGroup
-                          value={f.value}
-                          onChange={(_, val: string[]) => {
-                            if (val.includes('REFEREE')) {
-                              f.onChange(['REFEREE']);
-                            } else if (val.length <= 2) {
-                              f.onChange(val);
-                            }
-                          }}
-                          sx={{ flexWrap: 'wrap', gap: 1 }}
-                        >
-                          {POSITIONS.map((p) => (
-                            <ToggleButton
-                              key={p}
-                              value={p}
-                              disabled={isReferee && p !== 'REFEREE'}
-                              sx={{ borderRadius: 2 }}
-                            >
-                              {p}
-                            </ToggleButton>
-                          ))}
-                        </ToggleButtonGroup>
-                      </>
-                    );
-                  }}
-                />
-                {errors.preferredPositions && (
-                  <FormHelperText error>{errors.preferredPositions.message as string}</FormHelperText>
-                )}
-              </Grid>
-
-              <Grid item xs={6} sm={3}>
-                <TextField select label="T-shirt size" fullWidth defaultValue="M" {...field('tshirtSize')}>
-                  {TSHIRT_SIZES.map((s) => (
-                    <MenuItem key={s} value={s}>{s}</MenuItem>
-                  ))}
-                </TextField>
-              </Grid>
-              <Grid item xs={6} sm={3}>
-                <TextField select label="Skill level" fullWidth defaultValue="" {...field('skillLevel')}>
-                  <MenuItem value="">—</MenuItem>
-                  {SKILL_LEVELS.map((s) => (
-                    <MenuItem key={s} value={s}>{s}</MenuItem>
-                  ))}
-                </TextField>
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <Stack direction="row" spacing={2} alignItems="center">
-                  <Avatar src={photoPreview ?? undefined} sx={{ width: 56, height: 56 }} />
-                  <Button variant="outlined" component="label">
-                    Upload photo
-                    <input hidden type="file" accept="image/*" onChange={onPhotoChange} />
-                  </Button>
-                </Stack>
-              </Grid>
-
-              <Grid item xs={12} sm={6}>
-                <TextField label="Emergency contact name" fullWidth {...field('emergencyContactName')} />
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <TextField label="Emergency contact phone" fullWidth {...field('emergencyContactPhone')} />
-              </Grid>
-
-              <Grid item xs={12}>
-                <Controller
-                  control={control}
-                  name="photoConsent"
-                  render={({ field: f }) => (
-                    <FormControlLabel
-                      control={<Checkbox checked={!!f.value} onChange={f.onChange} />}
-                      label="I consent to my photo being used for tournament purposes"
+                  <Grid item xs={12} sm={6}>
+                    <TextField
+                      label="Emergency contact name *"
+                      fullWidth
+                      {...field('emergencyContactName')}
+                      error={!!errors.emergencyContactName}
+                      helperText={errors.emergencyContactName?.message}
                     />
-                  )}
-                />
-                <Controller
-                  control={control}
-                  name="waiverAccepted"
-                  render={({ field: f }) => (
-                    <Box>
-                      <FormControlLabel
-                        control={<Checkbox checked={!!f.value} onChange={f.onChange} />}
-                        label="I accept the liability waiver and tournament rules *"
-                      />
-                      {errors.waiverAccepted && (
-                        <FormHelperText error>{errors.waiverAccepted.message as string}</FormHelperText>
-                      )}
-                    </Box>
-                  )}
-                />
-              </Grid>
+                  </Grid>
+                  <Grid item xs={12} sm={6}>
+                    {(() => {
+                      const reg = field('emergencyContactPhone');
+                      return (
+                        <TextField
+                          label="Emergency contact phone *"
+                          fullWidth
+                          placeholder="(416)-555-1234"
+                          {...reg}
+                          onChange={(e) => {
+                            e.target.value = formatPhone(e.target.value);
+                            reg.onChange(e);
+                          }}
+                          inputProps={{ maxLength: 14 }}
+                          error={!!errors.emergencyContactPhone}
+                          helperText={errors.emergencyContactPhone?.message}
+                        />
+                      );
+                    })()}
+                  </Grid>
 
-              <Grid item xs={12}>
-                <Button
-                  type="submit"
-                  variant="contained"
-                  color="secondary"
-                  size="large"
-                  disabled={isSubmitting}
-                >
-                  {isSubmitting ? 'Submitting…' : 'Submit registration'}
-                </Button>
-              </Grid>
-            </Grid>
-          </Box>
-        </CardContent>
-      </Card>
-    </Container>
+                  <Grid item xs={12}>
+                    <Controller
+                      control={control}
+                      name="photoConsent"
+                      render={({ field: f }) => (
+                        <FormControlLabel
+                          control={<Checkbox checked={!!f.value} onChange={f.onChange} />}
+                          label="I consent to my photo being used for tournament purposes"
+                        />
+                      )}
+                    />
+                    <Controller
+                      control={control}
+                      name="waiverAccepted"
+                      render={({ field: f }) => (
+                        <Box>
+                          <FormControlLabel
+                            control={<Checkbox checked={!!f.value} onChange={f.onChange} />}
+                            label="I accept the liability waiver and tournament rules *"
+                          />
+                          {errors.waiverAccepted && (
+                            <FormHelperText error>{errors.waiverAccepted.message as string}</FormHelperText>
+                          )}
+                        </Box>
+                      )}
+                    />
+                  </Grid>
+
+                  <Grid item xs={12}>
+                    <Button
+                      type="submit"
+                      variant="contained"
+                      color="secondary"
+                      size="large"
+                      disabled={isSubmitting || registrationClosed || openTournaments.length === 0}
+                    >
+                      {isSubmitting ? 'Submitting…' : 'Submit registration'}
+                    </Button>
+                  </Grid>
+                </Grid>
+              </Box>
+            </CardContent>
+          </Card>
+        </Container>
+      </Box>
+    </Box>
   );
 }
