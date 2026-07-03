@@ -290,6 +290,11 @@ export function TossPage() {
                   <Typography variant="body2" color="text.secondary" mt={1}>
                     Called: {call} · Result: {result}
                   </Typography>
+                  {won && (
+                    <Typography variant="caption" color="text.secondary" display="block" mt={1.5}>
+                      Note: {callingTeamName} may choose to either serve first or select which side of the court to play on.
+                    </Typography>
+                  )}
                 </Box>
               )}
 
