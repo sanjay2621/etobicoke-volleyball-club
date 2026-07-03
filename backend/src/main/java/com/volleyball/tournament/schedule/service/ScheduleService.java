@@ -156,6 +156,7 @@ public class ScheduleService {
         }
 
         matchSetRepository.deleteByMatchId(matchId);
+        matchSetRepository.flush();
         int homeSets = 0;
         int awaySets = 0;
         int setNo = 1;
