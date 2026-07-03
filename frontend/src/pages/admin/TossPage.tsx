@@ -291,8 +291,16 @@ export function TossPage() {
                     Called: {call} · Result: {result}
                   </Typography>
                   {won && (
-                    <Typography variant="caption" color="text.secondary" display="block" mt={1.5}>
-                      Note: {callingTeamName} may choose to either serve first or select which side of the court to play on.
+                    <Typography variant="body1" color="text.secondary" mt={1.5}>
+                      Note: {callingTeamName} may choose to either{' '}
+                      <Box component="span" fontWeight={700} color="primary.main">
+                        serve first
+                      </Box>{' '}
+                      or select which{' '}
+                      <Box component="span" fontWeight={700} color="primary.main">
+                        court to play on
+                      </Box>
+                      .
                     </Typography>
                   )}
                 </Box>
