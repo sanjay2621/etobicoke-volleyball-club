@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Full-stack app to run a volleyball tournament end-to-end: player registration → team formation
 (manual or live captain draft) → two-group round-robin pool schedule across courts → standings →
-playoffs (semifinals, final, bronze). Stack: Spring Boot 3 (Java 17) + MySQL 8 (Flyway) backend,
+playoffs (semifinals, final, bronze). Stack: Spring Boot 3 (Java 17) + PostgreSQL 16 (Flyway) backend,
 React 18 + TypeScript (Vite + MUI) frontend. Full domain model, algorithms, and API surface are
 specified in `docs/SPEC.md` (also see `docs/PLAN.md` for build-order rationale). Read `docs/SPEC.md`
 §6-8 before touching domain logic — it is the source of truth for field names and business rules.
@@ -15,7 +15,7 @@ specified in `docs/SPEC.md` (also see `docs/PLAN.md` for build-order rationale).
 
 ```bash
 # Database (from repo root)
-docker compose up -d mysql             # MySQL 8 on :3306 (db: volleyball)
+docker compose up -d postgres          # Postgres 16 on :5432 (db: volleyball)
 
 # Backend (from backend/)
 ./mvnw spring-boot:run                 # run API on :8080, seeds admin on first boot

@@ -2,18 +2,18 @@
 
 Full-stack app to run a volleyball tournament: player registration, team formation (manual + live captain draft), pool round-robin scheduling across courts, standings, and playoffs (semifinals, final, bronze).
 
-**Stack:** Spring Boot 3 (Java 17) · MySQL 8 · React 18 + TypeScript (Vite + MUI). See [`docs/SPEC.md`](docs/SPEC.md), [`docs/PLAN.md`](docs/PLAN.md), [`docs/TASKS.md`](docs/TASKS.md).
+**Stack:** Spring Boot 3 (Java 17) · PostgreSQL 16 · React 18 + TypeScript (Vite + MUI). See [`docs/SPEC.md`](docs/SPEC.md), [`docs/PLAN.md`](docs/PLAN.md), [`docs/TASKS.md`](docs/TASKS.md).
 
 ## Prerequisites
 - Java 17, Maven (or use `./mvnw`)
 - Node 18+ / npm
-- Docker (for local MySQL) — or a local MySQL 8 instance
+- Docker (for local Postgres) — or a local PostgreSQL 16 instance
 
 ## Run locally
 
-1. **Start MySQL**
+1. **Start Postgres**
    ```bash
-   docker compose up -d mysql
+   docker compose up -d postgres
    ```
 2. **Start the backend** (port 8080) — seeds a default admin on first boot:
    ```bash
@@ -32,7 +32,7 @@ Full-stack app to run a volleyball tournament: player registration, team formati
 ## Configuration (env vars, all have local defaults)
 | Var | Purpose |
 |-----|---------|
-| `DB_URL` / `DB_USERNAME` / `DB_PASSWORD` | MySQL connection |
+| `DB_URL` / `DB_USERNAME` / `DB_PASSWORD` | Postgres connection (`DB_URL` is a full `jdbc:postgresql://...` URL) |
 | `JWT_SECRET` | Base64 HMAC secret for JWTs (override outside local dev) |
 | `ADMIN_EMAIL` / `ADMIN_PASSWORD` | Seeded admin account |
 | `UPLOAD_DIR` | Where player photos are stored (default `../uploads`) |

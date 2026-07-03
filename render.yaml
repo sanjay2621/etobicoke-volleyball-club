@@ -1,0 +1,38 @@
+services:
+  - type: web
+    name: volleyball-tournament-service
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    plan: free
+    healthCheckPath: /actuator/health
+    envVars:
+      # Render's fromDatabase "connectionString" is a postgres:// URI, not the
+      # jdbc:postgresql:// form Spring needs, so DB_URL must be set manually after
+      # the DB is created: jdbc:postgresql://<internal host>:5432/volleyball
+      - key: DB_URL
+        sync: false
+      - key: DB_USERNAME
+        fromDatabase:
+          name: volleyball-db
+          property: user
+      - key: DB_PASSWORD
+        fromDatabase:
+          name: volleyball-db
+          property: password
+      - key: JWT_SECRET
+        generateValue: true
+      - key: ADMIN_EMAIL
+        sync: false
+      - key: ADMIN_PASSWORD
+        sync: false
+      - key: CORS_ORIGINS
+        sync: false
+      - key: BREVO_API_KEY
+        sync: false
+
+databases:
+  - name: volleyball-db
+    plan: free
+    databaseName: volleyball
+    user: volleyball

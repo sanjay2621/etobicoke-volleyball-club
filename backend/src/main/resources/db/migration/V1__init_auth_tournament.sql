@@ -1,21 +1,21 @@
 -- V1: authentication accounts + tournaments
 
 CREATE TABLE user_account (
-    id            BIGINT       NOT NULL AUTO_INCREMENT,
+    id            BIGINT       GENERATED ALWAYS AS IDENTITY,
     email         VARCHAR(255) NOT NULL,
     password_hash VARCHAR(255) NOT NULL,
     role          VARCHAR(20)  NOT NULL,
     player_id     BIGINT       NULL,
-    enabled       BIT          NOT NULL DEFAULT 1,
-    deleted       BIT          NOT NULL DEFAULT 0,
-    created_at    DATETIME(6)  NULL,
-    updated_at    DATETIME(6)  NULL,
+    enabled       BOOLEAN      NOT NULL DEFAULT TRUE,
+    deleted       BOOLEAN      NOT NULL DEFAULT FALSE,
+    created_at    TIMESTAMP(6) NULL,
+    updated_at    TIMESTAMP(6) NULL,
     PRIMARY KEY (id),
     CONSTRAINT uq_user_account_email UNIQUE (email)
-) ENGINE = InnoDB;
+);
 
 CREATE TABLE tournament (
-    id                          BIGINT       NOT NULL AUTO_INCREMENT,
+    id                          BIGINT       GENERATED ALWAYS AS IDENTITY,
     name                        VARCHAR(255) NOT NULL,
     tournament_date             DATE         NOT NULL,
     start_time                  TIME         NOT NULL,
@@ -28,13 +28,13 @@ CREATE TABLE tournament (
     final_sets_to_win           INT          NOT NULL DEFAULT 2,
     final_points_per_set        INT          NOT NULL DEFAULT 15,
     target_roster_size          INT          NOT NULL DEFAULT 6,
-    captain_counts_in_roster    BIT          NOT NULL DEFAULT 1,
-    registration_open           BIT          NOT NULL DEFAULT 1,
+    captain_counts_in_roster    BOOLEAN      NOT NULL DEFAULT TRUE,
+    registration_open           BOOLEAN      NOT NULL DEFAULT TRUE,
     status                      VARCHAR(20)  NOT NULL DEFAULT 'SETUP',
-    deleted                     BIT          NOT NULL DEFAULT 0,
-    created_at                  DATETIME(6)  NULL,
-    updated_at                  DATETIME(6)  NULL,
+    deleted                     BOOLEAN      NOT NULL DEFAULT FALSE,
+    created_at                  TIMESTAMP(6) NULL,
+    updated_at                  TIMESTAMP(6) NULL,
     PRIMARY KEY (id)
-) ENGINE = InnoDB;
+);
 
 CREATE INDEX idx_user_account_player ON user_account (player_id);
