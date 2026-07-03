@@ -107,8 +107,16 @@ export function TossPage() {
         : selectedMatch.awayTeamName
       : null;
 
+  const otherTeamName =
+    selectedMatch && callingTeamId != null
+      ? callingTeamId === selectedMatch.homeTeamId
+        ? selectedMatch.awayTeamName
+        : selectedMatch.homeTeamName
+      : null;
+
   const callingCaptain = callingTeamId != null ? captainMap.get(callingTeamId) : null;
   const won = phase === 'result' && result != null && call != null && result === call;
+  const tossWinnerName = won ? callingTeamName : otherTeamName;
 
   // Coin visual state: switch to correct face once the coin is edge-on
   const showTails = (phase === 'revealing' || phase === 'result') && pendingResult === 'TAILS';
@@ -290,9 +298,9 @@ export function TossPage() {
                   <Typography variant="body2" color="text.secondary" mt={1}>
                     Called: {call} · Result: {result}
                   </Typography>
-                  {won && (
+                  {tossWinnerName && (
                     <Typography variant="body1" color="text.secondary" mt={1.5}>
-                      Note: {callingTeamName} may choose to either{' '}
+                      Note: {tossWinnerName} may choose to either{' '}
                       <Box component="span" fontWeight={700} color="primary.main">
                         serve first
                       </Box>{' '}
