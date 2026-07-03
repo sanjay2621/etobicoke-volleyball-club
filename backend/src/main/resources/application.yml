@@ -18,6 +18,12 @@ spring:
   flyway:
     enabled: true
     baseline-on-migrate: true
+  servlet:
+    multipart:
+      # Kept above app.storage.max-photo-bytes so the app's own validation returns a clean
+      # 400/413 instead of Tomcat rejecting the multipart request at the connector level.
+      max-file-size: 12MB
+      max-request-size: 15MB
 
 management:
   endpoints:
@@ -27,12 +33,7 @@ management:
   endpoint:
     health:
       show-details: never
-  servlet:
-    multipart:
-      # Kept above app.storage.max-photo-bytes so the app's own validation returns a clean
-      # 400/413 instead of Tomcat rejecting the multipart request at the connector level.
-      max-file-size: 12MB
-      max-request-size: 15MB
+      show-components: never
 
 server:
   port: ${PORT:8080}
