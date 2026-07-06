@@ -26,6 +26,6 @@ public interface PlayerMapper {
     }
 
     default String photoUrl(Player p) {
-        return p.getPhotoPath() == null ? null : "/api/players/" + p.getId() + "/photo";
+        return p.getPhotoData() == null ? null : "/api/players/" + p.getId() + "/photo";
     }
 }

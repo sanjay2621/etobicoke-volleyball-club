@@ -1,14 +1,8 @@
 package com.volleyball.tournament.common.storage;
 
 import com.volleyball.tournament.common.exception.ApiException;
-import jakarta.annotation.PostConstruct;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Set;
-import java.util.UUID;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -16,10 +10,10 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 
 /**
- * Stores uploaded player photos on the local filesystem under {uploadDir}/{tournamentId}/{uuid.ext}
- * and returns a relative storage key. Validates content type and size to avoid arbitrary uploads.
+ * Validates uploaded player photos and reads their bytes for storage in the database.
+ * Render's web service filesystem is ephemeral, so photo bytes are persisted in Postgres
+ * (player.photo_data) rather than on local disk.
  */
-@Slf4j
 @Service
 public class FileStorageService {
 
@@ -28,28 +22,17 @@ public class FileStorageService {
     private static final Set<String> ALLOWED_EXTENSIONS =
             Set.of("jpg", "jpeg", "png", "webp");
 
-    private final Path root;
+    public record StoredPhoto(byte[] bytes, String contentType) {
+    }
+
     private final long maxBytes;
 
-    public FileStorageService(
-            @Value("${app.storage.upload-dir}") String uploadDir,
-            @Value("${app.storage.max-photo-bytes}") long maxBytes) {
-        this.root = Paths.get(uploadDir).toAbsolutePath().normalize();
+    public FileStorageService(@Value("${app.storage.max-photo-bytes}") long maxBytes) {
         this.maxBytes = maxBytes;
     }
 
-    @PostConstruct
-    void init() {
-        try {
-            Files.createDirectories(root);
-            log.info("Photo upload directory: {}", root);
-        } catch (IOException e) {
-            throw new IllegalStateException("Could not create upload directory: " + root, e);
-        }
-    }
-
-    /** Stores the photo and returns its storage key (relative path), e.g. "12/ab12cd.png". */
-    public String storePhoto(MultipartFile file, Long tournamentId) {
+    /** Validates the uploaded photo and returns its bytes and content type for DB storage. */
+    public StoredPhoto readPhoto(MultipartFile file) {
         if (file == null || file.isEmpty()) {
             throw new ApiException(HttpStatus.BAD_REQUEST, "Photo file is required");
         }
@@ -68,27 +51,10 @@ public class FileStorageService {
         }
 
         try {
-            Path dir = root.resolve(String.valueOf(tournamentId)).normalize();
-            if (!dir.startsWith(root)) {
-                throw new ApiException(HttpStatus.BAD_REQUEST, "Invalid storage path");
-            }
-            Files.createDirectories(dir);
-            String key = tournamentId + "/" + UUID.randomUUID() + "." + ext;
-            Path target = root.resolve(key).normalize();
-            Files.copy(file.getInputStream(), target);
-            return key;
+            return new StoredPhoto(file.getBytes(), contentType);
         } catch (IOException e) {
-            throw new ApiException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to store photo");
+            throw new ApiException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to read photo");
         }
-    }
-
-    /** Resolves a previously-returned storage key back to an absolute path, guarding against traversal. */
-    public Path resolve(String storageKey) {
-        Path p = root.resolve(storageKey).normalize();
-        if (!p.startsWith(root)) {
-            throw new ApiException(HttpStatus.BAD_REQUEST, "Invalid storage key");
-        }
-        return p;
     }
 
     private static String extensionOf(String filename) {

@@ -221,7 +221,7 @@ public class TeamService {
                     return new CaptainRosterResponse.CaptainRosterMember(
                             m.getPlayerId(),
                             fullName(p),
-                            p.getPhotoPath() != null ? "/api/players/" + p.getId() + "/photo" : null,
+                            p.getPhotoData() != null ? "/api/players/" + p.getId() + "/photo" : null,
                             p.getPhone(),
                             p.getEmail(),
                             p.getSkillLevel(),
@@ -269,7 +269,7 @@ public class TeamService {
                     return new TeamMemberView(
                             m.getPlayerId(),
                             fullName(p),
-                            p.getPhotoPath() != null ? "/api/players/" + p.getId() + "/photo" : null,
+                            p.getPhotoData() != null ? "/api/players/" + p.getId() + "/photo" : null,
                             p.getPreferredPositions(),
                             m.getPlayerId().equals(team.getCaptainPlayerId()),
                             m.getPlayerId().equals(team.getRefereePlayerId()),

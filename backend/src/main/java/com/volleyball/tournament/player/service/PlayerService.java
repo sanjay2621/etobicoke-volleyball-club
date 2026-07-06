@@ -20,9 +20,6 @@ import com.volleyball.tournament.team.repository.TeamMemberRepository;
 import com.volleyball.tournament.team.repository.TeamRepository;
 import com.volleyball.tournament.tournament.entity.Tournament;
 import com.volleyball.tournament.tournament.service.TournamentService;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.HashSet;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -44,6 +41,12 @@ public class PlayerService {
     private final TeamRepository teamRepository;
 
     public record PhotoData(byte[] bytes, String contentType) {
+    }
+
+    private void applyPhoto(Player player, MultipartFile photo) {
+        FileStorageService.StoredPhoto stored = fileStorageService.readPhoto(photo);
+        player.setPhotoData(stored.bytes());
+        player.setPhotoContentType(stored.contentType());
     }
 
     @Transactional
@@ -68,7 +71,7 @@ public class PlayerService {
         applyRegistration(player, req);
 
         if (photo != null && !photo.isEmpty()) {
-            player.setPhotoPath(fileStorageService.storePhoto(photo, tournament.getId()));
+            applyPhoto(player, photo);
         }
 
         Player saved = playerRepository.save(player);
@@ -215,30 +218,24 @@ public class PlayerService {
             throw new NotFoundException("No player registration linked to this account");
         }
         Player player = getEntity(user.playerId());
-        player.setPhotoPath(fileStorageService.storePhoto(photo, player.getTournamentId()));
+        applyPhoto(player, photo);
         return toResponse(playerRepository.save(player));
     }
 
     @Transactional
     public PlayerResponse uploadPhoto(Long id, MultipartFile photo) {
         Player player = getEntity(id);
-        player.setPhotoPath(fileStorageService.storePhoto(photo, player.getTournamentId()));
+        applyPhoto(player, photo);
         return toResponse(playerRepository.save(player));
     }
 
     @Transactional(readOnly = true)
     public PhotoData getPhoto(Long id) {
         Player player = getEntity(id);
-        if (player.getPhotoPath() == null) {
+        if (player.getPhotoData() == null) {
             throw new NotFoundException("No photo for player " + id);
         }
-        try {
-            Path path = fileStorageService.resolve(player.getPhotoPath());
-            byte[] bytes = Files.readAllBytes(path);
-            return new PhotoData(bytes, contentTypeOf(player.getPhotoPath()));
-        } catch (IOException e) {
-            throw new ApiException(HttpStatus.INTERNAL_SERVER_ERROR, "Could not read photo");
-        }
+        return new PhotoData(player.getPhotoData(), player.getPhotoContentType());
     }
 
     public Player getEntity(Long id) {
@@ -294,12 +291,5 @@ public class PlayerService {
         if (!user.isAdmin() && !player.getId().equals(user.playerId())) {
             throw new ApiException(HttpStatus.FORBIDDEN, "You may only view your own registration");
         }
-    }
-
-    private static String contentTypeOf(String key) {
-        String lower = key.toLowerCase();
-        if (lower.endsWith(".png")) return "image/png";
-        if (lower.endsWith(".webp")) return "image/webp";
-        return "image/jpeg";
     }
 }

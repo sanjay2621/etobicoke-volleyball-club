@@ -43,8 +43,11 @@ public class Player extends BaseEntity {
     @Column(nullable = false)
     private String email;
 
-    @Column(name = "photo_path")
-    private String photoPath;
+    @Column(name = "photo_data")
+    private byte[] photoData;
+
+    @Column(name = "photo_content_type", length = 50)
+    private String photoContentType;
 
     @Embedded
     private Address address = new Address();

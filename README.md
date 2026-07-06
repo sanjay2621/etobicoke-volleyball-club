@@ -35,8 +35,10 @@ Full-stack app to run a volleyball tournament: player registration, team formati
 | `DB_URL` / `DB_USERNAME` / `DB_PASSWORD` | Postgres connection (`DB_URL` is a full `jdbc:postgresql://...` URL) |
 | `JWT_SECRET` | Base64 HMAC secret for JWTs (override outside local dev) |
 | `ADMIN_EMAIL` / `ADMIN_PASSWORD` | Seeded admin account |
-| `UPLOAD_DIR` | Where player photos are stored (default `../uploads`) |
 | `CORS_ORIGINS` | Allowed frontend origin(s) |
+
+Player photos are stored as bytea in Postgres (`player.photo_data`), not on local disk — the
+Render web service filesystem is ephemeral, so disk storage doesn't survive a deploy/restart.
 
 ## Build / test
 ```bash

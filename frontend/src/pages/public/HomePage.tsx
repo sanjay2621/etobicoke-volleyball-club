@@ -377,8 +377,8 @@ function PublicPodiumCard({
 function MatchTable({ matches, showGroup }: { matches: MatchResponse[]; showGroup?: boolean }) {
   if (matches.length === 0) return <Typography color="text.secondary">No matches.</Typography>;
   return (
-    <TableContainer component={Paper} variant="outlined">
-      <Table size="small">
+    <TableContainer component={Paper} variant="outlined" sx={{ overflowX: 'auto' }}>
+      <Table size="small" sx={{ minWidth: 480 }}>
         <TableHead>
           <TableRow>
             <TableCell>Time</TableCell>
@@ -395,10 +395,10 @@ function MatchTable({ matches, showGroup }: { matches: MatchResponse[]; showGrou
               : '—';
             return (
               <TableRow key={m.id} hover>
-                <TableCell>{time}</TableCell>
-                <TableCell>{m.court ?? '—'}</TableCell>
+                <TableCell sx={{ whiteSpace: 'nowrap' }}>{time}</TableCell>
+                <TableCell sx={{ whiteSpace: 'nowrap' }}>{m.court ?? '—'}</TableCell>
                 {showGroup && <TableCell>{m.groupLabel}</TableCell>}
-                <TableCell sx={{ maxWidth: 180 }}>
+                <TableCell sx={{ minWidth: 180 }}>
                   <Box className={m.winnerTeamId === m.homeTeamId ? styles.matchCellBold : styles.matchCellNormal}>
                     <TruncatedText text={m.homeTeamName ?? 'TBD'} />
                   </Box>
@@ -407,7 +407,7 @@ function MatchTable({ matches, showGroup }: { matches: MatchResponse[]; showGrou
                   </Box>
                   {m.bracketSlot && <Chip size="small" label={m.bracketSlot} className={styles.bracketChip} />}
                 </TableCell>
-                <TableCell>{scoreLabel(m)}</TableCell>
+                <TableCell sx={{ whiteSpace: 'nowrap' }}>{scoreLabel(m)}</TableCell>
               </TableRow>
             );
           })}
