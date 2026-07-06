@@ -2,6 +2,7 @@
 .root {
   min-height: 100vh;
   background-color: #F7F9FC;
+  overflow-x: hidden;
 }
 
 /* AppBar */
@@ -162,7 +163,8 @@
 .contentWrapper {
   background-color: #F7F9FC;
   display: grid;
-  grid-template-columns: 1fr;
+  grid-template-columns: minmax(0, 1fr);
+  overflow-x: hidden;
 }
 
 .courtBgSvg {
