@@ -276,6 +276,28 @@
   transform: translateY(-8px);
 }
 
+@media (max-width: 480px) {
+  .podiumRow {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .podiumItem {
+    min-width: 0;
+    max-width: none;
+    order: 2;
+  }
+
+  .podiumGold {
+    order: 1;
+    transform: none;
+  }
+
+  .podiumItem:last-child {
+    order: 3;
+  }
+}
+
 .medalEmoji {
   font-size: 56px;
   line-height: 1;
