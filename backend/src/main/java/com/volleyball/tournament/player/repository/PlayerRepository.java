@@ -3,7 +3,10 @@ package com.volleyball.tournament.player.repository;
 import com.volleyball.tournament.player.entity.Player;
 import java.util.List;
 import java.util.Optional;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 public interface PlayerRepository extends JpaRepository<Player, Long> {
 
@@ -15,4 +18,11 @@ public interface PlayerRepository extends JpaRepository<Player, Long> {
 
     /** Most recent active registration for an email, used to link a login account. */
     Optional<Player> findFirstByEmailIgnoreCaseOrderByCreatedAtDesc(String email);
+
+    /** Matches by email OR phone (either may be null), most recent first. Used for registration prefill lookup. */
+    @Query("SELECT p FROM Player p WHERE "
+            + "(:email IS NOT NULL AND LOWER(p.email) = LOWER(:email)) OR "
+            + "(:phone IS NOT NULL AND p.phone = :phone) "
+            + "ORDER BY p.createdAt DESC")
+    List<Player> findMatchesForLookup(@Param("email") String email, @Param("phone") String phone, Pageable pageable);
 }

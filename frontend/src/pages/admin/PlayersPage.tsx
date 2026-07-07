@@ -23,6 +23,7 @@ import {
   Typography,
 } from '@mui/material';
 import AddPhotoAlternateIcon from '@mui/icons-material/AddPhotoAlternate';
+import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import DeleteIcon from '@mui/icons-material/Delete';
 import DownloadIcon from '@mui/icons-material/Download';
 import EditIcon from '@mui/icons-material/Edit';
@@ -33,6 +34,7 @@ import { useTeams } from '../../api/teams';
 import { downloadFile } from '../../api/client';
 import type { Player } from '../../types';
 import { PlayerEditDialog } from './PlayerEditDialog';
+import { CopyPlayerDialog } from './CopyPlayerDialog';
 import styles from './PlayersPage.module.css';
 
 export function PlayersPage() {
@@ -45,6 +47,7 @@ export function PlayersPage() {
   const photoInputRef = useRef<HTMLInputElement>(null);
   const [uploadingId, setUploadingId] = useState<number | null>(null);
   const [editing, setEditing] = useState<Player | null>(null);
+  const [copying, setCopying] = useState<Player | null>(null);
   const [search, setSearch] = useState('');
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [sortField, setSortField] = useState<'firstName' | 'lastName' | null>(null);
@@ -255,6 +258,11 @@ export function PlayersPage() {
                   <IconButton size="small" aria-label="edit" onClick={() => setEditing(p)}>
                     <EditIcon fontSize="small" />
                   </IconButton>
+                  <Tooltip title="Copy to another tournament">
+                    <IconButton size="small" aria-label="copy" onClick={() => setCopying(p)}>
+                      <ContentCopyIcon fontSize="small" />
+                    </IconButton>
+                  </Tooltip>
                   <IconButton
                     size="small"
                     color="error"
@@ -289,6 +297,7 @@ export function PlayersPage() {
       />
 
       <PlayerEditDialog player={editing} onClose={() => setEditing(null)} />
+      <CopyPlayerDialog player={copying} onClose={() => setCopying(null)} />
 
       <Dialog open={!!previewUrl} onClose={() => setPreviewUrl(null)} maxWidth="sm" fullWidth>
         <Box className={styles.photoPreviewBox}>

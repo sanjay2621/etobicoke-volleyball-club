@@ -1,6 +1,8 @@
 package com.volleyball.tournament.player.api;
 
 import com.volleyball.tournament.player.entity.PaymentStatus;
+import com.volleyball.tournament.player.model.CopyPlayerRequest;
+import com.volleyball.tournament.player.model.PlayerLookupResponse;
 import com.volleyball.tournament.player.model.PlayerRegistrationRequest;
 import com.volleyball.tournament.player.model.PlayerResponse;
 import com.volleyball.tournament.player.model.PlayerUpdateRequest;
@@ -48,6 +50,22 @@ public class PlayerController {
     @PreAuthorize("hasRole('ADMIN')")
     public List<PlayerResponse> list(@RequestParam Long tournamentId) {
         return playerService.listByTournament(tournamentId);
+    }
+
+    /** Public lookup for the registration page's "already registered previously?" prefill. */
+    @GetMapping("/lookup")
+    public PlayerLookupResponse lookup(
+            @RequestParam(required = false) String email,
+            @RequestParam(required = false) String phone) {
+        return playerService.lookupPrevious(email, phone);
+    }
+
+    /** Admin copies a player's info into another tournament without the player re-registering. */
+    @PostMapping("/{id}/copy")
+    @PreAuthorize("hasRole('ADMIN')")
+    @ResponseStatus(HttpStatus.CREATED)
+    public PlayerResponse copy(@PathVariable Long id, @Valid @RequestBody CopyPlayerRequest req) {
+        return playerService.copyToTournament(id, req.targetTournamentId());
     }
 
     @GetMapping("/export")

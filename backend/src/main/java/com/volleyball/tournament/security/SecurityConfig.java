@@ -50,6 +50,7 @@ public class SecurityConfig {
                                 "/api/auth/register-account", "/api/auth/request-password-reset",
                                 "/api/auth/reset-password").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/players").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/players/lookup").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/tournaments/public/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/teams/public",
                                 "/api/schedule/public/**", "/api/standings/public/**").permitAll()

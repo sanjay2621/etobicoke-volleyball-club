@@ -3,6 +3,7 @@ package com.volleyball.tournament.player.mapper;
 import com.volleyball.tournament.player.entity.Address;
 import com.volleyball.tournament.player.entity.Player;
 import com.volleyball.tournament.player.model.AddressDto;
+import com.volleyball.tournament.player.model.PlayerLookupResponse;
 import com.volleyball.tournament.player.model.PlayerResponse;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
@@ -14,6 +15,9 @@ public interface PlayerMapper {
     @Mapping(target = "photoUrl", expression = "java(photoUrl(player))")
     @Mapping(target = "hasAccount", source = "hasAccount")
     PlayerResponse toResponse(Player player, boolean hasAccount);
+
+    @Mapping(target = "hasPhoto", expression = "java(player.getPhotoData() != null)")
+    PlayerLookupResponse toLookupResponse(Player player);
 
     AddressDto toAddressDto(Address address);
 

@@ -26,10 +26,15 @@ export function useActiveTournaments() {
   return { ...q, data: q.data?.filter(isUpcoming) };
 }
 
-/** Public hook — upcoming tournaments only (today or future). */
+/** Public hook — upcoming tournaments only (today or future), soonest first, capped to 5 for the dropdown. */
 export function useActivePublicTournaments() {
   const q = usePublicTournaments();
-  return { ...q, data: q.data?.filter(isUpcoming) };
+  const data = q.data
+    ?.filter(isUpcoming)
+    .slice()
+    .sort((a, b) => a.date.localeCompare(b.date))
+    .slice(0, 5);
+  return { ...q, data };
 }
 
 export function useCreateTournament() {

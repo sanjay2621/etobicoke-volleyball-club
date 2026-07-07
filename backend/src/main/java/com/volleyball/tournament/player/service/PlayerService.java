@@ -10,6 +10,7 @@ import com.volleyball.tournament.player.entity.PaymentStatus;
 import com.volleyball.tournament.player.entity.Player;
 import com.volleyball.tournament.player.mapper.PlayerMapper;
 import com.volleyball.tournament.player.model.AddressDto;
+import com.volleyball.tournament.player.model.PlayerLookupResponse;
 import com.volleyball.tournament.player.model.PlayerRegistrationRequest;
 import com.volleyball.tournament.player.model.PlayerResponse;
 import com.volleyball.tournament.player.model.PlayerUpdateRequest;
@@ -23,9 +24,11 @@ import com.volleyball.tournament.tournament.service.TournamentService;
 import java.util.HashSet;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 
 @Service
@@ -76,6 +79,65 @@ public class PlayerService {
 
         Player saved = playerRepository.save(player);
         return toResponse(saved);
+    }
+
+    /** Looks up the most recent previous registration by email or phone, for public registration prefill. */
+    @Transactional(readOnly = true)
+    public PlayerLookupResponse lookupPrevious(String rawEmail, String rawPhone) {
+        String email = blankToNull(rawEmail);
+        String phone = blankToNull(rawPhone);
+        if (email == null && phone == null) {
+            throw new ApiException(HttpStatus.BAD_REQUEST, "Provide an email or phone number to look up");
+        }
+        return playerRepository.findMatchesForLookup(email, phone, PageRequest.of(0, 1)).stream()
+                .findFirst()
+                .map(playerMapper::toLookupResponse)
+                .orElseThrow(() -> new NotFoundException("No previous registration found for that phone/email"));
+    }
+
+    /** Admin-initiated copy of an existing player's info into another tournament; source registration is untouched. */
+    @Transactional
+    public PlayerResponse copyToTournament(Long playerId, Long targetTournamentId) {
+        Player source = getEntity(playerId);
+        Tournament target = tournamentService.getEntity(targetTournamentId);
+        if (!target.isRegistrationOpen()) {
+            throw new ApiException(HttpStatus.BAD_REQUEST, "Registration is closed for the target tournament");
+        }
+        if (playerRepository.existsByTournamentIdAndEmailIgnoreCase(target.getId(), source.getEmail())) {
+            throw new DuplicateRegistrationException(
+                    "A registration with this email already exists for the target tournament");
+        }
+        if (playerRepository.existsByTournamentIdAndPhone(target.getId(), source.getPhone())) {
+            throw new DuplicateRegistrationException(
+                    "A registration with this phone number already exists for the target tournament");
+        }
+
+        Player copy = new Player();
+        copy.setTournamentId(target.getId());
+        copy.setFirstName(source.getFirstName());
+        copy.setMiddleName(source.getMiddleName());
+        copy.setLastName(source.getLastName());
+        copy.setPhone(source.getPhone());
+        copy.setEmail(source.getEmail());
+        copy.setAddress(copyAddress(source.getAddress()));
+        copy.setPreferredPositions(new HashSet<>(source.getPreferredPositions()));
+        copy.setTshirtSize(source.getTshirtSize());
+        copy.setEmergencyContactName(source.getEmergencyContactName());
+        copy.setEmergencyContactPhone(source.getEmergencyContactPhone());
+        copy.setSkillLevel(source.getSkillLevel());
+        copy.setYearsExperience(source.getYearsExperience());
+        copy.setJerseyNumberPreference(source.getJerseyNumberPreference());
+        copy.setPhotoConsent(source.isPhotoConsent());
+        copy.setDietaryNotes(source.getDietaryNotes());
+        copy.setGender(source.getGender());
+        copy.setDateOfBirth(source.getDateOfBirth());
+        copy.setNotes(source.getNotes());
+        copy.setPhotoData(source.getPhotoData());
+        copy.setPhotoContentType(source.getPhotoContentType());
+        copy.setPaymentStatus(PaymentStatus.UNPAID);
+        copy.setWaiverAccepted(false);
+        copy.setManualEntry(true);
+        return toResponse(playerRepository.save(copy));
     }
 
     @Transactional
@@ -279,6 +341,23 @@ public class PlayerService {
             address.setCountry(dto.countryOrDefault());
         }
         return address;
+    }
+
+    private Address copyAddress(Address source) {
+        Address address = new Address();
+        if (source != null) {
+            address.setLine1(source.getLine1());
+            address.setLine2(source.getLine2());
+            address.setCity(source.getCity());
+            address.setProvince(source.getProvince());
+            address.setPostalCode(source.getPostalCode());
+            address.setCountry(source.getCountry());
+        }
+        return address;
+    }
+
+    private static String blankToNull(String value) {
+        return StringUtils.hasText(value) ? value.trim() : null;
     }
 
     private PlayerResponse toResponse(Player player) {

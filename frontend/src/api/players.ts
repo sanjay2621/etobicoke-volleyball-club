@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { api, fixPhotoUrl } from './client';
-import type { Player, PlayerRegistrationRequest } from '../types';
+import type { Player, PlayerLookupResponse, PlayerRegistrationRequest } from '../types';
 
 const fixPlayer = (p: Player): Player => ({ ...p, photoUrl: fixPhotoUrl(p.photoUrl) });
 
@@ -20,6 +20,19 @@ export function useRegisterPlayer() {
       const res = await api.post<Player>('/players', form);
       return fixPlayer(res.data);
     },
+  });
+}
+
+/** Looks up a previous registration by phone or email, for the public registration page's prefill checkbox. */
+export function useLookupPreviousRegistration(email: string, phone: string, enabled: boolean) {
+  return useQuery({
+    queryKey: ['players', 'lookup', email, phone],
+    queryFn: () =>
+      api
+        .get<PlayerLookupResponse>('/players/lookup', { params: { email, phone } })
+        .then((r) => r.data),
+    enabled,
+    retry: false,
   });
 }
 
@@ -77,6 +90,16 @@ export function useMarkPayment() {
     mutationFn: ({ id, paymentStatus }: { id: number; paymentStatus: 'PAID' | 'UNPAID' }) =>
       api.patch<Player>(`/players/${id}/payment`, { paymentStatus }).then((r) => fixPlayer(r.data)),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['teams', 'my', 'roster'] }),
+  });
+}
+
+/** Admin copies a player's info into another tournament without the player re-registering. */
+export function useCopyPlayerToTournament() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, targetTournamentId }: { id: number; targetTournamentId: number }) =>
+      api.post<Player>(`/players/${id}/copy`, { targetTournamentId }).then((r) => fixPlayer(r.data)),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['players'] }),
   });
 }
 

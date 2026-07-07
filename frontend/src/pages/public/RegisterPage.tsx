@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { Link as RouterLink, useNavigate } from 'react-router-dom';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -26,7 +26,7 @@ import SportsVolleyballIcon from '@mui/icons-material/SportsVolleyball';
 import { POSITIONS, SKILL_LEVELS, TSHIRT_SIZES } from '../../types';
 import type { Position } from '../../types';
 import { useActivePublicTournaments } from '../../api/tournaments';
-import { useRegisterPlayer } from '../../api/players';
+import { useLookupPreviousRegistration, useRegisterPlayer } from '../../api/players';
 import styles from './RegisterPage.module.css';
 
 function formatPhone(v: string): string {
@@ -91,6 +91,8 @@ export function RegisterPage() {
     handleSubmit,
     control,
     watch,
+    reset,
+    getValues,
     formState: { errors, isSubmitting },
   } = useForm<FormValues>({
     resolver: zodResolver(schema),
@@ -101,6 +103,59 @@ export function RegisterPage() {
       photoConsent: false,
     } as Partial<FormValues> as FormValues,
   });
+
+  const [alreadyRegistered, setAlreadyRegistered] = useState(false);
+  const [locked, setLocked] = useState(false);
+  const [hasPhotoOnFile, setHasPhotoOnFile] = useState(false);
+
+  const phoneValue = watch('phone');
+  const emailValue = watch('email');
+  const [debouncedContact, setDebouncedContact] = useState({ phone: '', email: '' });
+  useEffect(() => {
+    const t = setTimeout(() => setDebouncedContact({ phone: phoneValue, email: emailValue }), 500);
+    return () => clearTimeout(t);
+  }, [phoneValue, emailValue]);
+
+  const lookupEnabled = alreadyRegistered && !locked
+    && (!!debouncedContact.phone.trim() || !!debouncedContact.email.trim());
+  const lookup = useLookupPreviousRegistration(debouncedContact.email, debouncedContact.phone, lookupEnabled);
+  const lookupNotFound = alreadyRegistered && !locked && lookup.isError
+    && (lookup.error as any)?.response?.status === 404;
+
+  useEffect(() => {
+    if (!lookup.data) return;
+    const d = lookup.data;
+    reset({
+      ...getValues(),
+      firstName: d.firstName,
+      middleName: d.middleName ?? '',
+      lastName: d.lastName,
+      phone: formatPhone(d.phone),
+      email: d.email,
+      line1: d.address?.line1 ?? '',
+      city: d.address?.city ?? '',
+      province: d.address?.province ?? '',
+      postalCode: d.address?.postalCode ?? '',
+      country: d.address?.country ?? 'Canada',
+      preferredPositions: d.preferredPositions,
+      tshirtSize: d.tshirtSize,
+      skillLevel: d.skillLevel ?? '',
+      emergencyContactName: d.emergencyContactName ?? '',
+      emergencyContactPhone: d.emergencyContactPhone ? formatPhone(d.emergencyContactPhone) : '',
+      waiverAccepted: false,
+    } as unknown as FormValues);
+    setHasPhotoOnFile(d.hasPhoto);
+    setLocked(true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [lookup.data]);
+
+  function onToggleAlreadyRegistered(checked: boolean) {
+    setAlreadyRegistered(checked);
+    if (!checked) {
+      setLocked(false);
+      setHasPhotoOnFile(false);
+    }
+  }
 
   const selectedTournamentId = watch('tournamentId');
   const selectedTournament = useMemo(
@@ -284,15 +339,52 @@ export function RegisterPage() {
                     )}
                   </Grid>
 
+                  <Grid item xs={12}>
+                    <FormControlLabel
+                      control={
+                        <Checkbox
+                          checked={alreadyRegistered}
+                          onChange={(e) => onToggleAlreadyRegistered(e.target.checked)}
+                        />
+                      }
+                      label="Already registered in a previous tournament?"
+                    />
+                    {alreadyRegistered && !locked && !debouncedContact.phone.trim() && !debouncedContact.email.trim() && (
+                      <FormHelperText>Enter your phone or email below, then we'll look up your details.</FormHelperText>
+                    )}
+                    {lookupEnabled && lookup.isFetching && (
+                      <FormHelperText>Looking up your previous registration…</FormHelperText>
+                    )}
+                    {lookupNotFound && (
+                      <Alert severity="info" className={styles.deadlineAlert}>
+                        No previous registration found with that phone/email — please fill in the form below.
+                      </Alert>
+                    )}
+                    {locked && (
+                      <Alert
+                        severity="success"
+                        className={styles.deadlineAlert}
+                        action={
+                          <Button color="inherit" size="small" onClick={() => setLocked(false)}>
+                            Edit details
+                          </Button>
+                        }
+                      >
+                        We found your previous registration and filled in your details below.
+                        {hasPhotoOnFile && ' You have a photo on file — upload a new one only if you want to replace it.'}
+                      </Alert>
+                    )}
+                  </Grid>
+
                   <Grid item xs={12} sm={4}>
-                    <TextField label="First name" fullWidth {...field('firstName')}
+                    <TextField label="First name" fullWidth {...field('firstName')} disabled={locked}
                       error={!!errors.firstName} helperText={errors.firstName?.message} />
                   </Grid>
                   <Grid item xs={12} sm={4}>
-                    <TextField label="Middle name" fullWidth {...field('middleName')} />
+                    <TextField label="Middle name" fullWidth {...field('middleName')} disabled={locked} />
                   </Grid>
                   <Grid item xs={12} sm={4}>
-                    <TextField label="Last name" fullWidth {...field('lastName')}
+                    <TextField label="Last name" fullWidth {...field('lastName')} disabled={locked}
                       error={!!errors.lastName} helperText={errors.lastName?.message} />
                   </Grid>
 
@@ -309,6 +401,7 @@ export function RegisterPage() {
                             e.target.value = formatPhone(e.target.value);
                             reg.onChange(e);
                           }}
+                          disabled={locked}
                           inputProps={{ maxLength: 14 }}
                           error={!!errors.phone}
                           helperText={errors.phone?.message}
@@ -317,7 +410,7 @@ export function RegisterPage() {
                     })()}
                   </Grid>
                   <Grid item xs={12} sm={6}>
-                    <TextField label="Email" type="email" fullWidth {...field('email')}
+                    <TextField label="Email" type="email" fullWidth {...field('email')} disabled={locked}
                       error={!!errors.email} helperText={errors.email?.message} />
                   </Grid>
 
@@ -325,23 +418,23 @@ export function RegisterPage() {
                     <Typography variant="subtitle2" color="text.secondary">Address</Typography>
                   </Grid>
                   <Grid item xs={12} sm={6}>
-                    <TextField label="Street address" fullWidth {...field('line1')}
+                    <TextField label="Street address" fullWidth {...field('line1')} disabled={locked}
                       error={!!errors.line1} helperText={errors.line1?.message} />
                   </Grid>
                   <Grid item xs={6} sm={3}>
-                    <TextField label="City" fullWidth {...field('city')}
+                    <TextField label="City" fullWidth {...field('city')} disabled={locked}
                       error={!!errors.city} helperText={errors.city?.message} />
                   </Grid>
                   <Grid item xs={6} sm={3}>
-                    <TextField label="Province" fullWidth {...field('province')}
+                    <TextField label="Province" fullWidth {...field('province')} disabled={locked}
                       error={!!errors.province} helperText={errors.province?.message} />
                   </Grid>
                   <Grid item xs={6} sm={3}>
-                    <TextField label="Postal code" fullWidth placeholder="M4B 1B3" {...field('postalCode')}
+                    <TextField label="Postal code" fullWidth placeholder="M4B 1B3" {...field('postalCode')} disabled={locked}
                       error={!!errors.postalCode} helperText={errors.postalCode?.message} />
                   </Grid>
                   <Grid item xs={6} sm={3}>
-                    <TextField label="Country" fullWidth {...field('country')} />
+                    <TextField label="Country" fullWidth {...field('country')} disabled={locked} />
                   </Grid>
 
                   <Grid item xs={12}>
@@ -370,7 +463,7 @@ export function RegisterPage() {
                                 <ToggleButton
                                   key={p}
                                   value={p}
-                                  disabled={isRef && p !== 'REFEREE'}
+                                  disabled={locked || (isRef && p !== 'REFEREE')}
                                   className={styles.positionBtn}
                                 >
                                   {p}
@@ -387,7 +480,7 @@ export function RegisterPage() {
                   </Grid>
 
                   <Grid item xs={6} sm={3}>
-                    <TextField select label="T-shirt size" fullWidth defaultValue="M" {...field('tshirtSize')}>
+                    <TextField select label="T-shirt size" fullWidth defaultValue="M" {...field('tshirtSize')} disabled={locked}>
                       {TSHIRT_SIZES.map((s) => (
                         <MenuItem key={s} value={s}>{s}</MenuItem>
                       ))}
@@ -401,6 +494,7 @@ export function RegisterPage() {
                         fullWidth
                         defaultValue=""
                         {...field('skillLevel')}
+                        disabled={locked}
                         error={!!errors.skillLevel}
                         helperText={errors.skillLevel?.message}
                       >
@@ -426,6 +520,7 @@ export function RegisterPage() {
                       label="Emergency contact name *"
                       fullWidth
                       {...field('emergencyContactName')}
+                      disabled={locked}
                       error={!!errors.emergencyContactName}
                       helperText={errors.emergencyContactName?.message}
                     />
@@ -443,6 +538,7 @@ export function RegisterPage() {
                             e.target.value = formatPhone(e.target.value);
                             reg.onChange(e);
                           }}
+                          disabled={locked}
                           inputProps={{ maxLength: 14 }}
                           error={!!errors.emergencyContactPhone}
                           helperText={errors.emergencyContactPhone?.message}

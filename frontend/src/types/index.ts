@@ -109,6 +109,22 @@ export type PlayerRegistrationRequest = {
   notes?: string;
 };
 
+export type PlayerLookupResponse = {
+  firstName: string;
+  middleName?: string | null;
+  lastName: string;
+  phone: string;
+  email: string;
+  address?: AddressDto | null;
+  preferredPositions: Position[];
+  tshirtSize: TshirtSize;
+  emergencyContactName?: string | null;
+  emergencyContactPhone?: string | null;
+  skillLevel?: SkillLevel | null;
+  photoConsent: boolean;
+  hasPhoto: boolean;
+};
+
 export type TeamMemberView = {
   playerId: number;
   fullName: string;
