@@ -357,11 +357,18 @@ export function RegisterPage() {
                       }
                       label="Already registered in a previous tournament?"
                     />
-                    {alreadyRegistered && !locked && !phoneValue.trim() && !emailValue.trim() && (
-                      <FormHelperText>Enter your phone or email below (then click out of the field), and we'll look up your details.</FormHelperText>
-                    )}
-                    {alreadyRegistered && !locked && lookup.isFetching && (
-                      <FormHelperText>Looking up your previous registration…</FormHelperText>
+                    {alreadyRegistered && !locked && (
+                      <Box>
+                        <FormHelperText>Enter your phone or email below, then click "Find my registration."</FormHelperText>
+                        <Button
+                          size="small"
+                          variant="outlined"
+                          disabled={!phoneValue.trim() && !emailValue.trim()}
+                          onClick={triggerLookup}
+                        >
+                          {lookup.isFetching ? 'Looking up…' : 'Find my registration'}
+                        </Button>
+                      </Box>
                     )}
                     {lookupNotFound && (
                       <Alert severity="info" className={styles.deadlineAlert}>
