@@ -23,16 +23,17 @@ export function useRegisterPlayer() {
   });
 }
 
-/** Looks up a previous registration by phone or email, for the public registration page's prefill checkbox. */
-export function useLookupPreviousRegistration(email: string, phone: string, enabled: boolean) {
-  return useQuery({
-    queryKey: ['players', 'lookup', email, phone],
-    queryFn: () =>
+/**
+ * Looks up a previous registration by phone or email, for the public registration page's prefill
+ * checkbox. A mutation rather than a query: it only ever runs when explicitly triggered (button
+ * click), so there's no "enabled" flag or query-key-change semantics to get wrong.
+ */
+export function useLookupPreviousRegistration() {
+  return useMutation({
+    mutationFn: ({ email, phone }: { email: string; phone: string }) =>
       api
         .get<PlayerLookupResponse>('/players/lookup', { params: { email, phone } })
         .then((r) => r.data),
-    enabled,
-    retry: false,
   });
 }
 

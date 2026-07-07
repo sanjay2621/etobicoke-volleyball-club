@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo } from 'react';
 import { Link as RouterLink, useNavigate } from 'react-router-dom';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -24,7 +24,7 @@ import {
 } from '@mui/material';
 import SportsVolleyballIcon from '@mui/icons-material/SportsVolleyball';
 import { POSITIONS, SKILL_LEVELS, TSHIRT_SIZES } from '../../types';
-import type { Position } from '../../types';
+import type { Position, PlayerLookupResponse } from '../../types';
 import { useActivePublicTournaments } from '../../api/tournaments';
 import { useLookupPreviousRegistration, useRegisterPlayer } from '../../api/players';
 import styles from './RegisterPage.module.css';
@@ -107,28 +107,14 @@ export function RegisterPage() {
   const [alreadyRegistered, setAlreadyRegistered] = useState(false);
   const [locked, setLocked] = useState(false);
   const [hasPhotoOnFile, setHasPhotoOnFile] = useState(false);
-  const [lookupAttempted, setLookupAttempted] = useState(false);
+  const [lookupNotFound, setLookupNotFound] = useState(false);
 
   const phoneValue = watch('phone') ?? '';
   const emailValue = watch('email') ?? '';
 
-  // Lookup is triggered manually (checkbox toggle + blurring phone/email), not live-as-you-type,
-  // so the query itself stays disabled and we call refetch() explicitly with the latest field values.
-  const lookup = useLookupPreviousRegistration(emailValue, phoneValue, false);
+  const lookup = useLookupPreviousRegistration();
 
-  function triggerLookup() {
-    if (alreadyRegistered && !locked && (phoneValue.trim() || emailValue.trim())) {
-      setLookupAttempted(true);
-      lookup.refetch();
-    }
-  }
-
-  const lookupNotFound = alreadyRegistered && !locked && lookupAttempted && lookup.isError
-    && (lookup.error as any)?.response?.status === 404;
-
-  useEffect(() => {
-    if (!lookup.data) return;
-    const d = lookup.data;
+  function applyLookupResult(d: PlayerLookupResponse) {
     reset({
       ...getValues(),
       firstName: d.firstName,
@@ -150,18 +136,43 @@ export function RegisterPage() {
     } as unknown as FormValues);
     setHasPhotoOnFile(d.hasPhoto);
     setLocked(true);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [lookup.data]);
+  }
+
+  function triggerLookup() {
+    if (!alreadyRegistered || locked || (!phoneValue.trim() && !emailValue.trim())) return;
+    setLookupNotFound(false);
+    lookup.mutate(
+      { email: emailValue, phone: phoneValue },
+      {
+        onSuccess: applyLookupResult,
+        onError: (err: any) => {
+          if (err?.response?.status === 404) {
+            setLookupNotFound(true);
+          }
+        },
+      },
+    );
+  }
 
   function onToggleAlreadyRegistered(checked: boolean) {
     setAlreadyRegistered(checked);
     if (!checked) {
       setLocked(false);
       setHasPhotoOnFile(false);
-      setLookupAttempted(false);
+      setLookupNotFound(false);
     } else if (phoneValue.trim() || emailValue.trim()) {
-      setLookupAttempted(true);
-      lookup.refetch();
+      setLookupNotFound(false);
+      lookup.mutate(
+        { email: emailValue, phone: phoneValue },
+        {
+          onSuccess: applyLookupResult,
+          onError: (err: any) => {
+            if (err?.response?.status === 404) {
+              setLookupNotFound(true);
+            }
+          },
+        },
+      );
     }
   }
 
@@ -366,7 +377,7 @@ export function RegisterPage() {
                           disabled={!phoneValue.trim() && !emailValue.trim()}
                           onClick={triggerLookup}
                         >
-                          {lookup.isFetching ? 'Looking up…' : 'Find my registration'}
+                          {lookup.isPending ? 'Looking up…' : 'Find my registration'}
                         </Button>
                       </Box>
                     )}
