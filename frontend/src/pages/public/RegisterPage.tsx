@@ -378,13 +378,16 @@ export function RegisterPage() {
 
                   <Grid item xs={12} sm={4}>
                     <TextField label="First name" fullWidth {...field('firstName')} disabled={locked}
+                      InputLabelProps={{ shrink: locked || undefined }}
                       error={!!errors.firstName} helperText={errors.firstName?.message} />
                   </Grid>
                   <Grid item xs={12} sm={4}>
-                    <TextField label="Middle name" fullWidth {...field('middleName')} disabled={locked} />
+                    <TextField label="Middle name" fullWidth {...field('middleName')} disabled={locked}
+                      InputLabelProps={{ shrink: locked || undefined }} />
                   </Grid>
                   <Grid item xs={12} sm={4}>
                     <TextField label="Last name" fullWidth {...field('lastName')} disabled={locked}
+                      InputLabelProps={{ shrink: locked || undefined }}
                       error={!!errors.lastName} helperText={errors.lastName?.message} />
                   </Grid>
 
@@ -402,6 +405,7 @@ export function RegisterPage() {
                             reg.onChange(e);
                           }}
                           disabled={locked}
+                          InputLabelProps={{ shrink: locked || undefined }}
                           inputProps={{ maxLength: 14 }}
                           error={!!errors.phone}
                           helperText={errors.phone?.message}
@@ -411,6 +415,7 @@ export function RegisterPage() {
                   </Grid>
                   <Grid item xs={12} sm={6}>
                     <TextField label="Email" type="email" fullWidth {...field('email')} disabled={locked}
+                      InputLabelProps={{ shrink: locked || undefined }}
                       error={!!errors.email} helperText={errors.email?.message} />
                   </Grid>
 
@@ -419,22 +424,27 @@ export function RegisterPage() {
                   </Grid>
                   <Grid item xs={12} sm={6}>
                     <TextField label="Street address" fullWidth {...field('line1')} disabled={locked}
+                      InputLabelProps={{ shrink: locked || undefined }}
                       error={!!errors.line1} helperText={errors.line1?.message} />
                   </Grid>
                   <Grid item xs={6} sm={3}>
                     <TextField label="City" fullWidth {...field('city')} disabled={locked}
+                      InputLabelProps={{ shrink: locked || undefined }}
                       error={!!errors.city} helperText={errors.city?.message} />
                   </Grid>
                   <Grid item xs={6} sm={3}>
                     <TextField label="Province" fullWidth {...field('province')} disabled={locked}
+                      InputLabelProps={{ shrink: locked || undefined }}
                       error={!!errors.province} helperText={errors.province?.message} />
                   </Grid>
                   <Grid item xs={6} sm={3}>
                     <TextField label="Postal code" fullWidth placeholder="M4B 1B3" {...field('postalCode')} disabled={locked}
+                      InputLabelProps={{ shrink: locked || undefined }}
                       error={!!errors.postalCode} helperText={errors.postalCode?.message} />
                   </Grid>
                   <Grid item xs={6} sm={3}>
-                    <TextField label="Country" fullWidth {...field('country')} disabled={locked} />
+                    <TextField label="Country" fullWidth {...field('country')} disabled={locked}
+                      InputLabelProps={{ shrink: locked || undefined }} />
                   </Grid>
 
                   <Grid item xs={12}>
@@ -480,7 +490,8 @@ export function RegisterPage() {
                   </Grid>
 
                   <Grid item xs={6} sm={3}>
-                    <TextField select label="T-shirt size" fullWidth defaultValue="M" {...field('tshirtSize')} disabled={locked}>
+                    <TextField select label="T-shirt size" fullWidth defaultValue="M" {...field('tshirtSize')} disabled={locked}
+                      InputLabelProps={{ shrink: true }}>
                       {TSHIRT_SIZES.map((s) => (
                         <MenuItem key={s} value={s}>{s}</MenuItem>
                       ))}
@@ -495,6 +506,7 @@ export function RegisterPage() {
                         defaultValue=""
                         {...field('skillLevel')}
                         disabled={locked}
+                        InputLabelProps={{ shrink: true }}
                         error={!!errors.skillLevel}
                         helperText={errors.skillLevel?.message}
                       >
@@ -521,6 +533,7 @@ export function RegisterPage() {
                       fullWidth
                       {...field('emergencyContactName')}
                       disabled={locked}
+                      InputLabelProps={{ shrink: locked || undefined }}
                       error={!!errors.emergencyContactName}
                       helperText={errors.emergencyContactName?.message}
                     />
@@ -539,6 +552,7 @@ export function RegisterPage() {
                             reg.onChange(e);
                           }}
                           disabled={locked}
+                          InputLabelProps={{ shrink: locked || undefined }}
                           inputProps={{ maxLength: 14 }}
                           error={!!errors.emergencyContactPhone}
                           helperText={errors.emergencyContactPhone?.message}

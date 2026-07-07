@@ -85,7 +85,7 @@ public class PlayerService {
     @Transactional(readOnly = true)
     public PlayerLookupResponse lookupPrevious(String rawEmail, String rawPhone) {
         String email = blankToNull(rawEmail);
-        String phone = blankToNull(rawPhone);
+        String phone = digitsOnly(rawPhone);
         if (email == null && phone == null) {
             throw new ApiException(HttpStatus.BAD_REQUEST, "Provide an email or phone number to look up");
         }
@@ -358,6 +358,15 @@ public class PlayerService {
 
     private static String blankToNull(String value) {
         return StringUtils.hasText(value) ? value.trim() : null;
+    }
+
+    /** Strips everything but digits, so phone lookup matches regardless of how the number was punctuated. */
+    private static String digitsOnly(String value) {
+        if (!StringUtils.hasText(value)) {
+            return null;
+        }
+        String digits = value.replaceAll("\\D", "");
+        return digits.isEmpty() ? null : digits;
     }
 
     private PlayerResponse toResponse(Player player) {
