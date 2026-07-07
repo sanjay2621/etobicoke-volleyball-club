@@ -107,19 +107,23 @@ export function RegisterPage() {
   const [alreadyRegistered, setAlreadyRegistered] = useState(false);
   const [locked, setLocked] = useState(false);
   const [hasPhotoOnFile, setHasPhotoOnFile] = useState(false);
+  const [lookupAttempted, setLookupAttempted] = useState(false);
 
-  const phoneValue = watch('phone');
-  const emailValue = watch('email');
-  const [debouncedContact, setDebouncedContact] = useState({ phone: '', email: '' });
-  useEffect(() => {
-    const t = setTimeout(() => setDebouncedContact({ phone: phoneValue, email: emailValue }), 500);
-    return () => clearTimeout(t);
-  }, [phoneValue, emailValue]);
+  const phoneValue = watch('phone') ?? '';
+  const emailValue = watch('email') ?? '';
 
-  const lookupEnabled = alreadyRegistered && !locked
-    && (!!debouncedContact.phone.trim() || !!debouncedContact.email.trim());
-  const lookup = useLookupPreviousRegistration(debouncedContact.email, debouncedContact.phone, lookupEnabled);
-  const lookupNotFound = alreadyRegistered && !locked && lookup.isError
+  // Lookup is triggered manually (checkbox toggle + blurring phone/email), not live-as-you-type,
+  // so the query itself stays disabled and we call refetch() explicitly with the latest field values.
+  const lookup = useLookupPreviousRegistration(emailValue, phoneValue, false);
+
+  function triggerLookup() {
+    if (alreadyRegistered && !locked && (phoneValue.trim() || emailValue.trim())) {
+      setLookupAttempted(true);
+      lookup.refetch();
+    }
+  }
+
+  const lookupNotFound = alreadyRegistered && !locked && lookupAttempted && lookup.isError
     && (lookup.error as any)?.response?.status === 404;
 
   useEffect(() => {
@@ -154,6 +158,10 @@ export function RegisterPage() {
     if (!checked) {
       setLocked(false);
       setHasPhotoOnFile(false);
+      setLookupAttempted(false);
+    } else if (phoneValue.trim() || emailValue.trim()) {
+      setLookupAttempted(true);
+      lookup.refetch();
     }
   }
 
@@ -349,10 +357,10 @@ export function RegisterPage() {
                       }
                       label="Already registered in a previous tournament?"
                     />
-                    {alreadyRegistered && !locked && !debouncedContact.phone.trim() && !debouncedContact.email.trim() && (
-                      <FormHelperText>Enter your phone or email below, then we'll look up your details.</FormHelperText>
+                    {alreadyRegistered && !locked && !phoneValue.trim() && !emailValue.trim() && (
+                      <FormHelperText>Enter your phone or email below (then click out of the field), and we'll look up your details.</FormHelperText>
                     )}
-                    {lookupEnabled && lookup.isFetching && (
+                    {alreadyRegistered && !locked && lookup.isFetching && (
                       <FormHelperText>Looking up your previous registration…</FormHelperText>
                     )}
                     {lookupNotFound && (
@@ -404,6 +412,10 @@ export function RegisterPage() {
                             e.target.value = formatPhone(e.target.value);
                             reg.onChange(e);
                           }}
+                          onBlur={(e) => {
+                            reg.onBlur(e);
+                            triggerLookup();
+                          }}
                           disabled={locked}
                           InputLabelProps={{ shrink: locked || undefined }}
                           inputProps={{ maxLength: 14 }}
@@ -414,9 +426,25 @@ export function RegisterPage() {
                     })()}
                   </Grid>
                   <Grid item xs={12} sm={6}>
-                    <TextField label="Email" type="email" fullWidth {...field('email')} disabled={locked}
-                      InputLabelProps={{ shrink: locked || undefined }}
-                      error={!!errors.email} helperText={errors.email?.message} />
+                    {(() => {
+                      const reg = field('email');
+                      return (
+                        <TextField
+                          label="Email"
+                          type="email"
+                          fullWidth
+                          {...reg}
+                          onBlur={(e) => {
+                            reg.onBlur(e);
+                            triggerLookup();
+                          }}
+                          disabled={locked}
+                          InputLabelProps={{ shrink: locked || undefined }}
+                          error={!!errors.email}
+                          helperText={errors.email?.message}
+                        />
+                      );
+                    })()}
                   </Grid>
 
                   <Grid item xs={12}>
