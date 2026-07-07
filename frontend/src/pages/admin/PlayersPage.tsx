@@ -4,6 +4,7 @@ import {
   Avatar,
   Box,
   Button,
+  Checkbox,
   Chip,
   Dialog,
   IconButton,
@@ -47,7 +48,8 @@ export function PlayersPage() {
   const photoInputRef = useRef<HTMLInputElement>(null);
   const [uploadingId, setUploadingId] = useState<number | null>(null);
   const [editing, setEditing] = useState<Player | null>(null);
-  const [copying, setCopying] = useState<Player | null>(null);
+  const [copying, setCopying] = useState<Player[]>([]);
+  const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
   const [search, setSearch] = useState('');
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [sortField, setSortField] = useState<'firstName' | 'lastName' | null>(null);
@@ -101,6 +103,24 @@ export function PlayersPage() {
     });
   }, [filtered, sortField, sortDir]);
 
+  useEffect(() => {
+    setSelectedIds(new Set());
+  }, [tournamentId]);
+
+  function toggleSelected(id: number) {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  }
+
+  function toggleSelectAll() {
+    setSelectedIds((prev) => (prev.size === sorted.length ? new Set() : new Set(sorted.map((p) => p.id))));
+  }
+
+  const selectedPlayers = sorted.filter((p) => selectedIds.has(p.id));
+
   return (
     <>
       <Stack direction="row" justifyContent="space-between" alignItems="center" mb={2} flexWrap="wrap" gap={1}>
@@ -136,6 +156,14 @@ export function PlayersPage() {
           </TextField>
           <Button
             variant="outlined"
+            startIcon={<ContentCopyIcon />}
+            disabled={selectedPlayers.length === 0}
+            onClick={() => setCopying(selectedPlayers)}
+          >
+            Copy selected{selectedPlayers.length > 0 ? ` (${selectedPlayers.length})` : ''}
+          </Button>
+          <Button
+            variant="outlined"
             startIcon={<DownloadIcon />}
             disabled={!tournamentId}
             onClick={() =>
@@ -152,6 +180,13 @@ export function PlayersPage() {
         <Table size="small">
           <TableHead>
             <TableRow>
+              <TableCell padding="checkbox">
+                <Checkbox
+                  indeterminate={selectedIds.size > 0 && selectedIds.size < sorted.length}
+                  checked={sorted.length > 0 && selectedIds.size === sorted.length}
+                  onChange={toggleSelectAll}
+                />
+              </TableCell>
               <TableCell />
               <TableCell sortDirection={sortField === 'firstName' ? sortDir : false}>
                 <TableSortLabel
@@ -185,12 +220,12 @@ export function PlayersPage() {
           <TableBody>
             {isLoading && (
               <TableRow>
-                <TableCell colSpan={12}>Loading…</TableCell>
+                <TableCell colSpan={13}>Loading…</TableCell>
               </TableRow>
             )}
             {!isLoading && sorted.length === 0 && (
               <TableRow>
-                <TableCell colSpan={12}>
+                <TableCell colSpan={13}>
                   <Box className={styles.emptyCell}>
                     {search ? 'No players match your search.' : 'No registrations yet for this tournament.'}
                   </Box>
@@ -203,8 +238,12 @@ export function PlayersPage() {
               <TableRow
                 key={p.id}
                 hover
+                selected={selectedIds.has(p.id)}
                 className={assignedTeam ? styles.assignedRow : ''}
               >
+                <TableCell padding="checkbox">
+                  <Checkbox checked={selectedIds.has(p.id)} onChange={() => toggleSelected(p.id)} />
+                </TableCell>
                 <TableCell>
                   <Box className={styles.avatarWrapper}>
                     <Avatar
@@ -259,7 +298,7 @@ export function PlayersPage() {
                     <EditIcon fontSize="small" />
                   </IconButton>
                   <Tooltip title="Copy to another tournament">
-                    <IconButton size="small" aria-label="copy" onClick={() => setCopying(p)}>
+                    <IconButton size="small" aria-label="copy" onClick={() => setCopying([p])}>
                       <ContentCopyIcon fontSize="small" />
                     </IconButton>
                   </Tooltip>
@@ -297,7 +336,13 @@ export function PlayersPage() {
       />
 
       <PlayerEditDialog player={editing} onClose={() => setEditing(null)} />
-      <CopyPlayerDialog player={copying} onClose={() => setCopying(null)} />
+      <CopyPlayerDialog
+        players={copying}
+        onClose={() => {
+          setCopying([]);
+          setSelectedIds(new Set());
+        }}
+      />
 
       <Dialog open={!!previewUrl} onClose={() => setPreviewUrl(null)} maxWidth="sm" fullWidth>
         <Box className={styles.photoPreviewBox}>
