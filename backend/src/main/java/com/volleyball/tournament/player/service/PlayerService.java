@@ -160,10 +160,22 @@ public class PlayerService {
         return toResponse(playerRepository.save(player));
     }
 
+    /**
+     * List/export views don't render raw photo bytes, so they read through
+     * {@link PlayerRepository#findListRowsByTournamentId} (excludes photo_data) instead of the full
+     * entity query — pulling every player's photo blob into one ResultSet is what caused production
+     * OutOfMemoryErrors. Positions come from a separate batched query since a projection row can't
+     * represent the player_position join table's one-to-many rows.
+     */
     @Transactional(readOnly = true)
     public List<PlayerResponse> listByTournament(Long tournamentId) {
-        return playerRepository.findByTournamentIdOrderByLastNameAscFirstNameAsc(tournamentId).stream()
-                .map(this::toResponse)
+        List<com.volleyball.tournament.player.repository.PlayerListProjection> rows =
+                playerRepository.findListRowsByTournamentId(tournamentId);
+        java.util.Map<Long, java.util.Set<com.volleyball.tournament.player.entity.Position>> positionsByPlayer =
+                positionsByPlayerId(rows.stream()
+                        .map(com.volleyball.tournament.player.repository.PlayerListProjection::getId).toList());
+        return rows.stream()
+                .map(row -> toResponse(row, positionsByPlayer.getOrDefault(row.getId(), java.util.Set.of())))
                 .toList();
     }
 
@@ -173,10 +185,15 @@ public class PlayerService {
         lines.add(com.volleyball.tournament.common.CsvUtil.row(
                 "First", "Middle", "Last", "Phone", "Email", "Positions", "Shirt", "Skill",
                 "Payment", "EmergencyName", "EmergencyPhone", "Waiver", "Manual", "HasAccount"));
-        for (Player p : playerRepository.findByTournamentIdOrderByLastNameAscFirstNameAsc(tournamentId)) {
+        List<com.volleyball.tournament.player.repository.PlayerListProjection> rows =
+                playerRepository.findListRowsByTournamentId(tournamentId);
+        java.util.Map<Long, java.util.Set<com.volleyball.tournament.player.entity.Position>> positionsByPlayer =
+                positionsByPlayerId(rows.stream()
+                        .map(com.volleyball.tournament.player.repository.PlayerListProjection::getId).toList());
+        for (com.volleyball.tournament.player.repository.PlayerListProjection p : rows) {
             lines.add(com.volleyball.tournament.common.CsvUtil.row(
                     p.getFirstName(), p.getMiddleName(), p.getLastName(), p.getPhone(), p.getEmail(),
-                    p.getPreferredPositions().stream().map(Enum::name).sorted()
+                    positionsByPlayer.getOrDefault(p.getId(), java.util.Set.of()).stream().map(Enum::name).sorted()
                             .collect(java.util.stream.Collectors.joining(" ")),
                     p.getTshirtSize(), p.getSkillLevel(), p.getPaymentStatus(),
                     p.getEmergencyContactName(), p.getEmergencyContactPhone(),
@@ -184,6 +201,50 @@ public class PlayerService {
                     userAccountRepository.existsByPlayerId(p.getId()) ? "Y" : "N"));
         }
         return com.volleyball.tournament.common.CsvUtil.join(lines);
+    }
+
+    private java.util.Map<Long, java.util.Set<com.volleyball.tournament.player.entity.Position>> positionsByPlayerId(
+            List<Long> playerIds) {
+        if (playerIds.isEmpty()) {
+            return java.util.Map.of();
+        }
+        java.util.Map<Long, java.util.Set<com.volleyball.tournament.player.entity.Position>> map = new java.util.HashMap<>();
+        for (Object[] row : playerRepository.findPositionRowsForPlayerIds(playerIds)) {
+            Long playerId = ((Number) row[0]).longValue();
+            com.volleyball.tournament.player.entity.Position position =
+                    com.volleyball.tournament.player.entity.Position.valueOf((String) row[1]);
+            map.computeIfAbsent(playerId, k -> new java.util.HashSet<>()).add(position);
+        }
+        return map;
+    }
+
+    private PlayerResponse toResponse(
+            com.volleyball.tournament.player.repository.PlayerListProjection row,
+            java.util.Set<com.volleyball.tournament.player.entity.Position> positions) {
+        AddressDto address = new AddressDto(
+                row.getAddressLine1(), row.getAddressLine2(), row.getAddressCity(),
+                row.getAddressProvince(), row.getAddressPostalCode(), row.getAddressCountry());
+        StringBuilder fullName = new StringBuilder(row.getFirstName());
+        if (row.getMiddleName() != null && !row.getMiddleName().isBlank()) {
+            fullName.append(' ').append(row.getMiddleName());
+        }
+        fullName.append(' ').append(row.getLastName());
+        return new PlayerResponse(
+                row.getId(), row.getTournamentId(), row.getFirstName(), row.getMiddleName(), row.getLastName(),
+                fullName.toString(), row.getPhone(), row.getEmail(),
+                row.isHasPhoto() ? "/api/players/" + row.getId() + "/photo" : null,
+                address, positions,
+                row.getTshirtSize() == null ? null
+                        : com.volleyball.tournament.player.entity.TshirtSize.valueOf(row.getTshirtSize()),
+                row.getEmergencyContactName(), row.getEmergencyContactPhone(),
+                row.getSkillLevel() == null ? null
+                        : com.volleyball.tournament.player.entity.SkillLevel.valueOf(row.getSkillLevel()),
+                row.getYearsExperience(), row.getJerseyNumberPreference(),
+                row.isWaiverAccepted(), row.isPhotoConsent(), row.getDietaryNotes(), row.getGender(),
+                row.getDateOfBirth(),
+                com.volleyball.tournament.player.entity.PaymentStatus.valueOf(row.getPaymentStatus()),
+                row.getNotes(), row.isManualEntry(),
+                userAccountRepository.existsByPlayerId(row.getId()));
     }
 
     @Transactional(readOnly = true)
