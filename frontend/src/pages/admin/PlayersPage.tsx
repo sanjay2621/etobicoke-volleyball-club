@@ -41,7 +41,7 @@ import styles from './PlayersPage.module.css';
 export function PlayersPage() {
   const { data: tournaments } = useActiveTournaments();
   const [tournamentId, setTournamentId] = useState<number | null>(null);
-  const { data: players, isLoading } = usePlayers(tournamentId);
+  const { data: players, isLoading, isError, refetch } = usePlayers(tournamentId);
   const { data: teams } = useTeams(tournamentId);
   const del = useDeletePlayer();
   const uploadPhoto = useUploadPlayerPhoto();
@@ -223,7 +223,17 @@ export function PlayersPage() {
                 <TableCell colSpan={13}>Loading…</TableCell>
               </TableRow>
             )}
-            {!isLoading && sorted.length === 0 && (
+            {!isLoading && isError && (
+              <TableRow>
+                <TableCell colSpan={13}>
+                  <Box className={styles.emptyCell}>
+                    Couldn't load players — the server may still be waking up.{' '}
+                    <Button size="small" onClick={() => refetch()}>Retry</Button>
+                  </Box>
+                </TableCell>
+              </TableRow>
+            )}
+            {!isLoading && !isError && sorted.length === 0 && (
               <TableRow>
                 <TableCell colSpan={13}>
                   <Box className={styles.emptyCell}>
