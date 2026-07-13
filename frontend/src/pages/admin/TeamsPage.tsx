@@ -74,7 +74,9 @@ export function TeamsPage() {
   }, [teams]);
 
   const availablePlayers = useMemo(
-    () => players?.filter((p) => !assignedIds.has(p.id) && !p.preferredPositions.includes('REFEREE')) ?? [],
+    () => players?.filter((p) =>
+      !assignedIds.has(p.id) && !p.preferredPositions.includes('REFEREE') && p.approvalStatus === 'APPROVED',
+    ) ?? [],
     [players, assignedIds],
   );
 
@@ -193,7 +195,8 @@ function TeamCard({
   const refereeOptions = useMemo(
     () => allPlayers.filter(
       (p) => p.preferredPositions.includes('REFEREE') &&
-        (!assignedRefereeIds.has(p.id) || p.id === team.refereePlayerId),
+        (!assignedRefereeIds.has(p.id) || p.id === team.refereePlayerId) &&
+        (p.approvalStatus === 'APPROVED' || p.id === team.refereePlayerId),
     ),
     [allPlayers, assignedRefereeIds, team.refereePlayerId],
   );

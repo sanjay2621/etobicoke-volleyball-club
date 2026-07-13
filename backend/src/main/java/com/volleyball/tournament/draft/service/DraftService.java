@@ -76,6 +76,9 @@ public class DraftService {
         if (!player.getTournamentId().equals(tournamentId)) {
             throw new ApiException(HttpStatus.BAD_REQUEST, "Player belongs to a different tournament");
         }
+        if (player.getApprovalStatus() != com.volleyball.tournament.player.entity.ApprovalStatus.APPROVED) {
+            throw new ApiException(HttpStatus.BAD_REQUEST, "Player is not yet approved");
+        }
         if (teamMemberRepository.existsByPlayerIdAndTeamIdIn(playerId, teamIds)) {
             throw new ApiException(HttpStatus.CONFLICT, "Player has already been drafted");
         }
@@ -113,6 +116,7 @@ public class DraftService {
         List<TeamResponse> teamResponses = teamService.listByTournament(tournamentId);
         List<PlayerResponse> available = playerService.listByTournament(tournamentId).stream()
                 .filter(p -> !assigned.contains(p.id()))
+                .filter(p -> p.approvalStatus() == com.volleyball.tournament.player.entity.ApprovalStatus.APPROVED)
                 .toList();
 
         return new DraftStateResponse(tournamentId, draft.getStatus().name(),

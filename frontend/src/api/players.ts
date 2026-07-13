@@ -94,6 +94,16 @@ export function useMarkPayment() {
   });
 }
 
+/** Admin approves or rejects a player's registration; reason is only used for REJECTED. */
+export function useSetApprovalStatus() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, status, reason }: { id: number; status: 'APPROVED' | 'REJECTED' | 'PENDING'; reason?: string }) =>
+      api.patch<Player>(`/players/${id}/approval`, { status, reason }).then((r) => fixPlayer(r.data)),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['players'] }),
+  });
+}
+
 /** Admin copies a player's info into another tournament without the player re-registering. */
 export function useCopyPlayerToTournament() {
   const qc = useQueryClient();

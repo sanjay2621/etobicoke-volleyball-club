@@ -139,6 +139,29 @@ export function PlayerDashboardPage() {
                   <Detail label="Skill level" value={player.skillLevel} />
                   <Detail label="Payment" value={player.paymentStatus} />
                   <Detail label="Jersey #" value={player.jerseyNumberPreference} />
+                  <Grid item xs={6} sm={4} sx={{ minWidth: 0 }}>
+                    <Typography variant="caption" color="text.secondary" display="block">
+                      Approval
+                    </Typography>
+                    <Chip
+                      size="small"
+                      label={
+                        player.approvalStatus === 'APPROVED' ? 'Approved'
+                          : player.approvalStatus === 'REJECTED' ? 'Rejected'
+                          : 'Pending'
+                      }
+                      color={
+                        player.approvalStatus === 'APPROVED' ? 'success'
+                          : player.approvalStatus === 'REJECTED' ? 'error'
+                          : 'warning'
+                      }
+                    />
+                    {player.approvalStatus === 'REJECTED' && player.rejectionReason && (
+                      <Typography variant="caption" color="text.secondary" display="block" mt={0.5}>
+                        {player.rejectionReason}
+                      </Typography>
+                    )}
+                  </Grid>
                 </Grid>
                 <Divider className={styles.divider} />
                 <Typography variant="h6" gutterBottom>

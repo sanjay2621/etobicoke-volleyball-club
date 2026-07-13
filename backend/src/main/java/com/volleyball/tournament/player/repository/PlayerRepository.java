@@ -49,7 +49,8 @@ public interface PlayerRepository extends JpaRepository<Player, Long> {
             + "p.jersey_number_preference AS jerseyNumberPreference, p.waiver_accepted AS waiverAccepted, "
             + "p.photo_consent AS photoConsent, p.dietary_notes AS dietaryNotes, p.gender AS gender, "
             + "p.date_of_birth AS dateOfBirth, p.payment_status AS paymentStatus, p.notes AS notes, "
-            + "p.manual_entry AS manualEntry, (p.photo_content_type IS NOT NULL) AS hasPhoto "
+            + "p.manual_entry AS manualEntry, (p.photo_content_type IS NOT NULL) AS hasPhoto, "
+            + "p.approval_status AS approvalStatus, p.rejection_reason AS rejectionReason "
             + "FROM player p WHERE p.tournament_id = :tournamentId AND p.deleted = false "
             + "ORDER BY p.last_name, p.first_name",
             nativeQuery = true)

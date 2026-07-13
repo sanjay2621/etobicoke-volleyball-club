@@ -24,10 +24,12 @@ import {
   Typography,
 } from '@mui/material';
 import AddPhotoAlternateIcon from '@mui/icons-material/AddPhotoAlternate';
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import DeleteIcon from '@mui/icons-material/Delete';
 import DownloadIcon from '@mui/icons-material/Download';
 import EditIcon from '@mui/icons-material/Edit';
+import CancelIcon from '@mui/icons-material/Cancel';
 import SearchIcon from '@mui/icons-material/Search';
 import { useActiveTournaments } from '../../api/tournaments';
 import { useDeletePlayer, usePlayers, useUploadPlayerPhoto } from '../../api/players';
@@ -36,7 +38,14 @@ import { downloadFile } from '../../api/client';
 import type { Player } from '../../types';
 import { PlayerEditDialog } from './PlayerEditDialog';
 import { CopyPlayerDialog } from './CopyPlayerDialog';
+import { ApprovalDialog } from './ApprovalDialog';
 import styles from './PlayersPage.module.css';
+
+const approvalColor: Record<Player['approvalStatus'], 'success' | 'error' | 'warning'> = {
+  APPROVED: 'success',
+  REJECTED: 'error',
+  PENDING: 'warning',
+};
 
 export function PlayersPage() {
   const { data: tournaments } = useActiveTournaments();
@@ -49,6 +58,7 @@ export function PlayersPage() {
   const [uploadingId, setUploadingId] = useState<number | null>(null);
   const [editing, setEditing] = useState<Player | null>(null);
   const [copying, setCopying] = useState<Player[]>([]);
+  const [approving, setApproving] = useState<{ players: Player[]; action: 'APPROVED' | 'REJECTED' | null }>({ players: [], action: null });
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
   const [search, setSearch] = useState('');
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
@@ -156,6 +166,24 @@ export function PlayersPage() {
           </TextField>
           <Button
             variant="outlined"
+            color="success"
+            startIcon={<CheckCircleIcon />}
+            disabled={selectedPlayers.length === 0}
+            onClick={() => setApproving({ players: selectedPlayers, action: 'APPROVED' })}
+          >
+            Approve selected{selectedPlayers.length > 0 ? ` (${selectedPlayers.length})` : ''}
+          </Button>
+          <Button
+            variant="outlined"
+            color="error"
+            startIcon={<CancelIcon />}
+            disabled={selectedPlayers.length === 0}
+            onClick={() => setApproving({ players: selectedPlayers, action: 'REJECTED' })}
+          >
+            Reject selected{selectedPlayers.length > 0 ? ` (${selectedPlayers.length})` : ''}
+          </Button>
+          <Button
+            variant="outlined"
             startIcon={<ContentCopyIcon />}
             disabled={selectedPlayers.length === 0}
             onClick={() => setCopying(selectedPlayers)}
@@ -212,6 +240,7 @@ export function PlayersPage() {
               <TableCell>Phone</TableCell>
               <TableCell>Email</TableCell>
               <TableCell>Payment</TableCell>
+              <TableCell>Approval</TableCell>
               <TableCell>Account</TableCell>
               <TableCell>Assigned Team</TableCell>
               <TableCell align="right">Actions</TableCell>
@@ -220,12 +249,12 @@ export function PlayersPage() {
           <TableBody>
             {isLoading && (
               <TableRow>
-                <TableCell colSpan={13}>Loading…</TableCell>
+                <TableCell colSpan={14}>Loading…</TableCell>
               </TableRow>
             )}
             {!isLoading && isError && (
               <TableRow>
-                <TableCell colSpan={13}>
+                <TableCell colSpan={14}>
                   <Box className={styles.emptyCell}>
                     Couldn't load players — the server may still be waking up.{' '}
                     <Button size="small" onClick={() => refetch()}>Retry</Button>
@@ -235,7 +264,7 @@ export function PlayersPage() {
             )}
             {!isLoading && !isError && sorted.length === 0 && (
               <TableRow>
-                <TableCell colSpan={13}>
+                <TableCell colSpan={14}>
                   <Box className={styles.emptyCell}>
                     {search ? 'No players match your search.' : 'No registrations yet for this tournament.'}
                   </Box>
@@ -295,6 +324,15 @@ export function PlayersPage() {
                     color={p.paymentStatus === 'PAID' ? 'success' : 'default'}
                   />
                 </TableCell>
+                <TableCell>
+                  <Tooltip title={p.approvalStatus === 'REJECTED' && p.rejectionReason ? p.rejectionReason : ''}>
+                    <Chip
+                      label={p.approvalStatus === 'APPROVED' ? 'Approved' : p.approvalStatus === 'REJECTED' ? 'Rejected' : 'Pending'}
+                      size="small"
+                      color={approvalColor[p.approvalStatus]}
+                    />
+                  </Tooltip>
+                </TableCell>
                 <TableCell>{p.hasAccount ? '✓' : '—'}</TableCell>
                 <TableCell>
                   {assignedTeam ? (
@@ -307,6 +345,22 @@ export function PlayersPage() {
                   <IconButton size="small" aria-label="edit" onClick={() => setEditing(p)}>
                     <EditIcon fontSize="small" />
                   </IconButton>
+                  {p.approvalStatus !== 'APPROVED' && (
+                    <Tooltip title="Approve">
+                      <IconButton size="small" color="success" aria-label="approve"
+                        onClick={() => setApproving({ players: [p], action: 'APPROVED' })}>
+                        <CheckCircleIcon fontSize="small" />
+                      </IconButton>
+                    </Tooltip>
+                  )}
+                  {p.approvalStatus !== 'REJECTED' && (
+                    <Tooltip title="Reject">
+                      <IconButton size="small" color="error" aria-label="reject"
+                        onClick={() => setApproving({ players: [p], action: 'REJECTED' })}>
+                        <CancelIcon fontSize="small" />
+                      </IconButton>
+                    </Tooltip>
+                  )}
                   <Tooltip title="Copy to another tournament">
                     <IconButton size="small" aria-label="copy" onClick={() => setCopying([p])}>
                       <ContentCopyIcon fontSize="small" />
@@ -350,6 +404,14 @@ export function PlayersPage() {
         players={copying}
         onClose={() => {
           setCopying([]);
+          setSelectedIds(new Set());
+        }}
+      />
+      <ApprovalDialog
+        players={approving.players}
+        action={approving.action}
+        onClose={() => {
+          setApproving({ players: [], action: null });
           setSelectedIds(new Set());
         }}
       />

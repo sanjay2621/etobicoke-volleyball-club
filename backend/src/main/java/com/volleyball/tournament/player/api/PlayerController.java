@@ -1,5 +1,6 @@
 package com.volleyball.tournament.player.api;
 
+import com.volleyball.tournament.player.entity.ApprovalStatus;
 import com.volleyball.tournament.player.entity.PaymentStatus;
 import com.volleyball.tournament.player.model.CopyPlayerRequest;
 import com.volleyball.tournament.player.model.PlayerLookupResponse;
@@ -122,6 +123,16 @@ public class PlayerController {
             @RequestBody java.util.Map<String, String> body) {
         PaymentStatus status = PaymentStatus.valueOf(body.get("paymentStatus"));
         return playerService.captainMarkPayment(id, status);
+    }
+
+    /** Admin approves or rejects a registration; rejection may include an optional reason. */
+    @PatchMapping("/{id}/approval")
+    @PreAuthorize("hasRole('ADMIN')")
+    public PlayerResponse setApprovalStatus(
+            @PathVariable Long id,
+            @RequestBody java.util.Map<String, String> body) {
+        ApprovalStatus status = ApprovalStatus.valueOf(body.get("status"));
+        return playerService.setApprovalStatus(id, status, body.get("reason"));
     }
 
     /** Player uploads or replaces their own photo. */

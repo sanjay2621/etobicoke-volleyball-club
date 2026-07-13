@@ -53,4 +53,28 @@ public class EmailService {
                     "Could not send the reset email. Please try again later.");
         }
     }
+
+    public void sendApprovalNotice(String toEmail, String firstName) {
+        Map<String, Object> body = Map.of(
+                "sender",      Map.of("email", FROM_EMAIL, "name", FROM_NAME),
+                "to",          List.of(Map.of("email", toEmail)),
+                "subject",     "Your registration is approved — Nilkanth Volleyball Club",
+                "textContent", "Hi " + firstName + ",\n\n" +
+                               "Good news — your tournament registration has been approved by an admin.\n\n" +
+                               "You can log in anytime to view your team and schedule once teams are formed.\n\n" +
+                               "— Nilkanth Volleyball Club"
+        );
+        try {
+            restClient.post()
+                    .uri("/smtp/email")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .body(body)
+                    .retrieve()
+                    .toBodilessEntity();
+        } catch (RestClientException ex) {
+            log.error("Failed to send approval notice to {} via Brevo API: {}", toEmail, ex.getMessage(), ex);
+            throw new ApiException(HttpStatus.SERVICE_UNAVAILABLE,
+                    "Could not send the approval email. Please try again later.");
+        }
+    }
 }

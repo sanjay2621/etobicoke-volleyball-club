@@ -1,5 +1,6 @@
 package com.volleyball.tournament.player.model;
 
+import com.volleyball.tournament.player.entity.ApprovalStatus;
 import com.volleyball.tournament.player.entity.PaymentStatus;
 import com.volleyball.tournament.player.entity.Position;
 import com.volleyball.tournament.player.entity.SkillLevel;
@@ -33,5 +34,7 @@ public record PlayerResponse(
         PaymentStatus paymentStatus,
         String notes,
         boolean manualEntry,
-        boolean hasAccount) {
+        boolean hasAccount,
+        ApprovalStatus approvalStatus,
+        String rejectionReason) {
 }

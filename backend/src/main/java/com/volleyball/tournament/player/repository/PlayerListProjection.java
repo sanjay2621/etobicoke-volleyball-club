@@ -38,4 +38,6 @@ public interface PlayerListProjection {
     String getNotes();
     boolean isManualEntry();
     boolean isHasPhoto();
+    String getApprovalStatus();
+    String getRejectionReason();
 }

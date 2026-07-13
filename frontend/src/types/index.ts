@@ -47,6 +47,7 @@ export type SkillLevel = 'BEGINNER' | 'INTERMEDIATE' | 'ADVANCED';
 export const SKILL_LEVELS: SkillLevel[] = ['BEGINNER', 'INTERMEDIATE', 'ADVANCED'];
 
 export type PaymentStatus = 'UNPAID' | 'PAID';
+export type ApprovalStatus = 'PENDING' | 'APPROVED' | 'REJECTED';
 
 export type AddressDto = {
   line1?: string;
@@ -84,6 +85,8 @@ export type Player = {
   notes?: string | null;
   manualEntry: boolean;
   hasAccount: boolean;
+  approvalStatus: ApprovalStatus;
+  rejectionReason?: string | null;
 };
 
 export type PlayerRegistrationRequest = {

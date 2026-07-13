@@ -1,11 +1,13 @@
 package com.volleyball.tournament.player.service;
 
 import com.volleyball.tournament.auth.repository.UserAccountRepository;
+import com.volleyball.tournament.auth.service.EmailService;
 import com.volleyball.tournament.common.exception.ApiException;
 import com.volleyball.tournament.common.exception.DuplicateRegistrationException;
 import com.volleyball.tournament.common.exception.NotFoundException;
 import com.volleyball.tournament.common.storage.FileStorageService;
 import com.volleyball.tournament.player.entity.Address;
+import com.volleyball.tournament.player.entity.ApprovalStatus;
 import com.volleyball.tournament.player.entity.PaymentStatus;
 import com.volleyball.tournament.player.entity.Player;
 import com.volleyball.tournament.player.mapper.PlayerMapper;
@@ -24,6 +26,7 @@ import com.volleyball.tournament.tournament.service.TournamentService;
 import java.util.HashSet;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -31,6 +34,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class PlayerService {
@@ -42,6 +46,7 @@ public class PlayerService {
     private final UserAccountRepository userAccountRepository;
     private final TeamMemberRepository teamMemberRepository;
     private final TeamRepository teamRepository;
+    private final EmailService emailService;
 
     public record PhotoData(byte[] bytes, String contentType) {
     }
@@ -72,6 +77,7 @@ public class PlayerService {
         Player player = new Player();
         player.setTournamentId(tournament.getId());
         applyRegistration(player, req);
+        // approvalStatus stays at its entity default (PENDING) — public registrations require admin review.
 
         if (photo != null && !photo.isEmpty()) {
             applyPhoto(player, photo);
@@ -137,6 +143,8 @@ public class PlayerService {
         copy.setPaymentStatus(PaymentStatus.UNPAID);
         copy.setWaiverAccepted(false);
         copy.setManualEntry(true);
+        // Admin already vouches for this copy, so skip the approval queue.
+        copy.setApprovalStatus(ApprovalStatus.APPROVED);
         return toResponse(playerRepository.save(copy));
     }
 
@@ -157,7 +165,31 @@ public class PlayerService {
                 ? com.volleyball.tournament.player.entity.TshirtSize.M : req.tshirtSize());
         player.setPaymentStatus(PaymentStatus.UNPAID);
         player.setManualEntry(true);
+        // Admin already vouches for a manually-entered player, so skip the approval queue.
+        player.setApprovalStatus(ApprovalStatus.APPROVED);
         return toResponse(playerRepository.save(player));
+    }
+
+    /**
+     * Admin approves or rejects a pending (or previously-decided) registration. Approval emails the
+     * player via {@link EmailService}, but a Brevo failure must not roll back the approval itself —
+     * unlike {@link EmailService#sendPasswordResetCode}, this isn't the primary purpose of the call,
+     * so the exception is caught and logged rather than propagated.
+     */
+    @Transactional
+    public PlayerResponse setApprovalStatus(Long playerId, ApprovalStatus status, String reason) {
+        Player player = getEntity(playerId);
+        player.setApprovalStatus(status);
+        player.setRejectionReason(status == ApprovalStatus.REJECTED ? reason : null);
+        Player saved = playerRepository.save(player);
+        if (status == ApprovalStatus.APPROVED) {
+            try {
+                emailService.sendApprovalNotice(saved.getEmail(), saved.getFirstName());
+            } catch (Exception e) {
+                log.error("Failed to send approval notice to player {}", playerId, e);
+            }
+        }
+        return toResponse(saved);
     }
 
     /**
@@ -244,7 +276,8 @@ public class PlayerService {
                 row.getDateOfBirth(),
                 com.volleyball.tournament.player.entity.PaymentStatus.valueOf(row.getPaymentStatus()),
                 row.getNotes(), row.isManualEntry(),
-                userAccountRepository.existsByPlayerId(row.getId()));
+                userAccountRepository.existsByPlayerId(row.getId()),
+                ApprovalStatus.valueOf(row.getApprovalStatus()), row.getRejectionReason());
     }
 
     @Transactional(readOnly = true)

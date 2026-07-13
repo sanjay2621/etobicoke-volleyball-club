@@ -103,4 +103,12 @@ public class Player extends BaseEntity {
     /** True for admin-created players who never went through public registration. */
     @Column(name = "manual_entry", nullable = false)
     private boolean manualEntry = false;
+
+    /** New public registrations start PENDING; admin-initiated rows (manual/copy) are set APPROVED explicitly. */
+    @Enumerated(EnumType.STRING)
+    @Column(name = "approval_status", nullable = false, length = 10)
+    private ApprovalStatus approvalStatus = ApprovalStatus.PENDING;
+
+    @Column(name = "rejection_reason", length = 500)
+    private String rejectionReason;
 }

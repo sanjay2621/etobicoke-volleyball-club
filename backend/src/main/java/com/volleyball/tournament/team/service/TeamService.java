@@ -2,6 +2,7 @@ package com.volleyball.tournament.team.service;
 
 import com.volleyball.tournament.common.exception.ApiException;
 import com.volleyball.tournament.common.exception.NotFoundException;
+import com.volleyball.tournament.player.entity.ApprovalStatus;
 import com.volleyball.tournament.player.entity.Player;
 import com.volleyball.tournament.player.repository.PlayerRepository;
 import com.volleyball.tournament.team.entity.Team;
@@ -104,6 +105,9 @@ public class TeamService {
         if (!player.getTournamentId().equals(team.getTournamentId())) {
             throw new ApiException(HttpStatus.BAD_REQUEST, "Player belongs to a different tournament");
         }
+        if (player.getApprovalStatus() != ApprovalStatus.APPROVED) {
+            throw new ApiException(HttpStatus.BAD_REQUEST, "Player is not yet approved");
+        }
         List<Long> teamIds = tournamentTeamIds(team.getTournamentId());
         if (teamMemberRepository.existsByPlayerIdAndTeamIdIn(player.getId(), teamIds)) {
             throw new ApiException(HttpStatus.CONFLICT, "Player is already on a team in this tournament");
@@ -155,6 +159,9 @@ public class TeamService {
                     .orElseThrow(() -> NotFoundException.of("Player", playerId));
             if (!player.getTournamentId().equals(team.getTournamentId())) {
                 throw new ApiException(HttpStatus.BAD_REQUEST, "Referee belongs to a different tournament");
+            }
+            if (player.getApprovalStatus() != ApprovalStatus.APPROVED) {
+                throw new ApiException(HttpStatus.BAD_REQUEST, "Player is not yet approved");
             }
         }
         team.setRefereePlayerId(playerId);

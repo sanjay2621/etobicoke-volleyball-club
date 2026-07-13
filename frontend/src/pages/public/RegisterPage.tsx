@@ -255,6 +255,10 @@ export function RegisterPage() {
             <Typography variant="h4" gutterBottom>
               You're registered! 🏐
             </Typography>
+            <Alert severity="info" sx={{ mb: 2 }}>
+              Your registration requires approval from an admin before you're eligible for team
+              selection. You'll get an email once it's approved.
+            </Alert>
             <Typography color="text.secondary" paragraph>
               Set a password to log in and view your team once the draft happens.
             </Typography>
