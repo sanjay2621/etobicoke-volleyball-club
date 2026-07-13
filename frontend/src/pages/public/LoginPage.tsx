@@ -47,7 +47,7 @@ export function LoginPage() {
         <Container maxWidth="xs" className={styles.bannerContainer}>
           <SportsVolleyballIcon className={styles.bannerMainIcon} />
           <Typography variant="h4" fontWeight={800} letterSpacing={-0.5}>
-            SANATANI Volleyball Club
+            Nilkanth Volleyball Club
           </Typography>
           <Typography variant="body1" className={styles.bannerSubtext}>
             Welcome back — log in to view your team and schedule.

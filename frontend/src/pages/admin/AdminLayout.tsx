@@ -86,7 +86,7 @@ export function AdminLayout() {
             )}
           </Box>
           <Typography variant="h6" fontWeight={700}>
-            SANATANI Volleyball Club
+            Nilkanth Volleyball Club
           </Typography>
           <Box sx={{ flex: 1, display: 'flex', justifyContent: 'flex-end', alignItems: 'center' }}>
             {!isMobile && (

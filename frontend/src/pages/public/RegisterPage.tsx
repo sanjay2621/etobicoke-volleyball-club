@@ -287,7 +287,7 @@ export function RegisterPage() {
                 Register to Play
               </Typography>
               <Typography variant="body1" className={styles.bannerSubtext}>
-                SANATANI Volleyball Club — fill in your details below to secure your spot.
+                Nilkanth Volleyball Club — fill in your details below to secure your spot.
               </Typography>
             </Box>
           </Stack>
