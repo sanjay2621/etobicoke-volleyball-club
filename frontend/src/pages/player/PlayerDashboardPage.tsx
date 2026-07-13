@@ -139,8 +139,8 @@ export function PlayerDashboardPage() {
                   <Detail label="Skill level" value={player.skillLevel} />
                   <Detail label="Payment" value={player.paymentStatus} />
                   <Detail label="Jersey #" value={player.jerseyNumberPreference} />
-                  <Grid item xs={6} sm={4} sx={{ minWidth: 0 }}>
-                    <Typography variant="caption" color="text.secondary" display="block">
+                  <Grid item xs={6} sm={4} sx={{ minWidth: 0, pb: 0.5 }}>
+                    <Typography variant="caption" color="text.secondary" display="block" sx={{ mb: 0.5 }}>
                       Approval
                     </Typography>
                     <Chip
