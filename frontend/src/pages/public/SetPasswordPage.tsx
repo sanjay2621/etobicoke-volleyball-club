@@ -47,6 +47,11 @@ export function SetPasswordPage() {
             <Typography variant="body2" color="text.secondary" className={styles.subtitle}>
               Use the email you registered with.
             </Typography>
+            <Alert severity="info" className={styles.alert}>
+              Your registration has been submitted to the management team for review and is
+              currently Pending. You can still create your login now — check back on your profile
+              once it's approved.
+            </Alert>
             {error && (
               <Alert severity="error" className={styles.alert}>
                 {error}
