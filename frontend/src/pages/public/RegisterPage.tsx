@@ -215,6 +215,10 @@ export function RegisterPage() {
 
   async function onSubmit(values: FormValues) {
     setError(null);
+    if (!photo && !hasPhotoOnFile) {
+      setError('Please upload a photo.');
+      return;
+    }
     try {
       await register.mutateAsync({
         data: {
@@ -571,10 +575,13 @@ export function RegisterPage() {
                     <Stack direction="row" spacing={2} alignItems="center">
                       <Avatar src={photoPreview ?? undefined} className={styles.photoAvatar} />
                       <Button variant="outlined" component="label">
-                        Upload photo
+                        {hasPhotoOnFile ? 'Upload photo' : 'Upload photo *'}
                         <input hidden type="file" accept="image/*" onChange={onPhotoChange} />
                       </Button>
                     </Stack>
+                    {!photo && !hasPhotoOnFile && (
+                      <FormHelperText>Photo required</FormHelperText>
+                    )}
                   </Grid>
 
                   <Grid item xs={12} sm={6}>
