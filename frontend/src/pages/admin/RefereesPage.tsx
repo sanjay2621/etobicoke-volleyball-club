@@ -106,14 +106,18 @@ export function RefereesPage() {
   }, [referees, search]);
 
   const sorted = useMemo(() => {
-    if (!sortField) return filtered;
-    return [...filtered].sort((a, b) => {
-      const va = a[sortField].toLowerCase();
-      const vb = b[sortField].toLowerCase();
-      if (va < vb) return sortDir === 'asc' ? -1 : 1;
-      if (va > vb) return sortDir === 'asc' ? 1 : -1;
-      return 0;
-    });
+    const columnSorted = sortField
+      ? [...filtered].sort((a, b) => {
+          const va = a[sortField].toLowerCase();
+          const vb = b[sortField].toLowerCase();
+          if (va < vb) return sortDir === 'asc' ? -1 : 1;
+          if (va > vb) return sortDir === 'asc' ? 1 : -1;
+          return 0;
+        })
+      : filtered;
+    return [...columnSorted].sort(
+      (a, b) => (a.approvalStatus === 'PENDING' ? 0 : 1) - (b.approvalStatus === 'PENDING' ? 0 : 1),
+    );
   }, [filtered, sortField, sortDir]);
 
   useEffect(() => {
