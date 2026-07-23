@@ -10,7 +10,10 @@ import {
   CardContent,
   Chip,
   Container,
+  Dialog,
+  DialogTitle,
   Grid,
+  IconButton,
   MenuItem,
   Paper,
   Stack,
@@ -27,6 +30,8 @@ import {
   Tooltip,
   Typography,
 } from '@mui/material';
+import CloseIcon from '@mui/icons-material/Close';
+import DescriptionIcon from '@mui/icons-material/Description';
 import SportsIcon from '@mui/icons-material/Sports';
 import SportsVolleyballIcon from '@mui/icons-material/SportsVolleyball';
 import StarIcon from '@mui/icons-material/Star';
@@ -50,6 +55,7 @@ export function HomePage() {
   const { data: tournaments } = useActivePublicTournaments();
   const [selectedId, setSelectedId] = useState<number | null>(null);
   const [tab, setTab] = useState(0);
+  const [rulesOpen, setRulesOpen] = useState(false);
 
   // Default to the newest tournament (latest date) once the list loads.
   const sorted = useMemo(
@@ -68,11 +74,26 @@ export function HomePage() {
           <Typography variant="h6" className={styles.appBarTitle}>
             Nilkanth Volleyball Club
           </Typography>
+          <Button color="inherit" startIcon={<DescriptionIcon />} onClick={() => setRulesOpen(true)}>
+            Rules
+          </Button>
           <Button color="inherit" component={RouterLink} to="/login">
             Log in
           </Button>
         </Toolbar>
       </AppBar>
+
+      <Dialog open={rulesOpen} onClose={() => setRulesOpen(false)} maxWidth="md" fullWidth>
+        <DialogTitle className={styles.rulesDialogTitle}>
+          Quick Reference Rules
+          <IconButton onClick={() => setRulesOpen(false)} size="small">
+            <CloseIcon />
+          </IconButton>
+        </DialogTitle>
+        <Box className={styles.rulesFrameBox}>
+          <iframe src="/rules.pdf" title="Quick Reference Rules" className={styles.rulesFrame} />
+        </Box>
+      </Dialog>
 
       <Box className={styles.hero}>
         {/* Decorative volleyball shapes */}

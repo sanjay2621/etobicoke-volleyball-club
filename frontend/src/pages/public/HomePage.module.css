@@ -15,6 +15,24 @@
   font-family: 'Poppins', sans-serif;
 }
 
+/* Rules dialog */
+.rulesDialogTitle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.rulesFrameBox {
+  height: 80vh;
+}
+
+.rulesFrame {
+  width: 100%;
+  height: 100%;
+  border: none;
+  display: block;
+}
+
 /* Hero */
 .hero {
   background: linear-gradient(135deg, #0F1D35 0%, #1A2B4A 40%, #1E3A6E 75%, #2C4A7A 100%);
