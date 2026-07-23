@@ -11,7 +11,6 @@ import {
   Chip,
   Container,
   Dialog,
-  DialogTitle,
   Grid,
   IconButton,
   MenuItem,
@@ -84,14 +83,11 @@ export function HomePage() {
       </AppBar>
 
       <Dialog open={rulesOpen} onClose={() => setRulesOpen(false)} maxWidth="md" fullWidth>
-        <DialogTitle className={styles.rulesDialogTitle}>
-          Quick Reference Rules
-          <IconButton onClick={() => setRulesOpen(false)} size="small">
+        <Box className={styles.rulesPreviewBox}>
+          <IconButton onClick={() => setRulesOpen(false)} size="small" className={styles.rulesCloseBtn}>
             <CloseIcon />
           </IconButton>
-        </DialogTitle>
-        <Box className={styles.rulesFrameBox}>
-          <iframe src="/rules.pdf" title="Quick Reference Rules" className={styles.rulesFrame} />
+          <img src="/rules.png" alt="Quick Reference Rules" className={styles.rulesImg} />
         </Box>
       </Dialog>
 

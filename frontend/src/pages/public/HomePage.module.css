@@ -16,21 +16,27 @@
 }
 
 /* Rules dialog */
-.rulesDialogTitle {
+.rulesPreviewBox {
+  position: relative;
+  padding: 16px;
   display: flex;
-  align-items: center;
-  justify-content: space-between;
+  justify-content: center;
 }
 
-.rulesFrameBox {
-  height: 80vh;
+.rulesCloseBtn {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: rgba(255, 255, 255, 0.85);
+  z-index: 1;
 }
 
-.rulesFrame {
-  width: 100%;
-  height: 100%;
-  border: none;
+.rulesImg {
+  max-width: 100%;
+  max-height: 80vh;
+  object-fit: contain;
   display: block;
+  border-radius: 4px;
 }
 
 /* Hero */
