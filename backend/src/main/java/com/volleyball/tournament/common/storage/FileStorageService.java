@@ -1,8 +1,20 @@
 package com.volleyball.tournament.common.storage;
 
 import com.volleyball.tournament.common.exception.ApiException;
+import java.awt.Color;
+import java.awt.Image;
+import java.awt.RenderingHints;
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.util.Iterator;
 import java.util.Set;
+import javax.imageio.IIOImage;
+import javax.imageio.ImageIO;
+import javax.imageio.ImageWriteParam;
+import javax.imageio.ImageWriter;
+import javax.imageio.stream.MemoryCacheImageOutputStream;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -12,7 +24,10 @@ import org.springframework.web.multipart.MultipartFile;
 /**
  * Validates uploaded player photos and reads their bytes for storage in the database.
  * Render's web service filesystem is ephemeral, so photo bytes are persisted in Postgres
- * (player.photo_data) rather than on local disk.
+ * (player.photo_data) rather than on local disk. Photos are downscaled and re-encoded as
+ * JPEG on the way in — avatars are rendered at a few dozen pixels, so storing (and later
+ * re-serving) multi-megabyte camera originals wastes bandwidth and DB space for no visual
+ * benefit.
  */
 @Service
 public class FileStorageService {
@@ -21,6 +36,10 @@ public class FileStorageService {
             Set.of("image/jpeg", "image/png", "image/webp");
     private static final Set<String> ALLOWED_EXTENSIONS =
             Set.of("jpg", "jpeg", "png", "webp");
+
+    private static final int MAX_DIMENSION = 500;
+    private static final float JPEG_QUALITY = 0.82f;
+    public static final String OUTPUT_CONTENT_TYPE = "image/jpeg";
 
     public record StoredPhoto(byte[] bytes, String contentType) {
     }
@@ -31,7 +50,7 @@ public class FileStorageService {
         this.maxBytes = maxBytes;
     }
 
-    /** Validates the uploaded photo and returns its bytes and content type for DB storage. */
+    /** Validates the uploaded photo and returns its resized, re-encoded bytes for DB storage. */
     public StoredPhoto readPhoto(MultipartFile file) {
         if (file == null || file.isEmpty()) {
             throw new ApiException(HttpStatus.BAD_REQUEST, "Photo file is required");
@@ -51,10 +70,55 @@ public class FileStorageService {
         }
 
         try {
-            return new StoredPhoto(file.getBytes(), contentType);
+            return new StoredPhoto(resizeToJpeg(file.getBytes()), OUTPUT_CONTENT_TYPE);
         } catch (IOException e) {
             throw new ApiException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to read photo");
         }
+    }
+
+    /** Re-encodes already-stored photo bytes at the current target size — used to backfill legacy rows. */
+    public byte[] resizeToJpeg(byte[] original) throws IOException {
+        BufferedImage source = ImageIO.read(new ByteArrayInputStream(original));
+        if (source == null) {
+            throw new ApiException(HttpStatus.BAD_REQUEST, "Unreadable image data");
+        }
+
+        int width = source.getWidth();
+        int height = source.getHeight();
+        double scale = Math.min(1.0, MAX_DIMENSION / (double) Math.max(width, height));
+        int targetWidth = Math.max(1, (int) Math.round(width * scale));
+        int targetHeight = Math.max(1, (int) Math.round(height * scale));
+
+        BufferedImage scaled = new BufferedImage(targetWidth, targetHeight, BufferedImage.TYPE_INT_RGB);
+        var g = scaled.createGraphics();
+        try {
+            g.setColor(Color.WHITE);
+            g.fillRect(0, 0, targetWidth, targetHeight);
+            g.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+            g.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
+            Image scaledInstance = source.getScaledInstance(targetWidth, targetHeight, Image.SCALE_SMOOTH);
+            g.drawImage(scaledInstance, 0, 0, null);
+        } finally {
+            g.dispose();
+        }
+
+        Iterator<ImageWriter> writers = ImageIO.getImageWritersByFormatName("jpg");
+        if (!writers.hasNext()) {
+            throw new ApiException(HttpStatus.INTERNAL_SERVER_ERROR, "No JPEG writer available");
+        }
+        ImageWriter writer = writers.next();
+        ImageWriteParam params = writer.getDefaultWriteParam();
+        params.setCompressionMode(ImageWriteParam.MODE_EXPLICIT);
+        params.setCompressionQuality(JPEG_QUALITY);
+
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        try (var ios = new MemoryCacheImageOutputStream(out)) {
+            writer.setOutput(ios);
+            writer.write(null, new IIOImage(scaled, null, null), params);
+        } finally {
+            writer.dispose();
+        }
+        return out.toByteArray();
     }
 
     private static String extensionOf(String filename) {

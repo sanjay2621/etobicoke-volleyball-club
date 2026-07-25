@@ -60,4 +60,13 @@ public interface PlayerRepository extends JpaRepository<Player, Long> {
     @Query(value = "SELECT player_id, position FROM player_position WHERE player_id IN :playerIds",
             nativeQuery = true)
     List<Object[]> findPositionRowsForPlayerIds(@Param("playerIds") List<Long> playerIds);
+
+    /**
+     * IDs of players whose stored photo exceeds the given size — used to backfill photos uploaded
+     * before server-side resizing was added (see PlayerPhotoBackfillRunner).
+     */
+    @Query(value = "SELECT p.id FROM player p WHERE p.deleted = false AND p.photo_data IS NOT NULL "
+            + "AND octet_length(p.photo_data) > :minBytes",
+            nativeQuery = true)
+    List<Long> findIdsWithPhotoLargerThan(@Param("minBytes") long minBytes);
 }
