@@ -12,7 +12,7 @@ spring:
       # retried) when a real request needs it — surfacing as an intermittent empty/failed response
       # that "fixes itself" once the pool recycles. keepalive-time proactively pings idle
       # connections so they're recycled before the server drops them.
-      maximum-pool-size: 5
+      maximum-pool-size: 10
       minimum-idle: 2
       idle-timeout: 300000
       max-lifetime: 1200000
