@@ -2,7 +2,6 @@ package com.volleyball.tournament.common.storage;
 
 import com.volleyball.tournament.common.exception.ApiException;
 import java.awt.Color;
-import java.awt.Image;
 import java.awt.RenderingHints;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
@@ -12,8 +11,11 @@ import java.util.Iterator;
 import java.util.Set;
 import javax.imageio.IIOImage;
 import javax.imageio.ImageIO;
+import javax.imageio.ImageReadParam;
+import javax.imageio.ImageReader;
 import javax.imageio.ImageWriteParam;
 import javax.imageio.ImageWriter;
+import javax.imageio.stream.ImageInputStream;
 import javax.imageio.stream.MemoryCacheImageOutputStream;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
@@ -76,9 +78,38 @@ public class FileStorageService {
         }
     }
 
-    /** Re-encodes already-stored photo bytes at the current target size — used to backfill legacy rows. */
+    /**
+     * Re-encodes already-stored photo bytes at the current target size — used to backfill legacy
+     * rows. Decodes via {@link ImageReader} with source subsampling so oversized camera originals
+     * (multi-thousand-pixel JPEGs) are never fully decoded at native resolution — a full-res decode
+     * of a large-enough original can exceed the heap on memory-constrained hosts.
+     */
     public byte[] resizeToJpeg(byte[] original) throws IOException {
-        BufferedImage source = ImageIO.read(new ByteArrayInputStream(original));
+        BufferedImage source;
+        try (ImageInputStream iis = ImageIO.createImageInputStream(new ByteArrayInputStream(original))) {
+            if (iis == null) {
+                throw new ApiException(HttpStatus.BAD_REQUEST, "Unreadable image data");
+            }
+            Iterator<ImageReader> readers = ImageIO.getImageReaders(iis);
+            if (!readers.hasNext()) {
+                throw new ApiException(HttpStatus.BAD_REQUEST, "Unreadable image data");
+            }
+            ImageReader reader = readers.next();
+            try {
+                reader.setInput(iis, true, true);
+                int width = reader.getWidth(0);
+                int height = reader.getHeight(0);
+                int subsample = Math.max(1, Math.min(width, height) == 0 ? 1
+                        : (int) Math.floor(Math.max(width, height) / (double) MAX_DIMENSION));
+                ImageReadParam param = reader.getDefaultReadParam();
+                if (subsample > 1) {
+                    param.setSourceSubsampling(subsample, subsample, 0, 0);
+                }
+                source = reader.read(0, param);
+            } finally {
+                reader.dispose();
+            }
+        }
         if (source == null) {
             throw new ApiException(HttpStatus.BAD_REQUEST, "Unreadable image data");
         }
@@ -96,8 +127,7 @@ public class FileStorageService {
             g.fillRect(0, 0, targetWidth, targetHeight);
             g.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
             g.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
-            Image scaledInstance = source.getScaledInstance(targetWidth, targetHeight, Image.SCALE_SMOOTH);
-            g.drawImage(scaledInstance, 0, 0, null);
+            g.drawImage(source, 0, 0, targetWidth, targetHeight, null);
         } finally {
             g.dispose();
         }

@@ -39,7 +39,10 @@ public class PlayerPhotoBackfillRunner implements ApplicationRunner {
             try {
                 resizeOne(id);
                 resized++;
-            } catch (Exception e) {
+            } catch (Throwable e) {
+                // Catch Throwable, not just Exception: a single oversized legacy photo can throw
+                // OutOfMemoryError during decode, which is an Error — left uncaught, that crashes
+                // the whole application boot instead of just skipping one photo.
                 log.warn("Failed to resize photo for player {}: {}", id, e.getMessage());
             }
         }
