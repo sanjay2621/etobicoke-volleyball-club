@@ -276,11 +276,15 @@ export type MatchResponse = {
   scheduledStart?: string | null;
   homeTeamId?: number | null;
   homeTeamName?: string | null;
+  homeTshirtColor?: string | null;
   awayTeamId?: number | null;
   awayTeamName?: string | null;
+  awayTshirtColor?: string | null;
   bracketSlot?: string | null;
   status: 'SCHEDULED' | 'IN_PROGRESS' | 'COMPLETE';
   winnerTeamId?: number | null;
+  liveHomePoints: number;
+  liveAwayPoints: number;
   sets: MatchSetDto[];
 };
 

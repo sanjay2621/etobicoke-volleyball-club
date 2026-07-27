@@ -220,8 +220,9 @@ public class ScheduleService {
     @Transactional(readOnly = true)
     public List<MatchResponse> getSchedule(Long tournamentId) {
         Map<Long, String> names = teamNames(tournamentId);
+        Map<Long, Team> teams = teamsById(tournamentId);
         return matchRepository.findByTournamentIdOrderByScheduledStartAscCourtAsc(tournamentId).stream()
-                .map(m -> toResponse(m, names))
+                .map(m -> toResponse(m, names, teams))
                 .toList();
     }
 
@@ -341,6 +342,13 @@ public class ScheduleService {
         return names;
     }
 
+    private Map<Long, Team> teamsById(Long tournamentId) {
+        Map<Long, Team> teams = new LinkedHashMap<>();
+        teamRepository.findByTournamentIdOrderBySeedAscNameAsc(tournamentId)
+                .forEach(t -> teams.put(t.getId(), t));
+        return teams;
+    }
+
     private static String snakeGroup(int seedIndex) {
         int cycle = seedIndex % 4;
         return (cycle == 0 || cycle == 3) ? "A" : "B";
@@ -354,8 +362,54 @@ public class ScheduleService {
                 m.getId(), m.getStage().name(), m.getGroupLabel(), m.getRoundNumber(), m.getCourt(),
                 m.getScheduledStart(),
                 m.getHomeTeamId(), m.getHomeTeamId() == null ? labelFor(m.getHomeSource()) : names.get(m.getHomeTeamId()),
+                null,
                 m.getAwayTeamId(), m.getAwayTeamId() == null ? labelFor(m.getAwaySource()) : names.get(m.getAwayTeamId()),
-                m.getBracketSlot(), m.getStatus().name(), m.getWinnerTeamId(), sets);
+                null,
+                m.getBracketSlot(), m.getStatus().name(), m.getWinnerTeamId(),
+                m.getLiveHomePoints(), m.getLiveAwayPoints(), sets);
+    }
+
+    private MatchResponse toResponse(Match m, Map<Long, String> names, Map<Long, Team> teams) {
+        List<MatchSetDto> sets = matchSetRepository.findByMatchIdOrderBySetNumberAsc(m.getId()).stream()
+                .map(s -> new MatchSetDto(s.getSetNumber(), s.getHomePoints(), s.getAwayPoints()))
+                .toList();
+        Team home = m.getHomeTeamId() == null ? null : teams.get(m.getHomeTeamId());
+        Team away = m.getAwayTeamId() == null ? null : teams.get(m.getAwayTeamId());
+        return new MatchResponse(
+                m.getId(), m.getStage().name(), m.getGroupLabel(), m.getRoundNumber(), m.getCourt(),
+                m.getScheduledStart(),
+                m.getHomeTeamId(), m.getHomeTeamId() == null ? labelFor(m.getHomeSource()) : names.get(m.getHomeTeamId()),
+                home == null ? null : home.getTshirtColor(),
+                m.getAwayTeamId(), m.getAwayTeamId() == null ? labelFor(m.getAwaySource()) : names.get(m.getAwayTeamId()),
+                away == null ? null : away.getTshirtColor(),
+                m.getBracketSlot(), m.getStatus().name(), m.getWinnerTeamId(),
+                m.getLiveHomePoints(), m.getLiveAwayPoints(), sets);
+    }
+
+    // ---------- Live score ----------
+
+    @Transactional
+    public MatchResponse adjustLiveScore(Long matchId, String side, int delta) {
+        Match match = matchRepository.findById(matchId)
+                .orElseThrow(() -> NotFoundException.of("Match", matchId));
+        if (match.getHomeTeamId() == null || match.getAwayTeamId() == null) {
+            throw new ApiException(HttpStatus.BAD_REQUEST, "Both teams must be set before live-scoring");
+        }
+        if (match.getStatus() == MatchStatus.COMPLETE) {
+            throw new ApiException(HttpStatus.BAD_REQUEST, "Match is already complete");
+        }
+        if (match.getStatus() == MatchStatus.SCHEDULED) {
+            match.setStatus(MatchStatus.IN_PROGRESS);
+        }
+        if ("HOME".equals(side)) {
+            match.setLiveHomePoints(Math.max(0, match.getLiveHomePoints() + delta));
+        } else if ("AWAY".equals(side)) {
+            match.setLiveAwayPoints(Math.max(0, match.getLiveAwayPoints() + delta));
+        } else {
+            throw new ApiException(HttpStatus.BAD_REQUEST, "side must be HOME or AWAY");
+        }
+        matchRepository.save(match);
+        return toResponse(match, teamNames(match.getTournamentId()), teamsById(match.getTournamentId()));
     }
 
     private static String labelFor(String source) {

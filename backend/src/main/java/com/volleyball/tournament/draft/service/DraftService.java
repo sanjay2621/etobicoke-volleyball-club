@@ -88,6 +88,7 @@ public class DraftService {
         member.setPlayerId(playerId);
         member.setDraftRound(draft.getCurrentRound());
         teamMemberRepository.save(member);
+        teamService.notifyIfRosterComplete(teamOnClock);
 
         advance(draft, teams.size());
         draftRepository.save(draft);

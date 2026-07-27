@@ -15,6 +15,44 @@
   font-family: 'Poppins', sans-serif;
 }
 
+/* Live scoreboard */
+.scoreboard {
+  display: flex;
+  flex-direction: column;
+  min-height: 60vh;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid rgba(15, 29, 53, 0.12);
+}
+
+.scoreboardHalf {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 16px;
+}
+
+.scoreboardDivider {
+  height: 2px;
+  background: rgba(15, 29, 53, 0.15);
+}
+
+.scoreboardTeam {
+  font-weight: 800;
+  font-size: clamp(1.25rem, 3vw, 2.25rem);
+  max-width: 90%;
+  text-align: center;
+}
+
+.scoreboardPoints {
+  font-weight: 900;
+  line-height: 1;
+  font-size: clamp(5rem, 18vw, 14rem);
+}
+
 /* Rules dialog */
 .rulesPreviewBox {
   position: relative;

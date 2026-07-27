@@ -25,6 +25,7 @@ import HowToRegIcon from '@mui/icons-material/HowToReg';
 import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
 import CheckroomIcon from '@mui/icons-material/Checkroom';
 import MonetizationOnIcon from '@mui/icons-material/MonetizationOn';
+import ScoreboardIcon from '@mui/icons-material/Scoreboard';
 import { useAuth } from '../../auth/AuthContext';
 import styles from './AdminLayout.module.css';
 
@@ -37,6 +38,7 @@ const NAV = [
   { to: '/admin/toss', label: 'Coin Toss', icon: <MonetizationOnIcon /> },
   { to: '/admin/draft', label: 'Draft', icon: <HowToRegIcon /> },
   { to: '/admin/schedule', label: 'Schedule', icon: <CalendarMonthIcon /> },
+  { to: '/admin/live-score', label: 'Live Score', icon: <ScoreboardIcon /> },
   { to: '/admin/tshirts', label: 'T-Shirts', icon: <CheckroomIcon /> },
 ];
 

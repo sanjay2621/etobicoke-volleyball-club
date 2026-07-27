@@ -1,0 +1,32 @@
+.tournamentSelect {
+  min-width: 200px;
+}
+
+.teamCard {
+  min-height: 320px;
+}
+
+.teamCardContent {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 100%;
+  text-align: center;
+}
+
+.teamName {
+  font-weight: 700;
+}
+
+.scoreNumber {
+  font-weight: 900;
+  font-size: clamp(3rem, 8vw, 6rem);
+  line-height: 1;
+  margin: 8px 0;
+}
+
+.scoreBtn {
+  border: 2px solid currentColor;
+}

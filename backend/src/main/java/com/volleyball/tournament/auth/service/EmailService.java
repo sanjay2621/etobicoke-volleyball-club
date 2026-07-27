@@ -54,6 +54,36 @@ public class EmailService {
         }
     }
 
+    public void sendRosterCompleteEmail(String toEmail, String firstName, String tournamentName,
+                                         String teamName, String tshirtColor, String captainName,
+                                         List<String> rosterNames) {
+        String roster = String.join("\n", rosterNames.stream().map(n -> "  - " + n).toList());
+        Map<String, Object> body = Map.of(
+                "sender",      Map.of("email", FROM_EMAIL, "name", FROM_NAME),
+                "to",          List.of(Map.of("email", toEmail)),
+                "subject",     "Your team is set — " + teamName + " (" + tournamentName + ")",
+                "textContent", "Hi " + firstName + ",\n\n" +
+                               "Your roster for " + tournamentName + " is complete! Here are your team details:\n\n" +
+                               "Team: " + teamName + "\n" +
+                               "T-shirt color: " + (tshirtColor != null ? tshirtColor : "TBD") + "\n" +
+                               "Captain: " + (captainName != null ? captainName : "TBD") + "\n\n" +
+                               "Roster:\n" + roster + "\n\n" +
+                               "— Nilkanth Volleyball Club"
+        );
+        try {
+            restClient.post()
+                    .uri("/smtp/email")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .body(body)
+                    .retrieve()
+                    .toBodilessEntity();
+        } catch (RestClientException ex) {
+            log.error("Failed to send roster-complete email to {} via Brevo API: {}", toEmail, ex.getMessage(), ex);
+            throw new ApiException(HttpStatus.SERVICE_UNAVAILABLE,
+                    "Could not send the team roster email. Please try again later.");
+        }
+    }
+
     public void sendApprovalNotice(String toEmail, String firstName) {
         Map<String, Object> body = Map.of(
                 "sender",      Map.of("email", FROM_EMAIL, "name", FROM_NAME),

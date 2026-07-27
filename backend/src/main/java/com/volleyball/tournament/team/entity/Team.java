@@ -37,4 +37,7 @@ public class Team extends BaseEntity {
 
     @Column(name = "tshirt_color", length = 50)
     private String tshirtColor;
+
+    @Column(name = "roster_complete_email_sent", nullable = false)
+    private boolean rosterCompleteEmailSent = false;
 }

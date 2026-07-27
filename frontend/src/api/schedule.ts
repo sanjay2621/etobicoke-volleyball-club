@@ -36,6 +36,18 @@ export function usePublicStandings(tournamentId: number | null) {
   });
 }
 
+/** Polls the public schedule and returns only matches currently live, for the home-page scoreboard. */
+export function usePublicLiveMatches(tournamentId: number | null) {
+  return useQuery({
+    queryKey: ['schedule', 'public', tournamentId, 'live'],
+    queryFn: () =>
+      api.get<MatchResponse[]>(`/schedule/public/${tournamentId}`)
+        .then((r) => r.data.filter((m) => m.status === 'IN_PROGRESS')),
+    enabled: tournamentId != null,
+    refetchInterval: 3000,
+  });
+}
+
 function useScheduleMutation<T>(fn: (arg: T) => Promise<unknown>) {
   const qc = useQueryClient();
   return useMutation({
@@ -56,4 +68,9 @@ export const useGeneratePlayoffs = () =>
 export const useRecordResult = () =>
   useScheduleMutation(({ matchId, sets }: { matchId: number; sets: MatchSetDto[] }) =>
     api.put(`/matches/${matchId}/result`, { sets }),
+  );
+
+export const useAdjustLiveScore = () =>
+  useScheduleMutation(({ matchId, side, delta }: { matchId: number; side: 'HOME' | 'AWAY'; delta: number }) =>
+    api.patch(`/matches/${matchId}/live-score`, { side, delta }),
   );

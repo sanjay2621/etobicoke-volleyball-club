@@ -36,8 +36,9 @@ import SportsVolleyballIcon from '@mui/icons-material/SportsVolleyball';
 import StarIcon from '@mui/icons-material/Star';
 import { useActivePublicTournaments } from '../../api/tournaments';
 import { usePublicTeams } from '../../api/teams';
-import { usePublicSchedule, usePublicStandings } from '../../api/schedule';
+import { usePublicSchedule, usePublicStandings, usePublicLiveMatches } from '../../api/schedule';
 import type { MatchResponse, PublicTeam, StandingGroup, Tournament } from '../../types';
+import { TSHIRT_COLORS } from '../../types';
 import styles from './HomePage.module.css';
 
 function isRegistrationClosed(t: Tournament): boolean {
@@ -231,11 +232,13 @@ export function HomePage() {
               <Tab label="Teams" />
               <Tab label="Schedule & Results" />
               <Tab label="Standings" />
+              <Tab label="Live Score" />
             </Tabs>
 
             {tab === 0 && <TeamsSection tournamentId={tournamentId} />}
             {tab === 1 && <ScheduleSection tournamentId={tournamentId} />}
             {tab === 2 && <StandingsSection tournamentId={tournamentId} />}
+            {tab === 3 && <LiveScoreSection tournamentId={tournamentId} />}
           </>
         )}
       </Container>
@@ -431,6 +434,64 @@ function MatchTable({ matches, showGroup }: { matches: MatchResponse[]; showGrou
         </TableBody>
       </Table>
     </TableContainer>
+  );
+}
+
+const TSHIRT_COLOR_HEX = new Map(TSHIRT_COLORS.map((c) => [c.label, c.hex]));
+
+function LiveScoreSection({ tournamentId }: { tournamentId: number | null }) {
+  const { data: liveMatches } = usePublicLiveMatches(tournamentId);
+  const [selectedId, setSelectedId] = useState<number | null>(null);
+
+  const matches = liveMatches ?? [];
+  const current = matches.find((m) => m.id === selectedId) ?? matches[0] ?? null;
+
+  if (matches.length === 0) {
+    return (
+      <Typography color="text.secondary" textAlign="center" py={6}>
+        No match is live right now — check back once play starts.
+      </Typography>
+    );
+  }
+
+  return (
+    <Box>
+      {matches.length > 1 && (
+        <Stack direction="row" spacing={1} flexWrap="wrap" mb={2} justifyContent="center">
+          {matches.map((m) => (
+            <Chip
+              key={m.id}
+              label={`${m.homeTeamName} vs ${m.awayTeamName}${m.court != null ? ` — Court ${m.court}` : ''}`}
+              color={current?.id === m.id ? 'primary' : 'default'}
+              onClick={() => setSelectedId(m.id)}
+            />
+          ))}
+        </Stack>
+      )}
+      {current && <LiveScoreboard match={current} />}
+    </Box>
+  );
+}
+
+function LiveScoreboard({ match }: { match: MatchResponse }) {
+  const homeColor = (match.homeTshirtColor && TSHIRT_COLOR_HEX.get(match.homeTshirtColor)) || '#1A2B4A';
+  const awayColor = (match.awayTshirtColor && TSHIRT_COLOR_HEX.get(match.awayTshirtColor)) || '#FF6B35';
+  return (
+    <Box className={styles.scoreboard}>
+      <Box className={styles.scoreboardHalf} style={{ color: homeColor }}>
+        <Typography className={styles.scoreboardTeam}>
+          <TruncatedText text={match.homeTeamName ?? 'TBD'} />
+        </Typography>
+        <Typography className={styles.scoreboardPoints}>{match.liveHomePoints}</Typography>
+      </Box>
+      <Box className={styles.scoreboardDivider} />
+      <Box className={styles.scoreboardHalf} style={{ color: awayColor }}>
+        <Typography className={styles.scoreboardTeam}>
+          <TruncatedText text={match.awayTeamName ?? 'TBD'} />
+        </Typography>
+        <Typography className={styles.scoreboardPoints}>{match.liveAwayPoints}</Typography>
+      </Box>
+    </Box>
   );
 }
 

@@ -1,5 +1,6 @@
 package com.volleyball.tournament.team.service;
 
+import com.volleyball.tournament.auth.service.EmailService;
 import com.volleyball.tournament.common.exception.ApiException;
 import com.volleyball.tournament.common.exception.NotFoundException;
 import com.volleyball.tournament.player.entity.ApprovalStatus;
@@ -15,16 +16,19 @@ import com.volleyball.tournament.team.model.TeamRequest;
 import com.volleyball.tournament.team.model.TeamResponse;
 import com.volleyball.tournament.team.repository.TeamMemberRepository;
 import com.volleyball.tournament.team.repository.TeamRepository;
+import com.volleyball.tournament.tournament.entity.Tournament;
 import com.volleyball.tournament.tournament.service.TournamentService;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class TeamService {
@@ -33,6 +37,7 @@ public class TeamService {
     private final TeamMemberRepository teamMemberRepository;
     private final PlayerRepository playerRepository;
     private final TournamentService tournamentService;
+    private final EmailService emailService;
 
     @Transactional(readOnly = true)
     public List<TeamResponse> listByTournament(Long tournamentId) {
@@ -117,7 +122,52 @@ public class TeamService {
         member.setPlayerId(player.getId());
         member.setDraftRound(req.draftRound());
         teamMemberRepository.save(member);
+        notifyIfRosterComplete(teamId);
         return toResponse(getEntity(teamId));
+    }
+
+    /**
+     * Fires a one-time "your team is set" email to every roster member once the team reaches the
+     * tournament's configured roster size. Guarded by {@code rosterCompleteEmailSent} so trimming
+     * and re-filling a roster later doesn't re-notify. Called after every roster-mutating path
+     * (manual add here, and {@link com.volleyball.tournament.draft.service.DraftService#pick}).
+     */
+    @Transactional
+    public void notifyIfRosterComplete(Long teamId) {
+        Team team = getEntity(teamId);
+        if (team.isRosterCompleteEmailSent()) {
+            return;
+        }
+        List<TeamMember> members = teamMemberRepository.findByTeamId(teamId);
+        Tournament tournament = tournamentService.getEntity(team.getTournamentId());
+        if (members.size() < tournament.getTargetRosterSize()) {
+            return;
+        }
+
+        Map<Long, Player> players = players(members.stream().map(TeamMember::getPlayerId).toList());
+        List<Player> roster = members.stream()
+                .map(m -> players.get(m.getPlayerId()))
+                .filter(java.util.Objects::nonNull)
+                .toList();
+        String captainName = team.getCaptainPlayerId() != null && players.containsKey(team.getCaptainPlayerId())
+                ? fullName(players.get(team.getCaptainPlayerId()))
+                : null;
+        List<String> rosterNames = roster.stream().map(TeamService::fullName).toList();
+
+        for (Player p : roster) {
+            if (p.getEmail() == null || p.getEmail().isBlank()) {
+                continue;
+            }
+            try {
+                emailService.sendRosterCompleteEmail(p.getEmail(), p.getFirstName(), tournament.getName(),
+                        team.getName(), team.getTshirtColor(), captainName, rosterNames);
+            } catch (RuntimeException ex) {
+                log.warn("Roster-complete email failed for player {} on team {}: {}",
+                        p.getId(), team.getId(), ex.getMessage());
+            }
+        }
+        team.setRosterCompleteEmailSent(true);
+        teamRepository.save(team);
     }
 
     @Transactional

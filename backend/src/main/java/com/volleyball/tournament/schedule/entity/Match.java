@@ -61,4 +61,10 @@ public class Match extends BaseEntity {
 
     @Column(name = "winner_team_id")
     private Long winnerTeamId;
+
+    @Column(name = "live_home_points", nullable = false)
+    private int liveHomePoints = 0;
+
+    @Column(name = "live_away_points", nullable = false)
+    private int liveAwayPoints = 0;
 }

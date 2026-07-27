@@ -1,0 +1,1 @@
+ALTER TABLE team ADD COLUMN roster_complete_email_sent BOOLEAN NOT NULL DEFAULT FALSE;

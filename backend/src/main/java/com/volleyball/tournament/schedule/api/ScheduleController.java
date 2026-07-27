@@ -1,5 +1,6 @@
 package com.volleyball.tournament.schedule.api;
 
+import com.volleyball.tournament.schedule.model.LiveScoreAdjustRequest;
 import com.volleyball.tournament.schedule.model.MatchResponse;
 import com.volleyball.tournament.schedule.model.RecordResultRequest;
 import com.volleyball.tournament.schedule.model.StandingResponse;
@@ -10,6 +11,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -71,5 +73,12 @@ public class ScheduleController {
     @PreAuthorize("hasRole('ADMIN')")
     public MatchResponse recordResult(@PathVariable Long matchId, @Valid @RequestBody RecordResultRequest req) {
         return scheduleService.recordResult(matchId, req);
+    }
+
+    /** Referees use this from the admin panel to bump a team's current live point count. */
+    @PatchMapping("/matches/{matchId}/live-score")
+    @PreAuthorize("hasRole('ADMIN')")
+    public MatchResponse adjustLiveScore(@PathVariable Long matchId, @Valid @RequestBody LiveScoreAdjustRequest req) {
+        return scheduleService.adjustLiveScore(matchId, req.side(), req.delta());
     }
 }

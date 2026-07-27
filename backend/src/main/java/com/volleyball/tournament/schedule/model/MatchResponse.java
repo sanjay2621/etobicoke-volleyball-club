@@ -12,10 +12,14 @@ public record MatchResponse(
         LocalDateTime scheduledStart,
         Long homeTeamId,
         String homeTeamName,
+        String homeTshirtColor,
         Long awayTeamId,
         String awayTeamName,
+        String awayTshirtColor,
         String bracketSlot,
         String status,
         Long winnerTeamId,
+        int liveHomePoints,
+        int liveAwayPoints,
         List<MatchSetDto> sets) {
 }
