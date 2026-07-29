@@ -15,6 +15,12 @@ import org.springframework.transaction.annotation.Transactional;
  * One-time-per-boot cleanup: re-encodes any player photo stored before server-side resizing was
  * added (readPhoto now downscales on upload). Threshold-gated and idempotent — once a photo has
  * been resized it lands well under the threshold, so later boots find nothing to do.
+ *
+ * <p>Processes at most {@link #MAX_PER_BOOT} photos per run, with a short pause between each, to
+ * keep peak memory low on small containers — observed to intermittently trigger an OS-level
+ * cgroup OOM-kill (not a catchable {@link OutOfMemoryError}) when churning through dozens of
+ * multi-megabyte decodes back-to-back on a memory-constrained host. Remaining photos are picked up
+ * on the next boot since the threshold gate makes this safely resumable.
  */
 @Slf4j
 @Component
@@ -23,6 +29,12 @@ public class PlayerPhotoBackfillRunner implements ApplicationRunner {
 
     /** Resized photos land well under this; anything above it predates the resize. */
     private static final long BACKFILL_THRESHOLD_BYTES = 200_000;
+
+    /** Caps peak memory per boot; remaining photos are picked up on the next boot. */
+    private static final int MAX_PER_BOOT = 10;
+
+    /** Lets GC reclaim decode buffers between photos instead of piling up back-to-back. */
+    private static final long PAUSE_BETWEEN_MILLIS = 300;
 
     private final PlayerRepository playerRepository;
     private final FileStorageService fileStorageService;
@@ -33,9 +45,11 @@ public class PlayerPhotoBackfillRunner implements ApplicationRunner {
         if (ids.isEmpty()) {
             return;
         }
-        log.info("Resizing {} oversized player photo(s) uploaded before compression was added", ids.size());
+        List<Long> batch = ids.size() > MAX_PER_BOOT ? ids.subList(0, MAX_PER_BOOT) : ids;
+        log.info("Resizing {} of {} oversized player photo(s) uploaded before compression was added",
+                batch.size(), ids.size());
         int resized = 0;
-        for (Long id : ids) {
+        for (Long id : batch) {
             try {
                 resizeOne(id);
                 resized++;
@@ -45,8 +59,15 @@ public class PlayerPhotoBackfillRunner implements ApplicationRunner {
                 // the whole application boot instead of just skipping one photo.
                 log.warn("Failed to resize photo for player {}: {}", id, e.getMessage());
             }
+            try {
+                Thread.sleep(PAUSE_BETWEEN_MILLIS);
+            } catch (InterruptedException ie) {
+                Thread.currentThread().interrupt();
+                break;
+            }
         }
-        log.info("Player photo backfill complete: {}/{} resized", resized, ids.size());
+        log.info("Player photo backfill batch complete: {}/{} resized ({} remaining)",
+                resized, batch.size(), ids.size() - batch.size());
     }
 
     @Transactional
