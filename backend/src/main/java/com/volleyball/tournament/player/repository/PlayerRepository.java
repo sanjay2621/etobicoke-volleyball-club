@@ -50,11 +50,24 @@ public interface PlayerRepository extends JpaRepository<Player, Long> {
             + "p.photo_consent AS photoConsent, p.dietary_notes AS dietaryNotes, p.gender AS gender, "
             + "p.date_of_birth AS dateOfBirth, p.payment_status AS paymentStatus, p.notes AS notes, "
             + "p.manual_entry AS manualEntry, (p.photo_content_type IS NOT NULL) AS hasPhoto, "
-            + "p.approval_status AS approvalStatus, p.rejection_reason AS rejectionReason "
+            + "p.approval_status AS approvalStatus, p.rejection_reason AS rejectionReason, "
+            + "p.draft_priority AS draftPriority "
             + "FROM player p WHERE p.tournament_id = :tournamentId AND p.deleted = false "
             + "ORDER BY p.last_name, p.first_name",
             nativeQuery = true)
     List<PlayerListProjection> findListRowsByTournamentId(@Param("tournamentId") Long tournamentId);
+
+    /**
+     * True if the tournament still has an approved, undrafted player flagged as draft priority —
+     * used by {@link com.volleyball.tournament.draft.service.DraftService} to gate picks of
+     * non-priority players until the priority pool is exhausted.
+     */
+    @Query(value = "SELECT EXISTS (SELECT 1 FROM player p WHERE p.tournament_id = :tournamentId "
+            + "AND p.deleted = false AND p.approval_status = 'APPROVED' AND p.draft_priority = true "
+            + "AND p.id NOT IN (SELECT tm.player_id FROM team_member tm "
+            + "JOIN team t ON t.id = tm.team_id WHERE t.tournament_id = :tournamentId))",
+            nativeQuery = true)
+    boolean existsUndraftedPriorityPlayer(@Param("tournamentId") Long tournamentId);
 
     /** Position rows for a batch of players, for assembling {@link PlayerListProjection} results. */
     @Query(value = "SELECT player_id, position FROM player_position WHERE player_id IN :playerIds",

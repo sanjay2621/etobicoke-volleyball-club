@@ -135,6 +135,15 @@ public class PlayerController {
         return playerService.setApprovalStatus(id, status, body.get("reason"));
     }
 
+    /** Admin flags or unflags a player as a draft priority pick. */
+    @PatchMapping("/{id}/priority")
+    @PreAuthorize("hasRole('ADMIN')")
+    public PlayerResponse setDraftPriority(
+            @PathVariable Long id,
+            @RequestBody java.util.Map<String, Boolean> body) {
+        return playerService.setDraftPriority(id, Boolean.TRUE.equals(body.get("priority")));
+    }
+
     /** Player uploads or replaces their own photo. */
     @PostMapping(value = "/me/photo", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public PlayerResponse uploadMyPhoto(@RequestPart("photo") MultipartFile photo) {

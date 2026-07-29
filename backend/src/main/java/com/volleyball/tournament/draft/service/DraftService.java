@@ -82,6 +82,9 @@ public class DraftService {
         if (teamMemberRepository.existsByPlayerIdAndTeamIdIn(playerId, teamIds)) {
             throw new ApiException(HttpStatus.CONFLICT, "Player has already been drafted");
         }
+        if (!player.isDraftPriority() && playerRepository.existsUndraftedPriorityPlayer(tournamentId)) {
+            throw new ApiException(HttpStatus.BAD_REQUEST, "Priority players must be drafted first");
+        }
 
         TeamMember member = new TeamMember();
         member.setTeamId(teamOnClock);

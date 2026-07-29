@@ -40,4 +40,5 @@ public interface PlayerListProjection {
     boolean isHasPhoto();
     String getApprovalStatus();
     String getRejectionReason();
+    boolean isDraftPriority();
 }

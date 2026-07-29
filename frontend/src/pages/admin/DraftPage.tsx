@@ -160,44 +160,62 @@ export function DraftPage() {
         <Grid item xs={12} md={5}>
           {(() => {
             const draftable = draft?.availablePlayers.filter((p) => !p.preferredPositions.includes('REFEREE')) ?? [];
+            const priorityPlayers = draftable.filter((p) => p.draftPriority);
+            const remainingPlayers = draftable.filter((p) => !p.draftPriority);
+            const priorityPending = priorityPlayers.length > 0;
+
+            const renderList = (list: typeof draftable, disabledHint?: string) => (
+              <Paper variant="outlined" className={styles.availableList}>
+                <List dense>
+                  {list.map((p) => (
+                    <ListItem
+                      key={p.id}
+                      secondaryAction={
+                        <Button
+                          size="small"
+                          variant="contained"
+                          disabled={!inProgress || pick.isPending || !!disabledHint}
+                          onClick={() => onPick(p.id)}
+                        >
+                          Draft
+                        </Button>
+                      }
+                    >
+                      <ListItemAvatar>
+                        <Avatar src={p.photoUrl ?? undefined} className={styles.avatar} />
+                      </ListItemAvatar>
+                      <ListItemText
+                        primary={<TruncatedText text={p.fullName} />}
+                        secondary={<TruncatedText text={`${p.preferredPositions.join(', ')}${p.skillLevel ? ' · ' + p.skillLevel : ''}`} />}
+                        sx={{ minWidth: 0 }}
+                      />
+                    </ListItem>
+                  ))}
+                  {list.length === 0 && (
+                    <ListItem>
+                      <ListItemText primary="None." />
+                    </ListItem>
+                  )}
+                </List>
+              </Paper>
+            );
+
             return (
               <>
                 <Typography variant="h6" gutterBottom>
-                  Available players ({draftable.length})
+                  Priority players ({priorityPlayers.length})
                 </Typography>
-                <Paper variant="outlined" className={styles.availableList}>
-                  <List dense>
-                    {draftable.map((p) => (
-                      <ListItem
-                        key={p.id}
-                        secondaryAction={
-                          <Button
-                            size="small"
-                            variant="contained"
-                            disabled={!inProgress || pick.isPending}
-                            onClick={() => onPick(p.id)}
-                          >
-                            Draft
-                          </Button>
-                        }
-                      >
-                        <ListItemAvatar>
-                          <Avatar src={p.photoUrl ?? undefined} className={styles.avatar} />
-                        </ListItemAvatar>
-                        <ListItemText
-                          primary={<TruncatedText text={p.fullName} />}
-                          secondary={<TruncatedText text={`${p.preferredPositions.join(', ')}${p.skillLevel ? ' · ' + p.skillLevel : ''}`} />}
-                          sx={{ minWidth: 0 }}
-                        />
-                      </ListItem>
-                    ))}
-                    {draftable.length === 0 && (
-                      <ListItem>
-                        <ListItemText primary="No players available." />
-                      </ListItem>
-                    )}
-                  </List>
-                </Paper>
+                {renderList(priorityPlayers)}
+
+                <Typography variant="h6" gutterBottom mt={2}>
+                  Remaining players ({remainingPlayers.length})
+                </Typography>
+                {priorityPending && (
+                  <Alert severity="info" className={styles.errorAlert}>
+                    Draft all priority players first.
+                  </Alert>
+                )}
+                {renderList(remainingPlayers, priorityPending ? 'Draft priority players first' : undefined)}
               </>
             );
           })()}

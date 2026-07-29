@@ -36,5 +36,6 @@ public record PlayerResponse(
         boolean manualEntry,
         boolean hasAccount,
         ApprovalStatus approvalStatus,
-        String rejectionReason) {
+        String rejectionReason,
+        boolean draftPriority) {
 }

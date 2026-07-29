@@ -104,6 +104,16 @@ export function useSetApprovalStatus() {
   });
 }
 
+/** Admin flags or unflags a player as a draft priority pick. */
+export function useSetDraftPriority() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, priority }: { id: number; priority: boolean }) =>
+      api.patch<Player>(`/players/${id}/priority`, { priority }).then((r) => fixPlayer(r.data)),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['players'] }),
+  });
+}
+
 /** Admin copies a player's info into another tournament without the player re-registering. */
 export function useCopyPlayerToTournament() {
   const qc = useQueryClient();

@@ -31,6 +31,8 @@ import DownloadIcon from '@mui/icons-material/Download';
 import EditIcon from '@mui/icons-material/Edit';
 import CancelIcon from '@mui/icons-material/Cancel';
 import SearchIcon from '@mui/icons-material/Search';
+import StarIcon from '@mui/icons-material/Star';
+import StarBorderIcon from '@mui/icons-material/StarBorder';
 import { useActiveTournaments } from '../../api/tournaments';
 import { useDeletePlayer, usePlayers, useUploadPlayerPhoto } from '../../api/players';
 import { useTeams } from '../../api/teams';
@@ -39,6 +41,7 @@ import type { Player } from '../../types';
 import { PlayerEditDialog } from './PlayerEditDialog';
 import { CopyPlayerDialog } from './CopyPlayerDialog';
 import { ApprovalDialog } from './ApprovalDialog';
+import { PriorityDialog } from './PriorityDialog';
 import styles from './PlayersPage.module.css';
 
 const approvalColor: Record<Player['approvalStatus'], 'success' | 'error' | 'warning'> = {
@@ -59,6 +62,7 @@ export function PlayersPage() {
   const [editing, setEditing] = useState<Player | null>(null);
   const [copying, setCopying] = useState<Player[]>([]);
   const [approving, setApproving] = useState<{ players: Player[]; action: 'APPROVED' | 'REJECTED' | null }>({ players: [], action: null });
+  const [markingPriority, setMarkingPriority] = useState<{ players: Player[]; action: 'MARK' | 'UNMARK' | null }>({ players: [], action: null });
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
   const [search, setSearch] = useState('');
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
@@ -188,6 +192,22 @@ export function PlayersPage() {
           </Button>
           <Button
             variant="outlined"
+            startIcon={<StarIcon />}
+            disabled={selectedPlayers.length === 0}
+            onClick={() => setMarkingPriority({ players: selectedPlayers, action: 'MARK' })}
+          >
+            Mark priority{selectedPlayers.length > 0 ? ` (${selectedPlayers.length})` : ''}
+          </Button>
+          <Button
+            variant="outlined"
+            startIcon={<StarBorderIcon />}
+            disabled={selectedPlayers.length === 0}
+            onClick={() => setMarkingPriority({ players: selectedPlayers, action: 'UNMARK' })}
+          >
+            Unmark priority{selectedPlayers.length > 0 ? ` (${selectedPlayers.length})` : ''}
+          </Button>
+          <Button
+            variant="outlined"
             startIcon={<ContentCopyIcon />}
             disabled={selectedPlayers.length === 0}
             onClick={() => setCopying(selectedPlayers)}
@@ -308,7 +328,16 @@ export function PlayersPage() {
                     </Tooltip>
                   </Box>
                 </TableCell>
-                <TableCell sx={{ maxWidth: 120 }}><TruncatedText text={p.firstName} /></TableCell>
+                <TableCell sx={{ maxWidth: 120 }}>
+                  <Stack direction="row" spacing={0.5} alignItems="center">
+                    {p.draftPriority && (
+                      <Tooltip title="Draft priority">
+                        <StarIcon fontSize="small" color="warning" />
+                      </Tooltip>
+                    )}
+                    <TruncatedText text={p.firstName} />
+                  </Stack>
+                </TableCell>
                 <TableCell sx={{ maxWidth: 120 }}><TruncatedText text={p.lastName} /></TableCell>
                 <TableCell>
                   <Stack direction="row" spacing={0.5} className={styles.positionsCell}>
@@ -416,6 +445,14 @@ export function PlayersPage() {
         action={approving.action}
         onClose={() => {
           setApproving({ players: [], action: null });
+          setSelectedIds(new Set());
+        }}
+      />
+      <PriorityDialog
+        players={markingPriority.players}
+        action={markingPriority.action}
+        onClose={() => {
+          setMarkingPriority({ players: [], action: null });
           setSelectedIds(new Set());
         }}
       />

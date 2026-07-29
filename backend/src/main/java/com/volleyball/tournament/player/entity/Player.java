@@ -111,4 +111,8 @@ public class Player extends BaseEntity {
 
     @Column(name = "rejection_reason", length = 500)
     private String rejectionReason;
+
+    /** Admin-flagged "good player" — must be drafted before the remaining pool opens up. */
+    @Column(name = "draft_priority", nullable = false)
+    private boolean draftPriority = false;
 }

@@ -87,6 +87,7 @@ export type Player = {
   hasAccount: boolean;
   approvalStatus: ApprovalStatus;
   rejectionReason?: string | null;
+  draftPriority: boolean;
 };
 
 export type PlayerRegistrationRequest = {

@@ -192,6 +192,14 @@ public class PlayerService {
         return toResponse(saved);
     }
 
+    /** Admin flags or unflags a player as a draft priority pick. */
+    @Transactional
+    public PlayerResponse setDraftPriority(Long playerId, boolean priority) {
+        Player player = getEntity(playerId);
+        player.setDraftPriority(priority);
+        return toResponse(playerRepository.save(player));
+    }
+
     /**
      * List/export views don't render raw photo bytes, so they read through
      * {@link PlayerRepository#findListRowsByTournamentId} (excludes photo_data) instead of the full
@@ -277,7 +285,8 @@ public class PlayerService {
                 com.volleyball.tournament.player.entity.PaymentStatus.valueOf(row.getPaymentStatus()),
                 row.getNotes(), row.isManualEntry(),
                 userAccountRepository.existsByPlayerId(row.getId()),
-                ApprovalStatus.valueOf(row.getApprovalStatus()), row.getRejectionReason());
+                ApprovalStatus.valueOf(row.getApprovalStatus()), row.getRejectionReason(),
+                row.isDraftPriority());
     }
 
     @Transactional(readOnly = true)
