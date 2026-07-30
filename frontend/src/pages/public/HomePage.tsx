@@ -57,9 +57,9 @@ export function HomePage() {
   const [tab, setTab] = useState(0);
   const [rulesOpen, setRulesOpen] = useState(false);
 
-  // Default to the newest tournament (latest date) once the list loads.
+  // Default to the soonest upcoming tournament once the list loads.
   const sorted = useMemo(
-    () => [...(tournaments ?? [])].sort((a, b) => (a.date < b.date ? 1 : -1)),
+    () => [...(tournaments ?? [])].sort((a, b) => (a.date < b.date ? -1 : 1)),
     [tournaments],
   );
   const tournamentId = selectedId ?? sorted[0]?.id ?? null;
