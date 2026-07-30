@@ -20,10 +20,11 @@ export function usePublicTournaments() {
 
 const isUpcoming = (t: Tournament) => t.date >= new Date().toISOString().slice(0, 10);
 
-/** Admin hook — upcoming tournaments only (today or future). */
+/** Admin hook — upcoming tournaments only (today or future), soonest first so dropdowns default sensibly. */
 export function useActiveTournaments() {
   const q = useTournaments();
-  return { ...q, data: q.data?.filter(isUpcoming) };
+  const data = q.data?.filter(isUpcoming).slice().sort((a, b) => a.date.localeCompare(b.date));
+  return { ...q, data };
 }
 
 /** Public hook — upcoming tournaments only (today or future), soonest first, capped to 5 for the dropdown. */
