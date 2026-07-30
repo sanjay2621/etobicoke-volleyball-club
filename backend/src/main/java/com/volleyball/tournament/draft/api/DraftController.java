@@ -33,6 +33,6 @@ public class DraftController {
 
     @PostMapping("/{tournamentId}/pick")
     public DraftStateResponse pick(@PathVariable Long tournamentId, @Valid @RequestBody PickRequest req) {
-        return draftService.pick(tournamentId, req.playerId());
+        return draftService.pick(tournamentId, req.playerId(), req.teamId());
     }
 }

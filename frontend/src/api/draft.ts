@@ -19,11 +19,10 @@ export function useDraftState(tournamentId: number | null) {
   });
 }
 
-function useDraftMutation(fn: (tournamentId: number, playerId?: number) => Promise<unknown>) {
+export function useStartDraft() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: ({ tournamentId, playerId }: { tournamentId: number; playerId?: number }) =>
-      fn(tournamentId, playerId),
+    mutationFn: (tournamentId: number) => api.post(`/draft/${tournamentId}/start`),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['draft'] });
       qc.invalidateQueries({ queryKey: ['teams'] });
@@ -31,10 +30,14 @@ function useDraftMutation(fn: (tournamentId: number, playerId?: number) => Promi
   });
 }
 
-export const useStartDraft = () =>
-  useDraftMutation((tournamentId) => api.post(`/draft/${tournamentId}/start`));
-
-export const usePick = () =>
-  useDraftMutation((tournamentId, playerId) =>
-    api.post(`/draft/${tournamentId}/pick`, { playerId }),
-  );
+export function usePick() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ tournamentId, playerId, teamId }: { tournamentId: number; playerId: number; teamId: number }) =>
+      api.post(`/draft/${tournamentId}/pick`, { playerId, teamId }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['draft'] });
+      qc.invalidateQueries({ queryKey: ['teams'] });
+    },
+  });
+}

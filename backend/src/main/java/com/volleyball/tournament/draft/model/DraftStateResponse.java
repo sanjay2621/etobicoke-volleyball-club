@@ -7,10 +7,6 @@ import java.util.List;
 public record DraftStateResponse(
         Long tournamentId,
         String status,
-        int currentRound,
-        int totalRounds,
-        Long onTheClockTeamId,
-        String onTheClockTeamName,
         List<TeamResponse> teams,
         List<PlayerResponse> availablePlayers) {
 }

@@ -308,10 +308,6 @@ export type StandingGroup = { groupLabel: string; rows: StandingRow[] };
 export type DraftState = {
   tournamentId: number;
   status: 'NOT_STARTED' | 'IN_PROGRESS' | 'COMPLETE';
-  currentRound: number;
-  totalRounds: number;
-  onTheClockTeamId?: number | null;
-  onTheClockTeamName?: string | null;
   teams: Team[];
   availablePlayers: Player[];
 };

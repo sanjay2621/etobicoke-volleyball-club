@@ -31,6 +31,7 @@ export function DraftPage() {
   const start = useStartDraft();
   const pick = usePick();
   const [error, setError] = useState<string | null>(null);
+  const [assignTeamId, setAssignTeamId] = useState<number | ''>('');
 
   useEffect(() => {
     if (tournamentId == null && tournaments && tournaments.length > 0) {
@@ -38,21 +39,27 @@ export function DraftPage() {
     }
   }, [tournaments, tournamentId]);
 
+  useEffect(() => {
+    if (draft && (assignTeamId === '' || !draft.teams.some((t) => t.id === assignTeamId))) {
+      setAssignTeamId(draft.teams[0]?.id ?? '');
+    }
+  }, [draft, assignTeamId]);
+
   async function onStart() {
     if (!tournamentId) return;
     setError(null);
     try {
-      await start.mutateAsync({ tournamentId });
+      await start.mutateAsync(tournamentId);
     } catch (e: any) {
       setError(e?.response?.data?.message ?? 'Could not start the draft');
     }
   }
 
   async function onPick(playerId: number) {
-    if (!tournamentId) return;
+    if (!tournamentId || !assignTeamId) return;
     setError(null);
     try {
-      await pick.mutateAsync({ tournamentId, playerId });
+      await pick.mutateAsync({ tournamentId, playerId, teamId: assignTeamId });
     } catch (e: any) {
       setError(e?.response?.data?.message ?? 'Pick failed');
     }
@@ -97,12 +104,23 @@ export function DraftPage() {
       {draft && (
         <Paper className={styles.statusPaper} variant="outlined">
           {inProgress && (
-            <Typography variant="h6">
-              Round {draft.currentRound} / {draft.totalRounds} — on the clock:{' '}
-              <Box component="span" color="secondary.main" fontWeight={700}>
-                {draft.onTheClockTeamName}
-              </Box>
-            </Typography>
+            <Stack direction="row" spacing={2} alignItems="center" flexWrap="wrap" useFlexGap>
+              <Typography variant="h6">Draft in progress</Typography>
+              <TextField
+                select
+                size="small"
+                label="Assign picks to"
+                value={assignTeamId}
+                onChange={(e) => setAssignTeamId(Number(e.target.value))}
+                className={styles.tournamentSelect}
+              >
+                {draft.teams.map((t) => (
+                  <MenuItem key={t.id} value={t.id}>
+                    {t.name} ({t.memberCount})
+                  </MenuItem>
+                ))}
+              </TextField>
+            </Stack>
           )}
           {complete && <Typography variant="h6">Draft complete 🎉 — rosters are set.</Typography>}
           {draft.status === 'NOT_STARTED' && (
@@ -116,44 +134,37 @@ export function DraftPage() {
       <Grid container spacing={2}>
         <Grid item xs={12} md={7}>
           <Grid container spacing={2}>
-            {draft?.teams.map((team) => {
-              const onClock = team.id === draft.onTheClockTeamId;
-              return (
-                <Grid item xs={12} sm={6} key={team.id}>
-                  <Card
-                    variant="outlined"
-                    className={onClock ? styles.teamCardOnClock : ''}
-                  >
-                    <CardContent>
-                      <Stack direction="row" justifyContent="space-between" alignItems="center">
-                        <Typography variant="subtitle1" fontWeight={700} sx={{ flex: 1, minWidth: 0, mr: 1 }}>
-                          <TruncatedText text={team.name} />
-                        </Typography>
-                        <Chip size="small" label={`${team.memberCount}`} />
-                      </Stack>
-                      <List dense>
-                        {team.members.map((m) => (
-                          <ListItem key={m.playerId} disableGutters>
-                            <ListItemText
-                              primary={
-                                <Stack direction="row" spacing={0.5} alignItems="center" sx={{ minWidth: 0 }}>
-                                  <Box sx={{ minWidth: 0, flex: 1 }}>
-                                    <TruncatedText text={m.fullName} />
-                                  </Box>
-                                  {m.captain && <StarIcon fontSize="inherit" color="warning" />}
-                                </Stack>
-                              }
-                              secondary={m.draftRound ? `Round ${m.draftRound}` : null}
-                              sx={{ minWidth: 0 }}
-                            />
-                          </ListItem>
-                        ))}
-                      </List>
-                    </CardContent>
-                  </Card>
-                </Grid>
-              );
-            })}
+            {draft?.teams.map((team) => (
+              <Grid item xs={12} sm={6} key={team.id}>
+                <Card variant="outlined">
+                  <CardContent>
+                    <Stack direction="row" justifyContent="space-between" alignItems="center">
+                      <Typography variant="subtitle1" fontWeight={700} sx={{ flex: 1, minWidth: 0, mr: 1 }}>
+                        <TruncatedText text={team.name} />
+                      </Typography>
+                      <Chip size="small" label={`${team.memberCount}`} />
+                    </Stack>
+                    <List dense>
+                      {team.members.map((m) => (
+                        <ListItem key={m.playerId} disableGutters>
+                          <ListItemText
+                            primary={
+                              <Stack direction="row" spacing={0.5} alignItems="center" sx={{ minWidth: 0 }}>
+                                <Box sx={{ minWidth: 0, flex: 1 }}>
+                                  <TruncatedText text={m.fullName} />
+                                </Box>
+                                {m.captain && <StarIcon fontSize="inherit" color="warning" />}
+                              </Stack>
+                            }
+                            sx={{ minWidth: 0 }}
+                          />
+                        </ListItem>
+                      ))}
+                    </List>
+                  </CardContent>
+                </Card>
+              </Grid>
+            ))}
           </Grid>
         </Grid>
 
@@ -174,7 +185,7 @@ export function DraftPage() {
                         <Button
                           size="small"
                           variant="contained"
-                          disabled={!inProgress || pick.isPending || !!disabledHint}
+                          disabled={!inProgress || !assignTeamId || pick.isPending || !!disabledHint}
                           onClick={() => onPick(p.id)}
                         >
                           Draft

@@ -41,7 +41,6 @@ public class DraftService {
 
     @Transactional
     public DraftStateResponse start(Long tournamentId) {
-        Tournament tournament = tournamentService.getEntity(tournamentId);
         List<Team> teams = seedOrderedTeams(tournamentId);
         if (teams.size() < 2) {
             throw new ApiException(HttpStatus.BAD_REQUEST, "At least two teams are required to draft");
@@ -53,23 +52,26 @@ public class DraftService {
         }
 
         Draft draft = getOrCreateEntity(tournamentId);
-        draft.setTotalRounds(tournament.draftRounds());
-        draft.setCurrentRound(1);
-        draft.setCurrentPickIndex(0);
-        draft.setStatus(draft.getTotalRounds() <= 0 ? DraftStatus.COMPLETE : DraftStatus.IN_PROGRESS);
+        draft.setStatus(DraftStatus.IN_PROGRESS);
         draftRepository.save(draft);
         return state(tournamentId);
     }
 
+    /**
+     * Admin explicitly assigns {@code playerId} to {@code teamId} -- there is no enforced pick
+     * order/rotation; the admin (acting on captains' verbal calls during an in-person draft) picks
+     * whichever player for whichever team, in any sequence.
+     */
     @Transactional
-    public DraftStateResponse pick(Long tournamentId, Long playerId) {
+    public DraftStateResponse pick(Long tournamentId, Long playerId, Long teamId) {
         Draft draft = getEntity(tournamentId);
         if (draft.getStatus() != DraftStatus.IN_PROGRESS) {
             throw new ApiException(HttpStatus.CONFLICT, "Draft is not in progress");
         }
         List<Team> teams = seedOrderedTeams(tournamentId);
         List<Long> teamIds = teams.stream().map(Team::getId).toList();
-        Long teamOnClock = DraftOrder.teamOnTheClock(teamIds, draft.getCurrentRound(), draft.getCurrentPickIndex());
+        Team team = teams.stream().filter(t -> t.getId().equals(teamId)).findFirst()
+                .orElseThrow(() -> new ApiException(HttpStatus.BAD_REQUEST, "Team belongs to a different tournament"));
 
         Player player = playerRepository.findById(playerId)
                 .orElseThrow(() -> NotFoundException.of("Player", playerId));
@@ -85,16 +87,23 @@ public class DraftService {
         if (!player.isDraftPriority() && playerRepository.existsUndraftedPriorityPlayer(tournamentId)) {
             throw new ApiException(HttpStatus.BAD_REQUEST, "Priority players must be drafted first");
         }
+        Tournament tournament = tournamentService.getEntity(tournamentId);
+        int currentRosterSize = teamMemberRepository.findByTeamId(teamId).size();
+        if (currentRosterSize >= tournament.getTargetRosterSize()) {
+            throw new ApiException(HttpStatus.BAD_REQUEST, team.getName() + "'s roster is already full");
+        }
 
         TeamMember member = new TeamMember();
-        member.setTeamId(teamOnClock);
+        member.setTeamId(teamId);
         member.setPlayerId(playerId);
-        member.setDraftRound(draft.getCurrentRound());
         teamMemberRepository.save(member);
-        teamService.notifyIfRosterComplete(teamOnClock);
+        teamService.notifyIfRosterComplete(teamId);
 
-        advance(draft, teams.size());
-        draftRepository.save(draft);
+        if (!playerRepository.existsUndraftedPriorityPlayer(tournamentId)
+                && !hasUndraftedApprovedPlayer(tournamentId, teamIds)) {
+            draft.setStatus(DraftStatus.COMPLETE);
+            draftRepository.save(draft);
+        }
         return state(tournamentId);
     }
 
@@ -103,15 +112,6 @@ public class DraftService {
         Draft draft = getOrCreateView(tournamentId);
         List<Team> teams = seedOrderedTeams(tournamentId);
         List<Long> teamIds = teams.stream().map(Team::getId).toList();
-
-        Long onClockId = null;
-        String onClockName = null;
-        if (draft.getStatus() == DraftStatus.IN_PROGRESS && !teamIds.isEmpty()) {
-            onClockId = DraftOrder.teamOnTheClock(teamIds, draft.getCurrentRound(), draft.getCurrentPickIndex());
-            final Long fid = onClockId;
-            onClockName = teams.stream().filter(t -> t.getId().equals(fid)).findFirst()
-                    .map(Team::getName).orElse(null);
-        }
 
         Set<Long> assigned = teamMemberRepository.findByTeamIdIn(teamIds).stream()
                 .map(TeamMember::getPlayerId)
@@ -123,22 +123,16 @@ public class DraftService {
                 .filter(p -> p.approvalStatus() == com.volleyball.tournament.player.entity.ApprovalStatus.APPROVED)
                 .toList();
 
-        return new DraftStateResponse(tournamentId, draft.getStatus().name(),
-                draft.getCurrentRound(), draft.getTotalRounds(), onClockId, onClockName,
-                teamResponses, available);
+        return new DraftStateResponse(tournamentId, draft.getStatus().name(), teamResponses, available);
     }
 
-    private void advance(Draft draft, int teamsPerRound) {
-        int nextIndex = draft.getCurrentPickIndex() + 1;
-        if (nextIndex >= teamsPerRound) {
-            draft.setCurrentPickIndex(0);
-            draft.setCurrentRound(draft.getCurrentRound() + 1);
-        } else {
-            draft.setCurrentPickIndex(nextIndex);
-        }
-        if (draft.getCurrentRound() > draft.getTotalRounds()) {
-            draft.setStatus(DraftStatus.COMPLETE);
-        }
+    private boolean hasUndraftedApprovedPlayer(Long tournamentId, List<Long> teamIds) {
+        Set<Long> assigned = teamMemberRepository.findByTeamIdIn(teamIds).stream()
+                .map(TeamMember::getPlayerId)
+                .collect(Collectors.toSet());
+        return playerService.listByTournament(tournamentId).stream()
+                .anyMatch(p -> !assigned.contains(p.id())
+                        && p.approvalStatus() == com.volleyball.tournament.player.entity.ApprovalStatus.APPROVED);
     }
 
     private List<Team> seedOrderedTeams(Long tournamentId) {
