@@ -7,6 +7,9 @@ export function useSchedule(tournamentId: number | null) {
     queryKey: ['schedule', tournamentId],
     queryFn: () => api.get<MatchResponse[]>(`/schedule/${tournamentId}`).then((r) => r.data),
     enabled: tournamentId != null,
+    // Short poll so an in-progress match's live score (set via the Live Score page) shows up here
+    // without a manual refresh -- mirrors the public live-scoreboard's polling.
+    refetchInterval: 5000,
   });
 }
 

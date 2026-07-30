@@ -192,6 +192,9 @@ function PodiumCard({
 }
 
 function scoreLabel(m: MatchResponse): string {
+  if (m.status === 'IN_PROGRESS' && (m.liveHomePoints > 0 || m.liveAwayPoints > 0)) {
+    return `🔴 ${m.liveHomePoints}–${m.liveAwayPoints}`;
+  }
   if (m.status !== 'COMPLETE') return '—';
   const home = m.sets.reduce((n, s) => n + (s.homePoints > s.awayPoints ? 1 : 0), 0);
   const away = m.sets.reduce((n, s) => n + (s.awayPoints > s.homePoints ? 1 : 0), 0);

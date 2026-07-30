@@ -182,6 +182,10 @@ public class ScheduleService {
         Long loser = homeSets > awaySets ? match.getAwayTeamId() : match.getHomeTeamId();
         match.setWinnerTeamId(winner);
         match.setStatus(MatchStatus.COMPLETE);
+        // Clear the in-progress live tally now that the official result is recorded, so a stale
+        // live score can't linger and confuse the live-score/schedule views for this match.
+        match.setLiveHomePoints(0);
+        match.setLiveAwayPoints(0);
         matchRepository.save(match);
 
         if (match.getStage() == MatchStage.SEMIFINAL && match.getBracketSlot() != null) {
