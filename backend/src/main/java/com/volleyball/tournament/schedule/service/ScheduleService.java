@@ -48,23 +48,33 @@ public class ScheduleService {
             throw new ApiException(HttpStatus.BAD_REQUEST, "At least two teams are required to schedule");
         }
 
-        // Snake split into groups A / B and persist on the teams.
-        for (int i = 0; i < teams.size(); i++) {
-            teams.get(i).setGroupLabel(snakeGroup(i));
+        // Groups are admin-assigned (Teams page) rather than auto-seeded, so every team must
+        // already have one before a schedule can be built.
+        List<String> unassigned = teams.stream()
+                .filter(t -> t.getGroupLabel() == null || t.getGroupLabel().isBlank())
+                .map(Team::getName)
+                .toList();
+        if (!unassigned.isEmpty()) {
+            throw new ApiException(HttpStatus.BAD_REQUEST,
+                    "Assign every team to a group first (Teams page): " + String.join(", ", unassigned));
         }
-        teamRepository.saveAll(teams);
 
         clearAllMatches(tournamentId);
+
+        List<String> groupLabels = teams.stream().map(Team::getGroupLabel).distinct().sorted().toList();
 
         // Round-robin per group, tagged with group label.
         record Tagged(Pairing pairing, String group) {
         }
         List<Tagged> tagged = new ArrayList<>();
-        for (String group : List.of("A", "B")) {
+        for (String group : groupLabels) {
             List<Long> groupTeamIds = teams.stream()
                     .filter(t -> group.equals(t.getGroupLabel()))
                     .map(Team::getId)
                     .toList();
+            if (groupTeamIds.size() < 2) {
+                throw new ApiException(HttpStatus.BAD_REQUEST, "Group " + group + " needs at least two teams");
+            }
             RoundRobin.generate(groupTeamIds).forEach(p -> tagged.add(new Tagged(p, group)));
         }
         tagged.sort(Comparator.comparingInt(t -> t.pairing().round()));
@@ -248,8 +258,14 @@ public class ScheduleService {
 
     @Transactional(readOnly = true)
     public List<StandingResponse.Group> getStandings(Long tournamentId) {
+        List<String> groupLabels = teamRepository.findByTournamentIdOrderBySeedAscNameAsc(tournamentId).stream()
+                .map(Team::getGroupLabel)
+                .filter(java.util.Objects::nonNull)
+                .distinct()
+                .sorted()
+                .toList();
         List<StandingResponse.Group> groups = new ArrayList<>();
-        for (String group : List.of("A", "B")) {
+        for (String group : groupLabels) {
             List<StandingResponse> rows = standingsForGroup(tournamentId, group);
             if (!rows.isEmpty()) {
                 groups.add(new StandingResponse.Group(group, rows));
@@ -351,11 +367,6 @@ public class ScheduleService {
         teamRepository.findByTournamentIdOrderBySeedAscNameAsc(tournamentId)
                 .forEach(t -> teams.put(t.getId(), t));
         return teams;
-    }
-
-    private static String snakeGroup(int seedIndex) {
-        int cycle = seedIndex % 4;
-        return (cycle == 0 || cycle == 3) ? "A" : "B";
     }
 
     private MatchResponse toResponse(Match m, Map<Long, String> names) {

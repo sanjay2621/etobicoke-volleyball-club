@@ -41,6 +41,7 @@ import {
   useSetCaptain,
   useSetReferee,
   useTeams,
+  useUpdateTeam,
 } from '../../api/teams';
 import type { Player, Team } from '../../types';
 import styles from './TeamsPage.module.css';
@@ -78,6 +79,11 @@ export function TeamsPage() {
       !assignedIds.has(p.id) && !p.preferredPositions.includes('REFEREE') && p.approvalStatus === 'APPROVED',
     ) ?? [],
     [players, assignedIds],
+  );
+
+  const existingGroupLabels = useMemo(
+    () => Array.from(new Set((teams ?? []).map((t) => t.groupLabel).filter((g): g is string => !!g))).sort(),
+    [teams],
   );
 
   async function onCreate() {
@@ -136,7 +142,13 @@ export function TeamsPage() {
         )}
         {teams?.map((team) => (
           <Grid item xs={12} md={6} lg={4} key={team.id}>
-            <TeamCard team={team} available={availablePlayers} allPlayers={players ?? []} assignedRefereeIds={assignedRefereeIds} />
+            <TeamCard
+              team={team}
+              available={availablePlayers}
+              allPlayers={players ?? []}
+              assignedRefereeIds={assignedRefereeIds}
+              allGroupLabels={existingGroupLabels}
+            />
           </Grid>
         ))}
       </Grid>
@@ -174,18 +186,36 @@ function TeamCard({
   available,
   allPlayers,
   assignedRefereeIds,
+  allGroupLabels,
 }: {
   team: Team;
   available: Player[];
   allPlayers: Player[];
   assignedRefereeIds: Set<number>;
+  allGroupLabels: string[];
 }) {
   const addMember = useAddMember();
   const removeMember = useRemoveMember();
   const setCaptain = useSetCaptain();
   const setReferee = useSetReferee();
   const deleteTeam = useDeleteTeam();
+  const updateTeam = useUpdateTeam();
   const [toAdd, setToAdd] = useState<Player | null>(null);
+
+  function onGroupLabelChange(value: string | null) {
+    const groupLabel = value?.trim().slice(0, 4) || null;
+    updateTeam.mutate({
+      id: team.id,
+      body: {
+        tournamentId: team.tournamentId,
+        name: team.name,
+        captainPlayerId: team.captainPlayerId,
+        refereePlayerId: team.refereePlayerId,
+        seed: team.seed,
+        groupLabel,
+      },
+    });
+  }
 
   const refereeName = team.refereePlayerId
     ? allPlayers.find((p) => p.id === team.refereePlayerId)?.fullName ?? `#${team.refereePlayerId}`
@@ -208,8 +238,19 @@ function TeamCard({
           <Typography variant="h6" sx={{ flex: 1, minWidth: 0, mr: 1 }}>
             <TruncatedText text={team.name} />
           </Typography>
-          <Box>
-            {team.groupLabel && <Chip size="small" label={`Group ${team.groupLabel}`} className={styles.groupChip} />}
+          <Box className={styles.headerControls}>
+            <Autocomplete
+              freeSolo
+              autoSelect
+              size="small"
+              options={allGroupLabels}
+              value={team.groupLabel ?? null}
+              onChange={(_, value) => onGroupLabelChange(value)}
+              className={styles.groupField}
+              renderInput={(params) => (
+                <TextField {...params} label="Group" placeholder="—" inputProps={{ ...params.inputProps, maxLength: 4 }} />
+              )}
+            />
             <Chip size="small" label={`${team.memberCount} players`} />
             <IconButton
               size="small"
