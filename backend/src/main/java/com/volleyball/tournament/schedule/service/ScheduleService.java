@@ -8,6 +8,8 @@ import com.volleyball.tournament.schedule.entity.MatchStage;
 import com.volleyball.tournament.schedule.entity.MatchStatus;
 import com.volleyball.tournament.schedule.model.MatchResponse;
 import com.volleyball.tournament.schedule.model.MatchSetDto;
+import com.volleyball.tournament.schedule.model.PlayoffBuildRequest;
+import com.volleyball.tournament.schedule.model.PlayoffMatchRequest;
 import com.volleyball.tournament.schedule.model.RecordResultRequest;
 import com.volleyball.tournament.schedule.model.StandingResponse;
 import com.volleyball.tournament.schedule.repository.MatchRepository;
@@ -23,6 +25,7 @@ import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -155,6 +158,109 @@ public class ScheduleService {
         return getSchedule(tournamentId);
     }
 
+    /**
+     * Admin-defined playoff bracket of arbitrary shape/depth (any number of advancing teams, any
+     * per-group advancement count) — the counterpart to {@link #generatePlayoffs} for tournaments
+     * that aren't exactly two groups of top-2. Matches must be submitted in dependency order; a
+     * match's round (and therefore its scheduled time) is derived from how many source-hops deep its
+     * {@code homeSource}/{@code awaySource} chain goes, so admin doesn't need to specify round numbers.
+     */
+    @Transactional
+    public List<MatchResponse> buildPlayoffs(Long tournamentId, PlayoffBuildRequest req) {
+        Tournament tournament = tournamentService.getEntity(tournamentId);
+        List<Match> pool = matchRepository.findByTournamentIdAndStage(tournamentId, MatchStage.POOL);
+        if (pool.isEmpty()) {
+            throw new ApiException(HttpStatus.BAD_REQUEST, "Generate the pool schedule first");
+        }
+        if (pool.stream().anyMatch(m -> m.getStatus() != MatchStatus.COMPLETE)) {
+            throw new ApiException(HttpStatus.BAD_REQUEST, "All pool matches must be completed first");
+        }
+
+        Set<Long> validTeamIds = teamRepository.findByTournamentIdOrderBySeedAscNameAsc(tournamentId).stream()
+                .map(Team::getId).collect(Collectors.toSet());
+
+        List<PlayoffMatchRequest> matches = req.matches();
+        Set<String> definedSoFar = new java.util.HashSet<>();
+        Map<String, Integer> roundBySlot = new LinkedHashMap<>();
+        for (PlayoffMatchRequest pm : matches) {
+            if (!definedSoFar.add(pm.slot())) {
+                throw new ApiException(HttpStatus.BAD_REQUEST, "Duplicate bracket slot: " + pm.slot());
+            }
+            MatchStage stage;
+            try {
+                stage = MatchStage.valueOf(pm.stage());
+            } catch (IllegalArgumentException e) {
+                throw new ApiException(HttpStatus.BAD_REQUEST, "Unknown playoff stage: " + pm.stage());
+            }
+            if (stage == MatchStage.POOL) {
+                throw new ApiException(HttpStatus.BAD_REQUEST, "Playoff matches cannot use the POOL stage");
+            }
+            if (pm.homeTeamId() == null && pm.homeSource() == null) {
+                throw new ApiException(HttpStatus.BAD_REQUEST, "Match " + pm.slot() + " needs a home team or source");
+            }
+            if (pm.awayTeamId() == null && pm.awaySource() == null) {
+                throw new ApiException(HttpStatus.BAD_REQUEST, "Match " + pm.slot() + " needs an away team or source");
+            }
+            if (pm.homeTeamId() != null && !validTeamIds.contains(pm.homeTeamId())) {
+                throw new ApiException(HttpStatus.BAD_REQUEST, "Unknown team in match " + pm.slot());
+            }
+            if (pm.awayTeamId() != null && !validTeamIds.contains(pm.awayTeamId())) {
+                throw new ApiException(HttpStatus.BAD_REQUEST, "Unknown team in match " + pm.slot());
+            }
+
+            int round = 0;
+            for (String source : List.of(pm.homeSource(), pm.awaySource())) {
+                if (source == null) {
+                    continue;
+                }
+                if ((!source.startsWith("W:") && !source.startsWith("L:")) || !roundBySlot.containsKey(source.substring(2))) {
+                    throw new ApiException(HttpStatus.BAD_REQUEST,
+                            "Match " + pm.slot() + " references an undefined or later slot: " + source);
+                }
+                round = Math.max(round, roundBySlot.get(source.substring(2)) + 1);
+            }
+            roundBySlot.put(pm.slot(), round);
+        }
+
+        // Remove any existing bracket matches before rebuilding.
+        for (Match m : matchRepository.findByTournamentIdOrderByScheduledStartAscCourtAsc(tournamentId)) {
+            if (m.getStage() != MatchStage.POOL) {
+                matchSetRepository.deleteByMatchId(m.getId());
+                matchRepository.delete(m);
+            }
+        }
+
+        LocalDateTime lastStart = pool.stream()
+                .map(Match::getScheduledStart)
+                .filter(java.util.Objects::nonNull)
+                .max(Comparator.naturalOrder())
+                .orElse(LocalDateTime.of(tournament.getDate(), tournament.getStartTime()));
+        long slotMinutes = (long) tournament.getPoolMatchDurationMinutes() + tournament.getBreakMinutes();
+        int numberOfCourts = Math.max(1, tournament.getNumberOfCourts());
+
+        List<PlayoffMatchRequest> ordered = matches.stream()
+                .sorted(Comparator.comparingInt(pm -> roundBySlot.get(pm.slot())))
+                .toList();
+
+        int court = 1;
+        int lastRound = -1;
+        LocalDateTime start = lastStart;
+        for (PlayoffMatchRequest pm : ordered) {
+            int round = roundBySlot.get(pm.slot());
+            if (round != lastRound) {
+                start = start.plusMinutes(slotMinutes);
+                court = 1;
+                lastRound = round;
+            }
+            saveBracket(tournamentId, MatchStage.valueOf(pm.stage()), pm.slot(),
+                    pm.homeTeamId(), pm.awayTeamId(), pm.homeSource(), pm.awaySource(), court, start);
+            court = court % numberOfCourts + 1;
+        }
+
+        tournament.setStatus(TournamentStatus.IN_PROGRESS);
+        return getSchedule(tournamentId);
+    }
+
     // ---------- Result entry ----------
 
     @Transactional
@@ -198,34 +304,42 @@ public class ScheduleService {
         match.setLiveAwayPoints(0);
         matchRepository.save(match);
 
-        if (match.getStage() == MatchStage.SEMIFINAL && match.getBracketSlot() != null) {
+        if (match.getBracketSlot() != null) {
             propagateBracket(match.getTournamentId(), match.getBracketSlot(), winner, loser);
         }
         return toResponse(match, teamNames(match.getTournamentId()));
     }
 
-    private void propagateBracket(Long tournamentId, String semiSlot, Long winner, Long loser) {
-        for (Match m : matchRepository.findByTournamentIdAndStage(tournamentId, MatchStage.FINAL)) {
-            applyFeeder(m, semiSlot, winner);
-        }
-        for (Match m : matchRepository.findByTournamentIdAndStage(tournamentId, MatchStage.BRONZE)) {
-            applyFeeder(m, semiSlot, loser);
-        }
-    }
-
-    /** Fills the home/away slot of a bracket match fed by the given semifinal. */
-    private void applyFeeder(Match m, String semiSlot, Long teamId) {
-        boolean changed = false;
-        if (m.getHomeSource() != null && m.getHomeSource().endsWith(semiSlot)) {
-            m.setHomeTeamId(teamId);
-            changed = true;
-        }
-        if (m.getAwaySource() != null && m.getAwaySource().endsWith(semiSlot)) {
-            m.setAwayTeamId(teamId);
-            changed = true;
-        }
-        if (changed) {
-            matchRepository.save(m);
+    /**
+     * Resolves any not-yet-played match anywhere in the bracket whose home/away source references
+     * the slot that just completed — generic over bracket depth/shape, so this covers the classic
+     * SF-feeds-Final/Bronze case and any admin-built quarterfinal-or-deeper bracket the same way.
+     */
+    private void propagateBracket(Long tournamentId, String slot, Long winner, Long loser) {
+        String winnerSource = "W:" + slot;
+        String loserSource = "L:" + slot;
+        for (Match m : matchRepository.findByTournamentIdOrderByScheduledStartAscCourtAsc(tournamentId)) {
+            if (m.getStatus() == MatchStatus.COMPLETE) {
+                continue;
+            }
+            boolean changed = false;
+            if (winnerSource.equals(m.getHomeSource())) {
+                m.setHomeTeamId(winner);
+                changed = true;
+            } else if (loserSource.equals(m.getHomeSource())) {
+                m.setHomeTeamId(loser);
+                changed = true;
+            }
+            if (winnerSource.equals(m.getAwaySource())) {
+                m.setAwayTeamId(winner);
+                changed = true;
+            } else if (loserSource.equals(m.getAwaySource())) {
+                m.setAwayTeamId(loser);
+                changed = true;
+            }
+            if (changed) {
+                matchRepository.save(m);
+            }
         }
     }
 

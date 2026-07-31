@@ -2,6 +2,7 @@ package com.volleyball.tournament.schedule.api;
 
 import com.volleyball.tournament.schedule.model.LiveScoreAdjustRequest;
 import com.volleyball.tournament.schedule.model.MatchResponse;
+import com.volleyball.tournament.schedule.model.PlayoffBuildRequest;
 import com.volleyball.tournament.schedule.model.RecordResultRequest;
 import com.volleyball.tournament.schedule.model.StandingResponse;
 import com.volleyball.tournament.schedule.service.ScheduleService;
@@ -35,6 +36,13 @@ public class ScheduleController {
     @PreAuthorize("hasRole('ADMIN')")
     public List<MatchResponse> generatePlayoffs(@PathVariable Long tournamentId) {
         return scheduleService.generatePlayoffs(tournamentId);
+    }
+
+    /** Admin-defined playoff bracket of arbitrary shape (any group count / advancement count). */
+    @PostMapping("/schedule/{tournamentId}/build-playoffs")
+    @PreAuthorize("hasRole('ADMIN')")
+    public List<MatchResponse> buildPlayoffs(@PathVariable Long tournamentId, @Valid @RequestBody PlayoffBuildRequest req) {
+        return scheduleService.buildPlayoffs(tournamentId, req);
     }
 
     /** Schedule is visible to any authenticated user (players see their matches too). */

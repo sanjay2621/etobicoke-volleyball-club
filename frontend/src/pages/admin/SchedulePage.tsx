@@ -22,6 +22,7 @@ import { useActiveTournaments } from '../../api/tournaments';
 import { downloadFile } from '../../api/client';
 import { useGeneratePlayoffs, useGeneratePools, useSchedule, useStandings } from '../../api/schedule';
 import type { MatchResponse, StandingGroup } from '../../types';
+import { PlayoffBuilderDialog } from './PlayoffBuilderDialog';
 import { ResultDialog } from './ResultDialog';
 import styles from './SchedulePage.module.css';
 
@@ -34,6 +35,7 @@ export function SchedulePage() {
   const genPlayoffs = useGeneratePlayoffs();
   const [editingMatch, setEditingMatch] = useState<MatchResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [buildingBracket, setBuildingBracket] = useState(false);
 
   useEffect(() => {
     if (tournamentId == null && tournaments && tournaments.length > 0) {
@@ -109,6 +111,14 @@ export function SchedulePage() {
           <Button
             size="small"
             variant="outlined"
+            disabled={!tournamentId}
+            onClick={() => setBuildingBracket(true)}
+          >
+            Build bracket
+          </Button>
+          <Button
+            size="small"
+            variant="outlined"
             startIcon={<DownloadIcon />}
             disabled={!tournamentId}
             onClick={() =>
@@ -152,6 +162,12 @@ export function SchedulePage() {
       </Grid>
 
       <ResultDialog match={editingMatch} onClose={() => setEditingMatch(null)} />
+      <PlayoffBuilderDialog
+        tournamentId={tournamentId}
+        standings={standings}
+        open={buildingBracket}
+        onClose={() => setBuildingBracket(false)}
+      />
     </>
   );
 }

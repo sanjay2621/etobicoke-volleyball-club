@@ -268,9 +268,11 @@ export type TeamRequest = {
 
 export type MatchSetDto = { setNumber: number; homePoints: number; awayPoints: number };
 
+export type PlayoffStage = 'QUARTERFINAL' | 'SEMIFINAL' | 'BRONZE' | 'FINAL';
+
 export type MatchResponse = {
   id: number;
-  stage: 'POOL' | 'SEMIFINAL' | 'BRONZE' | 'FINAL';
+  stage: 'POOL' | PlayoffStage;
   groupLabel?: string | null;
   roundNumber?: number | null;
   court?: number | null;
@@ -287,6 +289,16 @@ export type MatchResponse = {
   liveHomePoints: number;
   liveAwayPoints: number;
   sets: MatchSetDto[];
+};
+
+/** One match in an admin-built playoff bracket, submitted in dependency order. */
+export type PlayoffMatchRequest = {
+  stage: PlayoffStage;
+  slot: string;
+  homeTeamId?: number | null;
+  awayTeamId?: number | null;
+  homeSource?: string | null;
+  awaySource?: string | null;
 };
 
 export type StandingRow = {

@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from './client';
-import type { MatchResponse, MatchSetDto, StandingGroup } from '../types';
+import type { MatchResponse, MatchSetDto, PlayoffMatchRequest, StandingGroup } from '../types';
 
 export function useSchedule(tournamentId: number | null) {
   return useQuery({
@@ -67,6 +67,12 @@ export const useGeneratePools = () =>
 
 export const useGeneratePlayoffs = () =>
   useScheduleMutation((tournamentId: number) => api.post(`/schedule/${tournamentId}/generate-playoffs`));
+
+/** Admin-defined playoff bracket of arbitrary shape (any group count / advancement count). */
+export const useBuildPlayoffs = () =>
+  useScheduleMutation(({ tournamentId, matches }: { tournamentId: number; matches: PlayoffMatchRequest[] }) =>
+    api.post(`/schedule/${tournamentId}/build-playoffs`, { matches }),
+  );
 
 export const useRecordResult = () =>
   useScheduleMutation(({ matchId, sets }: { matchId: number; sets: MatchSetDto[] }) =>
