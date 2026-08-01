@@ -209,7 +209,7 @@ public class ScheduleService {
             }
 
             int round = 0;
-            for (String source : List.of(pm.homeSource(), pm.awaySource())) {
+            for (String source : java.util.Arrays.asList(pm.homeSource(), pm.awaySource())) {
                 if (source == null) {
                     continue;
                 }
