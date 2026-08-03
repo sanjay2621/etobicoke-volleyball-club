@@ -16,7 +16,7 @@ import {
   Typography,
 } from '@mui/material';
 import CheckroomIcon from '@mui/icons-material/Checkroom';
-import { useActiveTournaments } from '../../api/tournaments';
+import { useActiveTournaments, useSetRefereeTshirtColor } from '../../api/tournaments';
 import { usePlayers } from '../../api/players';
 import { useTeams } from '../../api/teams';
 import { useSetTshirtColor } from '../../api/teams';
@@ -54,6 +54,8 @@ export function TshirtPage() {
   const { data: players } = usePlayers(tournamentId);
   const { data: teams } = useTeams(tournamentId);
   const setColor = useSetTshirtColor();
+  const setRefereeColor = useSetRefereeTshirtColor();
+  const tournament = tournaments?.find((t) => t.id === tournamentId);
 
   const colorMap = useMemo(
     () => new Map(TSHIRT_COLORS.map((c) => [c.label, c.hex])),
@@ -73,27 +75,33 @@ export function TshirtPage() {
         if (sz) counts[sz]++;
       }
 
-      if (team.refereePlayerId) {
-        const memberIds = new Set(team.members.map((m) => m.playerId));
-        if (!memberIds.has(team.refereePlayerId)) {
-          const sz = sizeMap.get(team.refereePlayerId);
-          if (sz) counts[sz]++;
-        }
-      }
-
       const total = TSHIRT_SIZES.reduce((s, sz) => s + counts[sz], 0);
       return { teamId: team.id, teamName: team.name, tshirtColor: team.tshirtColor ?? '', counts, total };
     });
   }, [players, teams]);
 
+  // Referees get their own row with one shared color, regardless of which team (if any) they're
+  // assigned to referee for -- keeps them out of any team's own playing-color row/count.
+  const refereeRow = useMemo(() => {
+    const counts: Record<string, number> = {};
+    for (const sz of TSHIRT_SIZES) counts[sz] = 0;
+    for (const p of players ?? []) {
+      if (p.preferredPositions.includes('REFEREE') && p.tshirtSize) {
+        counts[p.tshirtSize]++;
+      }
+    }
+    const total = TSHIRT_SIZES.reduce((s, sz) => s + counts[sz], 0);
+    return { counts, total };
+  }, [players]);
+
   const totals = useMemo(() => {
     const t: Record<string, number> = {};
     for (const sz of TSHIRT_SIZES) t[sz] = 0;
-    for (const row of rows) {
+    for (const row of [...rows, refereeRow]) {
       for (const sz of TSHIRT_SIZES) t[sz] += row.counts[sz];
     }
     return t;
-  }, [rows]);
+  }, [rows, refereeRow]);
 
   const grandTotal = TSHIRT_SIZES.reduce((s, sz) => s + (totals[sz] ?? 0), 0);
 
@@ -181,6 +189,53 @@ export function TshirtPage() {
                 </TableCell>
               </TableRow>
             ))}
+            {rows.length > 0 && (
+              <TableRow hover className={styles.refereeRow}>
+                <TableCell sx={{ fontWeight: 700 }}>Referees</TableCell>
+                <TableCell sx={{ py: 0.5 }}>
+                  <Select
+                    size="small"
+                    displayEmpty
+                    value={tournament?.refereeTshirtColor ?? ''}
+                    onChange={(e) =>
+                      tournamentId &&
+                      setRefereeColor.mutate({ id: tournamentId, color: e.target.value || null })
+                    }
+                    renderValue={(val) => {
+                      if (!val) return <Typography variant="body2" color="text.disabled">— pick color —</Typography>;
+                      const hex = colorMap.get(val as string);
+                      return (
+                        <Stack direction="row" spacing={1} alignItems="center">
+                          {hex && <ColorSwatch hex={hex} />}
+                          <Typography variant="body2">{val as string}</Typography>
+                        </Stack>
+                      );
+                    }}
+                    sx={{ minWidth: 160, fontSize: '0.875rem' }}
+                  >
+                    <MenuItem value="">
+                      <Typography variant="body2" color="text.secondary">— none —</Typography>
+                    </MenuItem>
+                    {TSHIRT_COLORS.map((c) => (
+                      <MenuItem key={c.label} value={c.label}>
+                        <Stack direction="row" spacing={1} alignItems="center">
+                          <ColorSwatch hex={c.hex} />
+                          <span>{c.label}</span>
+                        </Stack>
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </TableCell>
+                {TSHIRT_SIZES.map((sz) => (
+                  <TableCell key={sz} align="center">
+                    {refereeRow.counts[sz] > 0 ? refereeRow.counts[sz] : '—'}
+                  </TableCell>
+                ))}
+                <TableCell align="center" className={styles.totalCell}>
+                  {refereeRow.total}
+                </TableCell>
+              </TableRow>
+            )}
             {rows.length > 0 && (
               <TableRow className={styles.totalRow}>
                 <TableCell className={styles.totalCell}>Total</TableCell>

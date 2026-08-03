@@ -61,4 +61,12 @@ public class TournamentController {
         tournamentService.delete(id);
         return ResponseEntity.noContent().build();
     }
+
+    @PutMapping("/{id}/referee-tshirt-color")
+    @PreAuthorize("hasRole('ADMIN')")
+    public TournamentResponse setRefereeTshirtColor(@PathVariable Long id,
+            @RequestBody(required = false) java.util.Map<String, String> body) {
+        String color = body != null ? body.get("color") : null;
+        return tournamentService.setRefereeTshirtColor(id, color);
+    }
 }

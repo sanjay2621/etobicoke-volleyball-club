@@ -68,6 +68,10 @@ public class Tournament extends BaseEntity {
     @Column(nullable = false, length = 20)
     private TournamentStatus status = TournamentStatus.SETUP;
 
+    /** One shared t-shirt color for every referee in the tournament, distinct from each team's color. */
+    @Column(name = "referee_tshirt_color", length = 30)
+    private String refereeTshirtColor;
+
     /** Number of draft rounds derived from roster config. */
     public int draftRounds() {
         return captainCountsInRoster ? Math.max(0, targetRosterSize - 1) : targetRosterSize;

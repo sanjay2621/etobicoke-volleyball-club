@@ -46,6 +46,13 @@ public class TournamentService {
     }
 
     @Transactional
+    public TournamentResponse setRefereeTshirtColor(Long id, String color) {
+        Tournament tournament = getEntity(id);
+        tournament.setRefereeTshirtColor(color == null || color.isBlank() ? null : color);
+        return tournamentMapper.toResponse(tournamentRepository.save(tournament));
+    }
+
+    @Transactional
     public TournamentResponse create(TournamentRequest req) {
         if (tournamentRepository.existsByNameIgnoreCase(req.name().trim())) {
             throw new ApiException(HttpStatus.CONFLICT, "A tournament with this name already exists");

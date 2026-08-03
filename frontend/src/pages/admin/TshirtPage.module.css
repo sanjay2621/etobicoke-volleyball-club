@@ -12,6 +12,11 @@
   background-color: #fafafa;
 }
 
+.refereeRow {
+  border-top: 2px solid #bdbdbd !important;
+  background-color: #f0f4f8;
+}
+
 .totalCell {
   font-weight: 700 !important;
 }

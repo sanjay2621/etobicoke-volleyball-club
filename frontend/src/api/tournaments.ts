@@ -63,3 +63,13 @@ export function useDeleteTournament() {
     onSuccess: () => qc.invalidateQueries({ queryKey: KEY }),
   });
 }
+
+/** One shared t-shirt color for every referee in the tournament. */
+export function useSetRefereeTshirtColor() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, color }: { id: number; color: string | null }) =>
+      api.put<Tournament>(`/tournaments/${id}/referee-tshirt-color`, { color }).then((r) => r.data),
+    onSuccess: () => qc.invalidateQueries({ queryKey: KEY }),
+  });
+}

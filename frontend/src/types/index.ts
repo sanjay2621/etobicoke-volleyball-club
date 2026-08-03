@@ -35,6 +35,7 @@ export type Tournament = {
   registrationOpen: boolean;
   registrationDeadline?: string | null;
   status: TournamentStatus;
+  refereeTshirtColor?: string | null;
 };
 
 export type Position = 'CENTER' | 'NETTY' | 'FRONT' | 'BACK' | 'ANYWHERE' | 'REFEREE';

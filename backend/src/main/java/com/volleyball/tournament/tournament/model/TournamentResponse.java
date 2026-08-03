@@ -22,5 +22,6 @@ public record TournamentResponse(
         int draftRounds,
         boolean registrationOpen,
         LocalDate registrationDeadline,
-        TournamentStatus status) {
+        TournamentStatus status,
+        String refereeTshirtColor) {
 }
