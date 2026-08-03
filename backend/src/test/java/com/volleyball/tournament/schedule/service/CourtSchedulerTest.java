@@ -59,5 +59,14 @@ class CourtSchedulerTest {
             countPerSlot.merge(s.slotIndex(), 1, Integer::sum);
         }
         countPerSlot.values().forEach(count -> assertThat(count).isLessThanOrEqualTo(4));
+
+        // Court utilization matters at least as much as rest gaps: every slot but the last
+        // (which only has the round-robin's final leftover pairings) should use all 4 courts.
+        int lastSlot = countPerSlot.keySet().stream().max(Integer::compareTo).orElseThrow();
+        countPerSlot.forEach((slotIndex, count) -> {
+            if (slotIndex != lastSlot) {
+                assertThat(count).as("courts used in slot %d", slotIndex).isEqualTo(4);
+            }
+        });
     }
 }

@@ -12,9 +12,10 @@ import java.util.Set;
  *  - no team plays two matches in the same time slot,
  *  - at most {@code numberOfCourts} matches run in any one slot, and
  *  - a team never plays three or more consecutive slots in a row, if any slot avoiding that
- *    exists -- tries for a full rest gap first, then falls back to allowing a single
- *    back-to-back pair (never a third in a row), and only as an absolute last resort allows
- *    an unrestricted run so every match still gets scheduled.
+ *    exists -- keeping every court filled each slot takes priority over spacing matches out, so a
+ *    single back-to-back pair is used freely rather than leaving a court idle; only a third
+ *    consecutive slot is avoided (and only as an absolute last resort, so every match still gets
+ *    scheduled, is a longer run allowed).
  *
  * <p>Pairings are not necessarily assigned slots in increasing order (a later pairing can land in
  * an earlier gap than one processed before it), so consecutive-run checks are made against the
@@ -33,8 +34,6 @@ public final class CourtScheduler {
     }
 
     private enum RestMode {
-        /** The slot immediately before or after any of the team's existing slots is off-limits. */
-        FULL_REST,
         /** A single back-to-back pair is fine, but never a run of three or more. */
         MAX_TWO_IN_A_ROW,
         /** No rest constraint -- last-resort fallback that always finds a slot. */
@@ -51,10 +50,7 @@ public final class CourtScheduler {
         Map<Long, Set<Integer>> slotsForTeam = new HashMap<>();
 
         for (Pairing p : pairings) {
-            int slot = findSlot(teamsBusy, courtsUsed, numberOfCourts, p, slotsForTeam, RestMode.FULL_REST);
-            if (slot < 0) {
-                slot = findSlot(teamsBusy, courtsUsed, numberOfCourts, p, slotsForTeam, RestMode.MAX_TWO_IN_A_ROW);
-            }
+            int slot = findSlot(teamsBusy, courtsUsed, numberOfCourts, p, slotsForTeam, RestMode.MAX_TWO_IN_A_ROW);
             if (slot < 0) {
                 slot = findSlot(teamsBusy, courtsUsed, numberOfCourts, p, slotsForTeam, RestMode.ANY);
             }
@@ -100,9 +96,6 @@ public final class CourtScheduler {
         boolean adjacent = existing.contains(slot - 1) || existing.contains(slot + 1);
         if (!adjacent) {
             return false;
-        }
-        if (mode == RestMode.FULL_REST) {
-            return true;
         }
         // MAX_TWO_IN_A_ROW: only a problem if inserting here bridges/extends existing slots into a
         // run of three or more (scan both directions from the candidate, not just one neighbor).
