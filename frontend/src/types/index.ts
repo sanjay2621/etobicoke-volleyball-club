@@ -212,6 +212,7 @@ export const TSHIRT_COLORS: TshirtColor[] = [
   { label: 'Gold',                     hex: '#C8960C' },
   { label: 'Daisy',                    hex: '#FFD700' },
   { label: 'Sand',                     hex: '#C2B280' },
+  { label: 'Brown Savana',             hex: '#796E65' },
   { label: 'Dark Chocolate',           hex: '#3D1C0A' },
   { label: 'Heliconia',                hex: '#E0115F' },
   { label: 'Antique Heliconia',        hex: '#A85070' },
