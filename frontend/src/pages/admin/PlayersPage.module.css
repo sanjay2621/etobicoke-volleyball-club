@@ -14,8 +14,8 @@
   }
 }
 
-.assignedRow {
-  background-color: #e8f5e9;
+.unassignedRow {
+  background-color: #fff3e0;
 }
 
 .emptyCell {

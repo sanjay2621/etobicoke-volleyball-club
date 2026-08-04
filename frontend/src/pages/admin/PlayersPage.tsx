@@ -116,10 +116,14 @@ export function PlayersPage() {
           return 0;
         })
       : filtered;
-    return [...columnSorted].sort(
-      (a, b) => (a.approvalStatus === 'PENDING' ? 0 : 1) - (b.approvalStatus === 'PENDING' ? 0 : 1),
-    );
-  }, [filtered, sortField, sortDir]);
+    return [...columnSorted].sort((a, b) => {
+      const pendingDiff = (a.approvalStatus === 'PENDING' ? 0 : 1) - (b.approvalStatus === 'PENDING' ? 0 : 1);
+      if (pendingDiff !== 0) return pendingDiff;
+      const aUnassigned = playerTeamMap.has(a.id) ? 1 : 0;
+      const bUnassigned = playerTeamMap.has(b.id) ? 1 : 0;
+      return aUnassigned - bUnassigned;
+    });
+  }, [filtered, sortField, sortDir, playerTeamMap]);
 
   useEffect(() => {
     setSelectedIds(new Set());
@@ -302,7 +306,7 @@ export function PlayersPage() {
                 key={p.id}
                 hover
                 selected={selectedIds.has(p.id)}
-                className={assignedTeam ? styles.assignedRow : ''}
+                className={assignedTeam ? '' : styles.unassignedRow}
               >
                 <TableCell padding="checkbox">
                   <Checkbox checked={selectedIds.has(p.id)} onChange={() => toggleSelected(p.id)} />
