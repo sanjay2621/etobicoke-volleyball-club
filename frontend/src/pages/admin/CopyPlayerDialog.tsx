@@ -20,6 +20,7 @@ import ErrorIcon from '@mui/icons-material/Error';
 import type { Player } from '../../types';
 import { useActiveTournaments } from '../../api/tournaments';
 import { useCopyPlayerToTournament } from '../../api/players';
+import { formatDateOnly } from '../../utils/date';
 
 type ResultStatus = 'pending' | 'success' | 'error';
 type Result = { player: Player; status: ResultStatus; message?: string };
@@ -87,7 +88,7 @@ export function CopyPlayerDialog({
             )}
             {options.map((t) => (
               <MenuItem key={t.id} value={t.id}>
-                {t.name} — {new Date(t.date).toLocaleDateString()}
+                {t.name} — {formatDateOnly(t.date)}
               </MenuItem>
             ))}
           </TextField>

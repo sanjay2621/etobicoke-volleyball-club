@@ -24,6 +24,7 @@ import {
   useTournaments,
 } from '../../api/tournaments';
 import type { Tournament } from '../../types';
+import { formatDateOnly } from '../../utils/date';
 import { TournamentFormDialog } from './TournamentFormDialog';
 
 export function TournamentsPage() {
@@ -82,12 +83,12 @@ export function TournamentsPage() {
             {tournaments?.map((t) => (
               <TableRow key={t.id} hover>
                 <TableCell sx={{ maxWidth: 200 }}><TruncatedText text={t.name} /></TableCell>
-                <TableCell>{new Date(t.date).toLocaleDateString()}</TableCell>
+                <TableCell>{formatDateOnly(t.date)}</TableCell>
                 <TableCell>{t.startTime?.slice(0, 5)}</TableCell>
                 <TableCell>{t.numberOfCourts}</TableCell>
                 <TableCell>
                   {t.registrationDeadline
-                    ? new Date(t.registrationDeadline).toLocaleDateString()
+                    ? formatDateOnly(t.registrationDeadline)
                     : '—'}
                 </TableCell>
                 <TableCell>

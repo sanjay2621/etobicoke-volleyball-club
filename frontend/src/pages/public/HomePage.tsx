@@ -39,12 +39,13 @@ import { usePublicTeams } from '../../api/teams';
 import { usePublicSchedule, usePublicStandings, usePublicLiveMatches } from '../../api/schedule';
 import type { MatchResponse, PublicTeam, StandingGroup, Tournament } from '../../types';
 import { TSHIRT_COLORS } from '../../types';
+import { formatDateOnly, parseDateOnly } from '../../utils/date';
 import styles from './HomePage.module.css';
 
 function isRegistrationClosed(t: Tournament): boolean {
   if (!t.registrationOpen) return true;
   if (t.registrationDeadline) {
-    const deadline = new Date(t.registrationDeadline);
+    const deadline = parseDateOnly(t.registrationDeadline);
     deadline.setHours(23, 59, 59, 999);
     if (new Date() > deadline) return true;
   }
@@ -109,14 +110,14 @@ export function HomePage() {
 
           <Typography variant="h6" className={featured?.registrationDeadline ? styles.heroSubtextWithDeadline : styles.heroSubtext}>
             {featured
-              ? `${featured.name} — ${new Date(featured.date).toLocaleDateString()} at ${featured.startTime?.slice(0, 5)}`
+              ? `${featured.name} — ${formatDateOnly(featured.date)} at ${featured.startTime?.slice(0, 5)}`
               : 'Sign up, get drafted, and hit the court.'}
           </Typography>
           {featured?.registrationDeadline && (
             <Typography variant="body1" className={styles.heroDeadlineText}>
               Registration deadline:{' '}
               <strong>
-                {new Date(featured.registrationDeadline).toLocaleDateString('en-CA', {
+                {formatDateOnly(featured.registrationDeadline, 'en-CA', {
                   year: 'numeric',
                   month: 'long',
                   day: 'numeric',
@@ -222,7 +223,7 @@ export function HomePage() {
               >
                 {sorted.map((t) => (
                   <MenuItem key={t.id} value={t.id}>
-                    {t.name} — {new Date(t.date).toLocaleDateString()}
+                    {t.name} — {formatDateOnly(t.date)}
                   </MenuItem>
                 ))}
               </TextField>

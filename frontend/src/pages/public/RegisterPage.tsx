@@ -27,6 +27,7 @@ import { POSITIONS, SKILL_LEVELS, TSHIRT_SIZES } from '../../types';
 import type { Position, PlayerLookupResponse } from '../../types';
 import { useActivePublicTournaments } from '../../api/tournaments';
 import { useLookupPreviousRegistration, useRegisterPlayer } from '../../api/players';
+import { formatDateOnly, parseDateOnly } from '../../utils/date';
 import styles from './RegisterPage.module.css';
 
 function formatPhone(v: string): string {
@@ -186,7 +187,7 @@ export function RegisterPage() {
   function isRegistrationClosed(t: { registrationOpen: boolean; registrationDeadline?: string | null }): boolean {
     if (!t.registrationOpen) return true;
     if (t.registrationDeadline) {
-      const deadline = new Date(t.registrationDeadline);
+      const deadline = parseDateOnly(t.registrationDeadline);
       deadline.setHours(23, 59, 59, 999);
       if (new Date() > deadline) return true;
     }
@@ -341,7 +342,7 @@ export function RegisterPage() {
                           )}
                           {openTournaments.map((t) => (
                             <MenuItem key={t.id} value={t.id}>
-                              {t.name} — {new Date(t.date).toLocaleDateString()}
+                              {t.name} — {formatDateOnly(t.date)}
                             </MenuItem>
                           ))}
                         </TextField>
@@ -356,7 +357,7 @@ export function RegisterPage() {
                       <Alert severity="info" className={styles.deadlineAlert}>
                         Registration deadline:{' '}
                         <strong>
-                          {new Date(selectedTournament.registrationDeadline).toLocaleDateString('en-CA', {
+                          {formatDateOnly(selectedTournament.registrationDeadline, 'en-CA', {
                             year: 'numeric',
                             month: 'long',
                             day: 'numeric',
