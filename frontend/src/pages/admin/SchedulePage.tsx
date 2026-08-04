@@ -298,7 +298,7 @@ function StandingsTable({ group }: { group: StandingGroup }) {
           </TableHead>
           <TableBody>
             {group.rows.map((r) => (
-              <TableRow key={r.teamId} sx={{ bgcolor: r.rank <= 2 ? 'action.hover' : undefined }}>
+              <TableRow key={r.teamId}>
                 <TableCell>{r.rank}</TableCell>
                 <TableCell sx={{ maxWidth: 160, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{r.teamName}</TableCell>
                 <TableCell align="right">{r.wins}</TableCell>
@@ -311,7 +311,7 @@ function StandingsTable({ group }: { group: StandingGroup }) {
         </Table>
       </TableContainer>
       <Typography variant="caption" color="text.secondary">
-        Top 2 (shaded) advance to the semifinals.
+        Playoff seeding is set separately once pool play finishes.
       </Typography>
     </Box>
   );
